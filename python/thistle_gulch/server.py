@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import List, Optional, Type, Dict, Union
+import subprocess
 
 import fable_saga
 from fable_saga.conversations import GeneratedConversation, ConversationAgent
@@ -9,6 +10,8 @@ import socketio
 from aiohttp import web
 from attr import define
 from langchain.chat_models.base import BaseLanguageModel
+
+from . import Runtime
 
 
 logger = logging.getLogger(__name__)
@@ -129,16 +132,25 @@ async def generic_handler(data: Union[str, Dict], request_type: Type, process_fu
     output = converter.unstructure(response)
     return output
 
-
 if __name__ == '__main__':
 
     # Parse command line arguments
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('--runtime', type=str, help='Path to the thistle gulch runtime')
     parser.add_argument('--host', type=str, default='localhost', help='Host to listen on')
     parser.add_argument('--port', type=int, default=8080, help='Port to listen on')
     parser.add_argument('--cors', type=str, default=None, help='CORS origin')
     args = parser.parse_args()
+
+    runtime = None
+    if args.runtime is not None:
+        import pathlib
+        path = pathlib.Path(args.runtime)
+        assert path.exists()
+        assert path.is_file()
+        runtime = Runtime(args.runtime)
+        runtime.start()
 
     # Create common server objects
     # Note: This is where you could override the LLM by passing the llm parameter to SagaServer.
@@ -187,3 +199,6 @@ if __name__ == '__main__':
 
     # Run server
     web.run_app(app, host=args.host, port=args.port)
+
+    if runtime:
+        runtime.terminate()
