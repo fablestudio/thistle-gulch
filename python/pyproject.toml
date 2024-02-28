@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "thistle-gulch"
+version = "0.1.0"
+description = "Python SDK for Thistle Gulch"
+authors = ["Frank Carey <fcarey@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
