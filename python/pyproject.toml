@@ -7,6 +7,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+python-socketio = "^5.11.1"
+cattrs = "^23.2.3"
+aiohttp = "^3.9.3"
+fable-saga = {git = "https://github.com/fablestudio/fable-saga.git", rev = "main"}
 
 
 [build-system]

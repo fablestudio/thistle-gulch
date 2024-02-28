@@ -1,4 +1,4 @@
-#Thistle Gulch
+# Thistle Gulch
 A Multi-Agent Gym Environment set in the wild west.
 
 
