@@ -137,7 +137,7 @@ if __name__ == '__main__':
     # Parse command line arguments
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--runtime', type=str, help='Path to the thistle gulch runtime')
+    parser.add_argument('--runtime', type=str, help='Path to the thistle gulch runtime and any additional arguments')
     parser.add_argument('--host', type=str, default='localhost', help='Host to listen on')
     parser.add_argument('--port', type=int, default=8080, help='Port to listen on')
     parser.add_argument('--cors', type=str, default=None, help='CORS origin')
@@ -145,11 +145,13 @@ if __name__ == '__main__':
 
     runtime = None
     if args.runtime is not None:
+        split_args = args.runtime.split()
+        assert len(split_args) > 0
         import pathlib
-        path = pathlib.Path(args.runtime)
+        path = pathlib.Path(split_args[0])
         assert path.exists()
         assert path.is_file()
-        runtime = Runtime(args.runtime)
+        runtime = Runtime(split_args[0], split_args[1:])
         runtime.start()
 
     # Create common server objects
