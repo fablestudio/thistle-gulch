@@ -1,5 +1,6 @@
 from subprocess import Popen
-from typing import List, Optional
+from typing import List, Optional, Dict
+from datetime import datetime, timedelta
 
 
 class Runtime:
@@ -20,3 +21,26 @@ class Runtime:
 
     def __exit__(self, *args):
         self.terminate()
+
+
+class Simulation:
+
+    def __init__(self):
+        # The current time - placeholder for now.
+        self.sim_time = datetime(1880, 1, 1, 8)
+        self.sim_id = None
+
+    def load(self):
+        """Load the simulation data """
+        # TODO: Load the metadata from the runtime.
+        pass
+
+    async def tick(self, delta: timedelta):
+        # TODO: Have the runtime send a TICK signal.
+        pass
+
+    async def receive_request(self, msg, callback):
+        pass
+
+    async def receive_message(self, msg):
+        pass
