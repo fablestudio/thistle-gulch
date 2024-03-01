@@ -1,8 +1,10 @@
+import asyncio
 import json
 import logging
 import traceback
+import uuid
 from collections import namedtuple
-from typing import Callable, Union, Dict, Type, Any, TypeVar
+from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional
 
 T = TypeVar('T')
 
@@ -126,7 +128,15 @@ class RuntimeBridge:
             print(request)
             return GenericResponse(type='heartbeat-ack', data={'ack': 'ack'}, reference=request.reference)
 
-        self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler))
+        async def dummy_handler_independent_response(request: GenericMessage):
+            await asyncio.sleep(.2)
+
+            def test_callback(response: GenericResponse):
+                print(response)
+
+            await self.send_message('heartbeat-independent', {'ack': 'ack'}, test_callback)
+
+        self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler_independent_response))
         self.router.add_route(Route('heartbeat-ack', GenericMessage, dummy_handler_with_response))
 
         # Validate the runtime path and create a runtime instance.
@@ -212,9 +222,10 @@ class RuntimeBridge:
             self.runtime.terminate()
             logger.info('Runtime [Stopped]')
 
-    async def send_message(self, data: dict, callback: Callable[[T], None]):
+    async def send_message(self, msg_type, data, callback: Optional[Callable[[T], None]]):
         """
                Send a request to the runtime.
+               :param msg_type:
                :param msg_type: type of message.
                :param data: data to send with the message.
                :param callback: [Optional] function to call when the server responds.
@@ -225,16 +236,21 @@ class RuntimeBridge:
             callback(response_message)
 
         if self.simulation.sim_id is None:
-            print('Error: simulation client id is None.')
+            logging.error('Error: simulation client id is None.')
             if callback is not None:
                 callback(GenericResponse(type='error', error='simulation_client_id is None.'))
             return
+
+        reference = uuid.uuid4().hex
+        msg = GenericMessage(type=msg_type, data=data, reference=reference)
+        serialized_message = json.dumps(converter.unstructure(msg))
+
         if callback is not None:
-            await self.sio.emit('message-ack', (type, json.dumps(data)), to=self.simulation.sim_id,
+            await self.sio.emit('messages', (msg.type, serialized_message), to=self.simulation.sim_id,
                                 callback=convert_response_to_message)
 
         else:
-            await self.sio.emit('message', (type, json.dumps(data)))
+            await self.sio.emit('messages', (msg.type, serialized_message), to=self.simulation.sim_id)
 
 
 if __name__ == '__main__':
