@@ -136,8 +136,27 @@ class RuntimeBridge:
 
             await self.send_message('heartbeat-independent', {'ack': 'ack'}, test_callback)
 
+        async def on_ready_handler(request: GenericMessage):
+            print("Simulation is ready..")
+            print(request)
+
+            for i in range(4):
+                await asyncio.sleep(0.5)
+                print("Pretending to do something..")
+
+            def on_resumed(response: GenericResponse):
+                print("Simulation is resumed..")
+                print(response)
+
+            print("Resuming simulation..")
+            await self.send_message('simulation-command', {
+                'command': 'resume'
+            }, on_resumed)
+
         self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler_independent_response))
         self.router.add_route(Route('heartbeat-ack', GenericMessage, dummy_handler_with_response))
+        self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
+
 
         # Validate the runtime path and create a runtime instance.
         if self.config.runtime_path is not None:
@@ -232,7 +251,9 @@ class RuntimeBridge:
                """
 
         def convert_response_to_message(response_type: str, response_data: str):
-            response_message = GenericResponse(response_type, json.loads(response_data))
+            data = json.loads(response_data)
+            response_message = GenericResponse(response_type, data=data)
+            response_message.error = data.get('error')
             callback(response_message)
 
         if self.simulation.sim_id is None:
