@@ -1,9 +1,9 @@
 import asyncio
 import json
 import logging
+import sys
 import traceback
 import uuid
-from collections import namedtuple
 from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional
 
 T = TypeVar('T')
@@ -14,12 +14,28 @@ from aiohttp import web
 from attr import define
 import fable_saga.server as saga_server
 
-from . import Runtime, Simulation
+import thistle_gulch
+from . import Runtime, Simulation, API
+from .data_models import PersonaContextObject
 
 logger = logging.getLogger(__name__)
 
 # module level converter to convert between objects and dicts.
 converter = cattrs.Converter(forbid_extra_keys=True)
+saga_server.converter.forbid_extra_keys = False
+
+
+# Override the default saga_server request types to include a context_obj field when working with the runtime.
+@define(slots=True)
+class TGActionsRequest(saga_server.ActionsRequest):
+    """Enhanced ActionsRequest with a context_obj."""
+    context_obj: PersonaContextObject = None
+
+
+@define(slots=True)
+class TGConversationRequest(saga_server.ConversationRequest):
+    """Enhanced ConversationRequest with a context_obj."""
+    context_obj: PersonaContextObject = None
 
 """
 Sets up a server that can be used to generate actions for SAGA. Either HTTP or socketio can be used.
@@ -32,14 +48,6 @@ class GenericMessage:
     type: str
     data: dict = {}
     reference: str = None
-
-
-@define(slots=True)
-class GenericResponse:
-    """ A generic response that is sent."""
-    type: str
-    reference: str = None
-    data: dict = {}
     error: str = None
 
 
@@ -118,44 +126,40 @@ class RuntimeBridge:
         self.runtime = None
         self.simulation = Simulation()
         self.router = IncomingMessageRouter()
+        self.on_ready: Optional[Callable[[API], None]] = None
 
         # Add routes
+        async def on_ready_handler(request: GenericMessage):
+            """Handler for the simulation-ready message."""
+            logger.info(f"[Simulation Ready] received..")
+            thistle_gulch.api = API(self)
+            if self.on_ready is not None:
+                # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
+                self.on_ready(thistle_gulch.api)
+            else:
+                await thistle_gulch.api.resume()
+            return None
+        self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
+
+        # Add some dummy routes for testing.
         async def dummy_handler(request: GenericMessage):
             print(request)
             return None
 
         async def dummy_handler_with_response(request: GenericMessage):
             print(request)
-            return GenericResponse(type='heartbeat-ack', data={'ack': 'ack'}, reference=request.reference)
+            return GenericMessage(type='heartbeat-ack', data={'ack': 'ack'}, reference=request.reference)
 
         async def dummy_handler_independent_response(request: GenericMessage):
             await asyncio.sleep(.2)
 
-            def test_callback(response: GenericResponse):
+            def test_callback(response: GenericMessage):
                 print(response)
 
             await self.send_message('heartbeat-independent', {'ack': 'ack'}, test_callback)
 
-        async def on_ready_handler(request: GenericMessage):
-            print("Simulation is ready..")
-            print(request)
-
-            for i in range(4):
-                await asyncio.sleep(0.5)
-                print("Pretending to do something..")
-
-            def on_resumed(response: GenericResponse):
-                print("Simulation is resumed..")
-                print(response)
-
-            print("Resuming simulation..")
-            await self.send_message('simulation-command', {
-                'command': 'resume'
-            }, on_resumed)
-
         self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler_independent_response))
         self.router.add_route(Route('heartbeat-ack', GenericMessage, dummy_handler_with_response))
-        self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
 
 
         # Validate the runtime path and create a runtime instance.
@@ -172,7 +176,7 @@ class RuntimeBridge:
         self.app = web.Application()
 
         # Set up socketio
-        sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins=args.cors)
+        sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins=config.cors)
         sio.attach(self.app)
         self.sio = sio
 
@@ -203,7 +207,7 @@ class RuntimeBridge:
         async def generate_actions(sid, message_str: str):
             logger.info(f"[Generate Actions] Request from {sid}")
             logger.debug(f"[Generate Actions] Request from {sid}: {message_str}")
-            return await saga_server.generic_handler(message_str, saga_server.ActionsRequest,
+            return await saga_server.generic_handler(message_str, TGActionsRequest,
                                                      self.config.actions_endpoint.generate_actions,
                                                      saga_server.ActionsResponse)
 
@@ -212,16 +216,9 @@ class RuntimeBridge:
         async def generate_conversation(sid, message_str: str):
             logger.info(f"[Generate Conversation] Request from {sid}")
             logger.debug(f"[Generate Conversation] Request from {sid}: {message_str}")
-            return await saga_server.generic_handler(message_str, saga_server.ConversationRequest,
+            return await saga_server.generic_handler(message_str, TGConversationRequest,
                                                      self.config.conversation_endpoint.generate_conversation,
                                                      saga_server.ConversationResponse)
-
-        # Setup logging
-        formatter = logging.Formatter('%(asctime)s - thistle_gulch.bridge - %(levelname)s - %(message)s')
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
 
     def run(self):
         if self.runtime:
@@ -251,15 +248,18 @@ class RuntimeBridge:
                """
 
         def convert_response_to_message(response_type: str, response_data: str):
+            if response_data is None:
+                response_data = '{}'
+                logging.error(f'[Message Response] {response_type} response_data is None.')
             data = json.loads(response_data)
-            response_message = GenericResponse(response_type, data=data)
+            response_message = GenericMessage(response_type, data=data)
             response_message.error = data.get('error')
             callback(response_message)
 
         if self.simulation.sim_id is None:
             logging.error('Error: simulation client id is None.')
             if callback is not None:
-                callback(GenericResponse(type='error', error='simulation_client_id is None.'))
+                callback(GenericMessage(type='error', error='simulation_client_id is None.'))
             return
 
         reference = uuid.uuid4().hex
@@ -274,7 +274,8 @@ class RuntimeBridge:
             await self.sio.emit('messages', (msg.type, serialized_message), to=self.simulation.sim_id)
 
 
-if __name__ == '__main__':
+def main():
+
     dummy_config = BridgeConfig()
 
     # Parse command line arguments
@@ -291,3 +292,9 @@ if __name__ == '__main__':
     real_config = BridgeConfig(host=args.host, port=args.port, cors=args.cors, runtime_path=args.runtime)
     bridge = RuntimeBridge(real_config)
     bridge.run()
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                        format='<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s')
+    main()
