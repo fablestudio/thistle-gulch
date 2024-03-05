@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import sys
 import traceback
 import uuid
 from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional
@@ -221,13 +222,6 @@ class RuntimeBridge:
                                                      self.config.conversation_endpoint.generate_conversation,
                                                      saga_server.ConversationResponse)
 
-        # Setup logging
-        formatter = logging.Formatter('%(asctime)s - thistle_gulch.bridge - %(levelname)s - %(message)s')
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-
     def run(self):
         if self.runtime:
             logger.info('Runtime [Starting] ' + self.config.runtime_path)
@@ -283,6 +277,7 @@ class RuntimeBridge:
 
 
 def main():
+
     dummy_config = BridgeConfig()
 
     # Parse command line arguments
@@ -302,4 +297,6 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                        format='<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s')
     main()

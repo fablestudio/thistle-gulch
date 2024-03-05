@@ -1,6 +1,12 @@
+import logging
 from subprocess import Popen
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
+
+
+# This makes it easier to get the current api for now - we can change this later.
+api = None
+logger = logging.getLogger(__name__)
 
 
 class Runtime:

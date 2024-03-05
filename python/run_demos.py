@@ -1,9 +1,11 @@
-import thistle_gulch.bridge as tg_bridge
+import logging
+import sys
 
+import thistle_gulch.bridge as tg_bridge
 import demos.override_action_options as action_overrides
 
 
-if __name__ == "__main__":
+def main():
 
     # A list of available demos and the corresponding endpoint they override.
     options = [
@@ -12,7 +14,7 @@ if __name__ == "__main__":
     ]
 
     # Print the available demos and prompt the user to select one.
-    print (" -= Available Demos =- ")
+    print ("\n -= Available Demos =- ")
     for i, item in enumerate(options):
         print(f"{i}: {item[0].__name__}")
     while True:
@@ -32,3 +34,10 @@ if __name__ == "__main__":
 
     # Run the bridge.
     tg_bridge.main()
+
+
+if __name__ == "__main__":
+    # Setup logging
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                        format='<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s')
+    main()
