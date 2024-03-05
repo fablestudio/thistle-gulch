@@ -3,7 +3,6 @@ import json
 import logging
 import traceback
 import uuid
-from collections import namedtuple
 from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional
 
 T = TypeVar('T')
@@ -283,7 +282,7 @@ class RuntimeBridge:
             await self.sio.emit('messages', (msg.type, serialized_message), to=self.simulation.sim_id)
 
 
-if __name__ == '__main__':
+def main():
     dummy_config = BridgeConfig()
 
     # Parse command line arguments
@@ -300,3 +299,7 @@ if __name__ == '__main__':
     real_config = BridgeConfig(host=args.host, port=args.port, cors=args.cors, runtime_path=args.runtime)
     bridge = RuntimeBridge(real_config)
     bridge.run()
+
+
+if __name__ == '__main__':
+    main()
