@@ -66,14 +66,8 @@ class SequenceStep:
 
 @define(slots=True)
 class Conversation:
-    timestamp: datetime.datetime
-    turns: List['ConversationTurn']
-
-
-@define(slots=True)
-class ConversationTurn:
-    guid: str
-    dialogue: str
+    time_ago: str
+    transcript: List[Dict[str, str]]
 
 
 @define(slots=True)
