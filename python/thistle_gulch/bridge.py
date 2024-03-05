@@ -15,11 +15,26 @@ from attr import define
 import fable_saga.server as saga_server
 
 from . import Runtime, Simulation
+from .data_models import PersonaContextObject
 
 logger = logging.getLogger(__name__)
 
 # module level converter to convert between objects and dicts.
 converter = cattrs.Converter(forbid_extra_keys=True)
+saga_server.converter.forbid_extra_keys = False
+
+
+# Override the default saga_server request types to include a context_obj field when working with the runtime.
+@define(slots=True)
+class TGActionsRequest(saga_server.ActionsRequest):
+    """Enhanced ActionsRequest with a context_obj."""
+    context_obj: PersonaContextObject = None
+
+
+@define(slots=True)
+class TGConversationRequest(saga_server.ConversationRequest):
+    """Enhanced ConversationRequest with a context_obj."""
+    context_obj: PersonaContextObject = None
 
 """
 Sets up a server that can be used to generate actions for SAGA. Either HTTP or socketio can be used.
@@ -32,14 +47,6 @@ class GenericMessage:
     type: str
     data: dict = {}
     reference: str = None
-
-
-@define(slots=True)
-class GenericResponse:
-    """ A generic response that is sent."""
-    type: str
-    reference: str = None
-    data: dict = {}
     error: str = None
 
 
@@ -126,12 +133,12 @@ class RuntimeBridge:
 
         async def dummy_handler_with_response(request: GenericMessage):
             print(request)
-            return GenericResponse(type='heartbeat-ack', data={'ack': 'ack'}, reference=request.reference)
+            return GenericMessage(type='heartbeat-ack', data={'ack': 'ack'}, reference=request.reference)
 
         async def dummy_handler_independent_response(request: GenericMessage):
             await asyncio.sleep(.2)
 
-            def test_callback(response: GenericResponse):
+            def test_callback(response: GenericMessage):
                 print(response)
 
             await self.send_message('heartbeat-independent', {'ack': 'ack'}, test_callback)
@@ -144,19 +151,18 @@ class RuntimeBridge:
                 await asyncio.sleep(0.5)
                 print("Pretending to do something..")
 
-            def on_resumed(response: GenericResponse):
+            def on_resumed(response: GenericMessage):
                 print("Simulation is resumed..")
                 print(response)
 
             print("Resuming simulation..")
             await self.send_message('simulation-command', {
-                'command': 'resume'
+                'command': 'resume',
             }, on_resumed)
 
         self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler_independent_response))
         self.router.add_route(Route('heartbeat-ack', GenericMessage, dummy_handler_with_response))
         self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
-
 
         # Validate the runtime path and create a runtime instance.
         if self.config.runtime_path is not None:
@@ -172,7 +178,7 @@ class RuntimeBridge:
         self.app = web.Application()
 
         # Set up socketio
-        sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins=args.cors)
+        sio = socketio.AsyncServer(async_mode='aiohttp', cors_allowed_origins=config.cors)
         sio.attach(self.app)
         self.sio = sio
 
@@ -203,7 +209,7 @@ class RuntimeBridge:
         async def generate_actions(sid, message_str: str):
             logger.info(f"[Generate Actions] Request from {sid}")
             logger.debug(f"[Generate Actions] Request from {sid}: {message_str}")
-            return await saga_server.generic_handler(message_str, saga_server.ActionsRequest,
+            return await saga_server.generic_handler(message_str, TGActionsRequest,
                                                      self.config.actions_endpoint.generate_actions,
                                                      saga_server.ActionsResponse)
 
@@ -212,7 +218,7 @@ class RuntimeBridge:
         async def generate_conversation(sid, message_str: str):
             logger.info(f"[Generate Conversation] Request from {sid}")
             logger.debug(f"[Generate Conversation] Request from {sid}: {message_str}")
-            return await saga_server.generic_handler(message_str, saga_server.ConversationRequest,
+            return await saga_server.generic_handler(message_str, TGConversationRequest,
                                                      self.config.conversation_endpoint.generate_conversation,
                                                      saga_server.ConversationResponse)
 
@@ -251,15 +257,18 @@ class RuntimeBridge:
                """
 
         def convert_response_to_message(response_type: str, response_data: str):
+            if response_data is None:
+                response_data = '{}'
+                logging.error(f'[Message Response] {response_type} response_data is None.')
             data = json.loads(response_data)
-            response_message = GenericResponse(response_type, data=data)
+            response_message = GenericMessage(response_type, data=data)
             response_message.error = data.get('error')
             callback(response_message)
 
         if self.simulation.sim_id is None:
             logging.error('Error: simulation client id is None.')
             if callback is not None:
-                callback(GenericResponse(type='error', error='simulation_client_id is None.'))
+                callback(GenericMessage(type='error', error='simulation_client_id is None.'))
             return
 
         reference = uuid.uuid4().hex
