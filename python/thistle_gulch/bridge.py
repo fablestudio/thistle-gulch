@@ -14,7 +14,8 @@ from aiohttp import web
 from attr import define
 import fable_saga.server as saga_server
 
-from . import Runtime, Simulation
+import thistle_gulch
+from . import Runtime, Simulation, API
 from .data_models import PersonaContextObject
 
 logger = logging.getLogger(__name__)
@@ -125,8 +126,22 @@ class RuntimeBridge:
         self.runtime = None
         self.simulation = Simulation()
         self.router = IncomingMessageRouter()
+        self.on_ready: Optional[Callable[[API], None]] = None
 
         # Add routes
+        async def on_ready_handler(request: GenericMessage):
+            """Handler for the simulation-ready message."""
+            logger.info(f"[Simulation Ready] received..")
+            thistle_gulch.api = API(self)
+            if self.on_ready is not None:
+                # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
+                self.on_ready(thistle_gulch.api)
+            else:
+                await thistle_gulch.api.resume()
+            return None
+        self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
+
+        # Add some dummy routes for testing.
         async def dummy_handler(request: GenericMessage):
             print(request)
             return None
@@ -143,26 +158,9 @@ class RuntimeBridge:
 
             await self.send_message('heartbeat-independent', {'ack': 'ack'}, test_callback)
 
-        async def on_ready_handler(request: GenericMessage):
-            print("Simulation is ready..")
-            print(request)
-
-            for i in range(4):
-                await asyncio.sleep(0.5)
-                print("Pretending to do something..")
-
-            def on_resumed(response: GenericMessage):
-                print("Simulation is resumed..")
-                print(response)
-
-            print("Resuming simulation..")
-            await self.send_message('simulation-command', {
-                'command': 'resume',
-            }, on_resumed)
-
         self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler_independent_response))
         self.router.add_route(Route('heartbeat-ack', GenericMessage, dummy_handler_with_response))
-        self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
+
 
         # Validate the runtime path and create a runtime instance.
         if self.config.runtime_path is not None:

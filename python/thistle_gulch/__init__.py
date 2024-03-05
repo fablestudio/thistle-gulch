@@ -1,7 +1,10 @@
 import logging
 from subprocess import Popen
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Callable, TYPE_CHECKING
 from datetime import datetime, timedelta
+
+if TYPE_CHECKING:
+    from .bridge import RuntimeBridge, GenericMessage
 
 
 # This makes it easier to get the current api for now - we can change this later.
@@ -50,3 +53,25 @@ class Simulation:
 
     async def receive_message(self, msg):
         pass
+
+
+class API:
+
+    def __init__(self, bridge: "RuntimeBridge"):
+        self.bridge = bridge
+
+    async def resume(self, callback: Optional[Callable[["GenericMessage"], None]] = None):
+        logger.info("Resuming simulation")
+        await self.bridge.send_message('simulation-command', {
+            'command': 'resume',
+        }, callback)
+
+    async def pause(self, callback: Optional[Callable[["GenericMessage"], None]] = None):
+        await self.bridge.send_message('simulation-command', {
+            'command': 'pause',
+        }, callback)
+
+    async def set_time(self, speed: str, callback: Optional[Callable[["GenericMessage"], None]] = None):
+        await self.bridge.send_message('simulation-command', {
+            'set-speed': speed,
+        }, callback)

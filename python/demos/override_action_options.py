@@ -13,7 +13,7 @@ class PrintActionsAndPickFirst:
         super().__init__()
         self.agent = fable_saga.SagaAgent(llm)
 
-    async def generate_actions(self, req: saga_server.ActionsRequest) -> saga_server.ActionsResponse:
+    async def generate_actions(self, req: thistle_gulch.bridge.TGActionsRequest) -> saga_server.ActionsResponse:
         # Generate actions
         try:
             assert isinstance(req, saga_server.ActionsRequest), f"Invalid request type: {type(req)}"
@@ -43,7 +43,7 @@ class SkipSagaAlwaysDoTheDefaultAction:
     async def generate_actions(self, req: saga_server.ActionsRequest) -> saga_server.ActionsResponse:
         # Generate actions
         try:
-            assert isinstance(req, saga_server.ActionsRequest), f"Invalid request type: {type(req)}"
+            assert isinstance(req, thistle_gulch.bridge.TGActionsRequest), f"Invalid request type: {type(req)}"
 
             # Override action options by always picking the default action.
             default_action = fable_saga.Action(
