@@ -112,6 +112,12 @@ class Memory:
 
 
 @define(slots=True)
+class PersonaMemories:
+    persona_guid: str
+    memories: List[Memory]
+
+
+@define(slots=True)
 class Inventory:
     owner_guid: str
     resources: List[str]
@@ -128,13 +134,12 @@ class Interactions:
 @define(slots=True)
 class PersonaContextObject:
     time: str
-    self_persona: Persona
-    other_personas: List[Persona]
-    self_observation: Observation
+    participants: List[str]
+    personas: List[Persona]
     observations: List[Observation]
     inventories: List[Inventory]
     conversations: List[Conversation]
     interactions: List[Interactions]
     locations: List[Location]
-    memories: List[Memory]
+    memories: List[PersonaMemories]
     default_action: str
