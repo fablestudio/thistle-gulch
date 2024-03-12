@@ -1,5 +1,6 @@
 import logging
 import sys
+import fable_saga.server as saga_server
 
 import thistle_gulch.bridge as tg_bridge
 import demos.override_action_options as action_overrides
@@ -9,9 +10,11 @@ def main():
 
     # A list of available demos and the corresponding endpoint they override.
     options = [
+        (saga_server.SagaServer, "actions_endpoint"),
         (action_overrides.PrintActionsAndPickFirst, "actions_endpoint"),
         (action_overrides.SkipSagaAlwaysDoTheDefaultAction, "actions_endpoint"),
         (action_overrides.ReplaceContextWithYamlDump, "actions_endpoint"),
+        (action_overrides.UseLlama2Model, "actions_endpoint")
     ]
 
     # Print the available demos and prompt the user to select one.

@@ -221,6 +221,15 @@ class RuntimeBridge:
                                                      saga_server.ConversationResponse)
 
     def run(self):
+        print("""
+  _______ _     _     _   _         _____       _      _     
+ |__   __| |   (_)   | | | |       / ____|     | |    | |    
+    | |  | |__  _ ___| |_| | ___  | |  __ _   _| | ___| |__  
+    | |  | '_ \| / __| __| |/ _ \ | | |_ | | | | |/ __| '_ \ 
+    | |  | | | | \__ \ |_| |  __/ | |__| | |_| | | (__| | | |
+    |_|  |_| |_|_|___/\__|_|\___|  \_____|\__,_|_|\___|_| |_|
+""")
+
         if self.runtime:
             logger.info('Runtime [Starting] ' + self.config.runtime_path)
             self.runtime.start()
