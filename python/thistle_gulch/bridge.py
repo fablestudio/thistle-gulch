@@ -165,12 +165,27 @@ class RuntimeBridge:
         # Validate the runtime path and create a runtime instance.
         if self.config.runtime_path is not None:
             split_args = self.config.runtime_path.split()
-            assert len(split_args) > 0
+            assert len(split_args) > 0, f"Error: Empty --runtime path"
+
+            runtime_arg_index = 1
+            runtime_path_str = split_args[0]
+            for runtime_arg_index in range(1, len(split_args)):
+                arg = split_args[runtime_arg_index]
+                # Detect the first runtime flag
+                if arg.startswith("-"):
+                    break
+                # Re-join the runtime path if it has spaces
+                else:
+                    runtime_path_str += " " + arg
+
+            # Validate runtime path
             import pathlib
-            path = pathlib.Path(split_args[0])
-            assert path.exists()
-            assert path.is_file()
-            self.runtime = Runtime(split_args[0], split_args[1:])
+            path = pathlib.Path(runtime_path_str)
+            assert path.exists(), f"Error: --runtime path not found: \"{runtime_path_str}\""
+            assert path.is_file(), f"Error: --runtime path is not a file: \"{runtime_path_str}\""
+
+            runtime_args = split_args[runtime_arg_index:]
+            self.runtime = Runtime(runtime_path_str, runtime_args)
 
         # Set up the async web server via aiohttp - this is the server that will handle the socketio connections.
         self.app = web.Application()
