@@ -163,3 +163,33 @@ class UseLlama2Model:
         except Exception as e:
             logger.exception(str(e))
             return saga_server.ActionsResponse(actions=None, error=str(e), reference=req.reference)
+
+
+class UseClaude3FromAnthropic:
+    """ Server for SAGA. """
+
+    def __init__(self):
+        super().__init__()
+        from langchain.chat_models.anthropic import ChatAnthropic
+        self.llm = ChatAnthropic(model_name='claude-3-opus-20240229')
+        self.agent = fable_saga.SagaAgent(self.llm)
+
+        def generate_chain(_) -> LLMChain:
+            return LLMChain(llm=self.llm, prompt=self.agent.generate_actions_prompt)
+        self.agent.generate_chain = generate_chain
+
+    async def generate_actions(self, req: thistle_gulch.bridge.TGActionsRequest) -> saga_server.ActionsResponse:
+        # Generate actions
+        try:
+            assert isinstance(req, saga_server.ActionsRequest), f"Invalid request type: {type(req)}"
+            actions = await self.agent.generate_actions(req.context, req.skills, req.retries, req.verbose, req.model)
+            # Override action options by first printing the action options to the console. Then, only pass back the first action option.
+            print(json.dumps(cattrs.unstructure(actions.options), indent=2))
+
+            response = saga_server.ActionsResponse(actions=actions, reference=req.reference)
+            if actions.error is not None:
+                response.error = f"Generation Error: {actions.error}"
+            return response
+        except Exception as e:
+            logger.exception(str(e))
+            return saga_server.ActionsResponse(actions=None, error=str(e), reference=req.reference)

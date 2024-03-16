@@ -14,7 +14,8 @@ def main():
         (action_overrides.PrintActionsAndPickFirst, "actions_endpoint"),
         (action_overrides.SkipSagaAlwaysDoTheDefaultAction, "actions_endpoint"),
         (action_overrides.ReplaceContextWithYamlDump, "actions_endpoint"),
-        (action_overrides.UseLlama2Model, "actions_endpoint")
+        (action_overrides.UseLlama2Model, "actions_endpoint"),
+        (action_overrides.UseClaude3FromAnthropic, "actions_endpoint")
     ]
 
     # Print the available demos and prompt the user to select one.
