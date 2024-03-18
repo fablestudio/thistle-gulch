@@ -4,6 +4,8 @@ A Multi-Agent Gym Environment (MAGE) set in the wild west to simulate the action
 
 <img width="400px" src="docs/images/thistle-gulch-logo-and-background.jpg" alt="thistle gulch logo" title="Thistle Gulch Logo">
 
+⚠️ NOTE: To use this repo, you need access to the Thistle-Gulch Runtime as well. [Apply for Beta Access on our Website](https://blog.fabledev.com/blog/beta-application-for-thistle-gulch-now-open).
+
 ## About
 This project consists of two parts that work together: The [Thistle Gulch Simulation](https://fablestudio.itch.io/thistle-gulch) running in
 a 3D game engine we call a "Runtime" and a python bridge (referred to simply as the "Bridge" from here 
