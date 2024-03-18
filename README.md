@@ -16,7 +16,7 @@ on out) that acts similar to a client for the Runtime. The Bridge also leverages
 
 ## Quick Start
 
-0. Make sure you have python, openAI env var, and poetry installed at least. See Wiki for [Dependencies on Windows, Linux, or macOS](fablestudio/thistle-gulch/wiki/Dependencies)
+0. Make sure you have python, openAI env var, and poetry installed at least. See Wiki for [Dependencies on Windows, Linux, or macOS](https://github.com/fablestudio/thistle-gulch/wiki/Dependencies)
 1. Sign up for the Thistle Gulch beta at https://blog.fabledev.com/blog/beta-application-for-thistle-gulch-now-open and wait to receive your itch.io invite link.
 2. Download and install the Thistle Gulch Runtime from itch.io
 3. Make sure you have git, python-3.10/11, poetry installed, and your OPENAI key setup (see Installing Dependencies below.)
@@ -46,7 +46,7 @@ Resuming simulation
 ```
 
 The icon in the upper-right corner of the Runtime will remain red as long as the bridge is connected and you should quickly see the simulation pause and open a modal with options for wyatt_cooper. You can choose which option you want him to do.
-Note that the options are sorted by their score, so the "best" option should be at the top. See the wiki for more details on using the Runtime.
+Note that the options are sorted by their score, so the "best" option should be at the top. See the [wiki](https://github.com/fablestudio/thistle-gulch/wiki) for more details on using the Runtime.
 
 # Making Thistle Gulch your own.
-There are lots of ways to customize Thistle Gulch, with more coming in each release. Head over to the [WIKI](wiki) for more in-depth discussion on how to customize Thistle Gulch.
+There are lots of ways to customize Thistle Gulch, with more coming in each release. Head over to the [WIKI](https://github.com/fablestudio/thistle-gulch/wiki) for more in-depth discussion on how to customize Thistle Gulch.
