@@ -5,7 +5,10 @@ A Multi-Agent Gym Environment (MAGE) set in the wild west to simulate the action
 <img width="400px" src="docs/images/thistle-gulch-logo-and-background.jpg" alt="thistle gulch logo" title="Thistle Gulch Logo">
 
 ## About
-This project consists of two parts that work together: The [Thistle Gulch Simulation](https://fablestudio.itch.io/thistle-gulch) running in a 3D game engine we call a "Runtime" and a python bridge (referred to simply as the "Bridge" from here on out) that acts similar to a client for the Runtime. The Bridge also leverages our [open-source SAGA python library] (https://github.com/fablestudio/fable-saga) to generate actions and conversations. The simulation is rendered in 3D using the Thistle Gulch Runtime app which can be downloaded from itch.io. The Bridge allows many aspects of the simulation to be customized or overridden by manipulating the metadata and/or prompts that are sent to SAGA. While each CAN be run independently - for the proper functioning, you will need both parts. The bridge is available in this repo under a non-commercial use open-source license, while the Runtime is currently available for free under our standard Fable Studio EULA.
+This project consists of two parts that work together: The [Thistle Gulch Simulation](https://fablestudio.itch.io/thistle-gulch) running in
+a 3D game engine we call a "Runtime" and a python bridge (referred to simply as the "Bridge" from here 
+on out) that acts similar to a client for the Runtime. The Bridge also leverages our
+[open-source SAGA python library](https://github.com/fablestudio/fable-saga) to generate actions and conversations. The simulation is rendered in 3D using the Thistle Gulch Runtime app which can be downloaded from itch.io. The Bridge allows many aspects of the simulation to be customized or overridden by manipulating the metadata and/or prompts that are sent to SAGA. While each CAN be run independently - for the proper functioning, you will need both parts. The bridge is available in this repo under a non-commercial use open-source license, while the Runtime is currently available for free under our standard Fable Studio EULA.
 
 <img width="75%" src="docs/images/Murder+Investigation.jpg">
 
