@@ -142,10 +142,14 @@ class RuntimeBridge:
                     """Handler for the set-start-date message."""
                     if response.error is None:
                         await thistle_gulch.api.resume()
-
-                start_date = datetime.fromisoformat(ready_response.data.get("start_date"))
-                # Override the start date here as needed. e.g. start_date = start_date + timedelta(hours=9)
-                await thistle_gulch.api.set_start_date(start_date.isoformat(), on_set_start_date_handler)
+                try:
+                    assert "start_date" in ready_response.data, f"Error: start_date not in ready_response.data"
+                    start_date = datetime.fromisoformat(ready_response.data["start_date"])
+                    # Override the start date here as needed. e.g. start_date = start_date + timedelta(hours=9)
+                    await thistle_gulch.api.set_start_date(start_date.isoformat(), on_set_start_date_handler)
+                except Exception as e:
+                    logger.exception(f"Error setting start date: {e}")
+                await thistle_gulch.api.resume()
             return None
         self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
 
