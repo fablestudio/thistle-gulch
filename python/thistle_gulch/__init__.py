@@ -1,6 +1,6 @@
 import logging
 from subprocess import Popen
-from typing import List, Optional, Dict, Callable, TYPE_CHECKING, Any
+from typing import List, Optional, Dict, Callable, TYPE_CHECKING, Any, Awaitable
 from datetime import datetime, timedelta
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class API:
     def __init__(self, bridge: "RuntimeBridge"):
         self.bridge = bridge
 
-    async def resume(self, callback: Optional[Callable[["GenericMessage"], Any]] = None):
+    async def resume(self, callback: Optional[Callable[["GenericMessage"], Awaitable[None]]] = None):
         """
         Start or resume the simulation using the last known simulation speed
 
@@ -71,7 +71,7 @@ class API:
             'command': 'resume',
         }, callback)
 
-    async def pause(self, callback: Optional[Callable[["GenericMessage"], Any]] = None):
+    async def pause(self, callback: Optional[Callable[["GenericMessage"], Awaitable[None]]] = None):
         """
         Pause the simulation
 
@@ -82,7 +82,7 @@ class API:
             'command': 'pause',
         }, callback)
 
-    async def set_speed(self, speed: str, callback: Optional[Callable[["GenericMessage"], Any]] = None):
+    async def set_speed(self, speed: str, callback: Optional[Callable[["GenericMessage"], Awaitable[None]]] = None):
         """
         Change the speed of the simulation
 
@@ -101,7 +101,7 @@ class API:
             'speed': speed,
         }, callback)
 
-    async def set_start_date(self, iso_date: str, callback: Optional[Callable[["GenericMessage"], Any]] = None):
+    async def set_start_date(self, iso_date: str, callback: Optional[Callable[["GenericMessage"],  Awaitable[None]]] = None):
         """
         Set the simulation start date using an ISO 8601 string
 

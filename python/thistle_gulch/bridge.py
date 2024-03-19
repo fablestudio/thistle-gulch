@@ -5,7 +5,7 @@ import sys
 import traceback
 import uuid
 from datetime import datetime, timedelta
-from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional
+from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional, Awaitable
 
 T = TypeVar('T')
 
@@ -64,7 +64,7 @@ class BridgeConfig:
 
 
 class Route:
-    def __init__(self, msg_type: str, msg_class: Type[T], process_function: Callable[[T], Any]):
+    def __init__(self, msg_type: str, msg_class: Type[T], process_function: Callable[[T], Awaitable[None]]):
         self.msg_type = msg_type
         self.msg_class = msg_class
         self.process_function = process_function
@@ -270,7 +270,7 @@ class RuntimeBridge:
             self.runtime.terminate()
             logger.info('Runtime [Stopped]')
 
-    async def send_message(self, msg_type, data, callback: Optional[Callable[[T], Any]]):
+    async def send_message(self, msg_type, data, callback: Optional[Callable[[T],  Awaitable[None]]]):
         """
                Send a request to the runtime.
                :param msg_type: type of message.
@@ -292,7 +292,7 @@ class RuntimeBridge:
         if self.simulation.sim_id is None:
             logging.error('Error: simulation client id is None.')
             if callback is not None:
-                callback(GenericMessage(type='error', error='simulation_client_id is None.'))
+                await callback(GenericMessage(type='error', error='simulation_client_id is None.'))
             return
 
         reference = uuid.uuid4().hex
