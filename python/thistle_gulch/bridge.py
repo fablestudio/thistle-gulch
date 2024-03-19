@@ -4,6 +4,7 @@ import logging
 import sys
 import traceback
 import uuid
+from datetime import datetime, timedelta
 from typing import Callable, Union, Dict, Type, Any, TypeVar, Optional
 
 T = TypeVar('T')
@@ -129,7 +130,7 @@ class RuntimeBridge:
         self.on_ready: Optional[Callable[[API], None]] = None
 
         # Add routes
-        async def on_ready_handler(request: GenericMessage):
+        async def on_ready_handler(ready_response: GenericMessage):
             """Handler for the simulation-ready message."""
             logger.info(f"[Simulation Ready] received..")
             thistle_gulch.api = API(self)
@@ -137,7 +138,14 @@ class RuntimeBridge:
                 # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
                 self.on_ready(thistle_gulch.api)
             else:
-                await thistle_gulch.api.resume()
+                async def on_set_start_date_handler(response: GenericMessage):
+                    """Handler for the set-start-date message."""
+                    if response.error is None:
+                        await thistle_gulch.api.resume()
+
+                start_date = datetime.fromisoformat(ready_response.data.get("start_date"))
+                # Override the start date here as needed. e.g. start_date = start_date + timedelta(hours=9)
+                await thistle_gulch.api.set_start_date(start_date.isoformat(), on_set_start_date_handler)
             return None
         self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
 
@@ -262,23 +270,24 @@ class RuntimeBridge:
             self.runtime.terminate()
             logger.info('Runtime [Stopped]')
 
-    async def send_message(self, msg_type, data, callback: Optional[Callable[[T], None]]):
+    async def send_message(self, msg_type, data, callback: Optional[Callable[[T], Any]]):
         """
                Send a request to the runtime.
-               :param msg_type:
                :param msg_type: type of message.
                :param data: data to send with the message.
                :param callback: [Optional] function to call when the server responds.
                """
 
-        def convert_response_to_message(response_type: str, response_data: str):
+        async def convert_response_to_message(response_type: str, response_data: str):
             if response_data is None:
                 response_data = '{}'
                 logging.error(f'[Message Response] {response_type} response_data is None.')
             data = json.loads(response_data)
             response_message = GenericMessage(response_type, data=data)
             response_message.error = data.get('error')
-            callback(response_message)
+            if response_message.error:
+                logger.error(f"{response_message.type} Error: {response_message.error}")
+            await callback(response_message)
 
         if self.simulation.sim_id is None:
             logging.error('Error: simulation client id is None.')
