@@ -132,30 +132,24 @@ class RuntimeBridge:
         self.runtime = None
         self.simulation = Simulation()
         self.router = IncomingMessageRouter()
-        self.on_ready: Optional[Callable[[API], None]] = None
+        self.on_ready: Optional[Callable[[RuntimeBridge], Awaitable[None]]] = None
+        self.emit_lock = asyncio.Lock()
+        self.api = API(self)
 
         # Add routes
         async def on_ready_handler(ready_response: GenericMessage):
             """Handler for the simulation-ready message."""
             logger.info(f"[Simulation Ready] received..")
-            thistle_gulch.api = API(self)
             if self.on_ready is not None:
                 # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
-                self.on_ready(thistle_gulch.api)
+                logger.info(f"[Simulation Ready] Calling on_ready callback..")
+                await self.on_ready(self)
             else:
-                async def on_set_start_date_handler(response: GenericMessage):
-                    """Handler for the set-start-date message."""
-                    if response.error is None:
-                        await thistle_gulch.api.resume()
-                try:
-                    assert "start_date" in ready_response.data, f"Error: start_date not in ready_response.data"
-                    start_date = datetime.fromisoformat(ready_response.data["start_date"])
-                    # Override the start date here as needed. e.g. start_date = start_date + timedelta(hours=9)
-                    await thistle_gulch.api.set_start_date(start_date.isoformat(), on_set_start_date_handler)
-                except Exception as e:
-                    logger.exception(f"Error setting start date: {e}")
-                await thistle_gulch.api.resume()
-            return None
+                logger.info(f"[Simulation Ready] No on_ready callback registered..")
+
+            logger.info(f"[Simulation Ready] Resuming simulation..")
+            await self.api.resume()
+
         self.router.add_route(Route('simulation-ready', GenericMessage, on_ready_handler))
 
         # Add some dummy routes for testing.
@@ -177,7 +171,6 @@ class RuntimeBridge:
 
         self.router.add_route(Route('heartbeat', GenericMessage, dummy_handler_independent_response))
         self.router.add_route(Route('heartbeat-ack', GenericMessage, dummy_handler_with_response))
-
 
         # Validate the runtime path and create a runtime instance.
         if self.config.runtime_path is not None:
@@ -360,8 +353,8 @@ class RuntimeBridge:
         response = GenericMessage(type=response_type, data=data, reference=reference)
         return response
 
-def main():
 
+def main(auto_run=True) -> RuntimeBridge:
     dummy_config = BridgeConfig()
 
     # Parse command line arguments
@@ -377,7 +370,9 @@ def main():
     # Run the bridge server.
     real_config = BridgeConfig(host=args.host, port=args.port, cors=args.cors, runtime_path=args.runtime)
     bridge = RuntimeBridge(real_config)
-    bridge.run()
+    if auto_run:
+        bridge.run()
+    return bridge
 
 
 if __name__ == '__main__':
