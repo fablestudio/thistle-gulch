@@ -132,8 +132,6 @@ and the chosen skill options.""".replace("\n", " ")
 class UseLlama2Model:
     """ Server for SAGA. """
 
-
-
     def __init__(self):
         super().__init__()
         from thistle_gulch.llms import AsyncOllama
@@ -150,7 +148,8 @@ class UseLlama2Model:
             assert isinstance(req, saga_server.ActionsRequest), f"Invalid request type: {type(req)}"
             actions = await self.agent.generate_actions(req.context, req.skills, req.retries, req.verbose, req.model)
 
-            # Override action options by first printing the action options to the console. Then, only pass back the first action option.
+            # Override action options by first printing the action options to the console.
+            # Then, only pass back the first action option.
             print(json.dumps(cattrs.unstructure(actions.options), indent=2))
             if len(actions.options) > 1:
                 actions.options = [actions.options[0]]
