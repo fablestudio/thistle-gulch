@@ -60,7 +60,7 @@ class API:
     def __init__(self, bridge: "RuntimeBridge"):
         self.bridge = bridge
 
-    async def resume(self, callback: Optional[Callable[["GenericMessage"], Awaitable[None]]] = None):
+    async def resume(self) -> None:
         """
         Start or resume the simulation using the last known simulation speed
 
@@ -69,9 +69,9 @@ class API:
         logger.info("Resuming simulation")
         await self.bridge.send_message('simulation-command', {
             'command': 'resume',
-        }, callback)
+        })
 
-    async def pause(self, callback: Optional[Callable[["GenericMessage"], Awaitable[None]]] = None):
+    async def pause(self) -> None:
         """
         Pause the simulation
 
@@ -80,9 +80,9 @@ class API:
         logger.info("Pausing simulation")
         await self.bridge.send_message('simulation-command', {
             'command': 'pause',
-        }, callback)
+        })
 
-    async def set_speed(self, speed: str, callback: Optional[Callable[["GenericMessage"], Awaitable[None]]] = None):
+    async def set_speed(self, speed: str) -> None:
         """
         Change the speed of the simulation
 
@@ -99,9 +99,9 @@ class API:
         await self.bridge.send_message('simulation-command', {
             'command': 'set-speed',
             'speed': speed,
-        }, callback)
+        })
 
-    async def set_start_date(self, iso_date: str, callback: Optional[Callable[["GenericMessage"],  Awaitable[None]]] = None):
+    async def set_start_date(self, iso_date: str) -> None:
         """
         Set the simulation start date using an ISO 8601 string
 
@@ -115,4 +115,4 @@ class API:
         await self.bridge.send_message('simulation-command', {
             'command': 'set-start-date',
             'iso_date': iso_date,
-        }, callback)
+        })
