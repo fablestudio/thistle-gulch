@@ -1,12 +1,11 @@
 import logging
 import sys
-import fable_saga.server as saga_server
+from typing import List
 
-import thistle_gulch.bridge as tg_bridge
-
-from demos import Demo
 import demos.override_action_options as action_overrides
 import demos.simulation_commands as simulation_commands
+import thistle_gulch.bridge as tg_bridge
+from demos import Demo, DefaultSagaServerDemo
 
 
 def main():
@@ -14,24 +13,31 @@ def main():
     bridge = tg_bridge.main(auto_run=False)
 
     # A list of available demos and the corresponding endpoint they override.
-    options = [
-        # (saga_server.SagaServer, "actions_endpoint"),
-        # (action_overrides.PrintActionsAndPickFirst, "actions_endpoint"),
-        # (action_overrides.SkipSagaAlwaysDoTheDefaultAction, "actions_endpoint"),
-        # (action_overrides.ReplaceContextWithYamlDump, "actions_endpoint"),
-        # (action_overrides.UseLlama2Model, "actions_endpoint"),
-        (simulation_commands.SetStartTimeDemo()),
+    options: List[Demo] = [
+        DefaultSagaServerDemo(),
+        action_overrides.PrintActionsAndPickFirstDemo(),
+        action_overrides.SkipSagaAlwaysDoTheDefaultActionDemo(),
+        action_overrides.ReplaceContextWithYamlDumpDemo(),
+        action_overrides.UseLlama2ModelDemo(),
+        simulation_commands.SetStartTimeDemo(),
     ]
 
     # Print the available demos and prompt the user to select one.
-    print ("\n -= Available Demos =- ")
+    print("\n -= Available Demos =- ")
+    last_category = None
     for i, item in enumerate(options):
-        print(f"{i}: {item.name}")
+        if item.category != last_category:
+            print(f"\n -= {item.category} =-")
+            last_category = item.category
+        print(f"> {i}: {item.name} - {item.description}")
     while True:
         try:
+            print()
             pick = int(input("Pick a demo to run: "))
             if pick >= len(options) or pick < 0:
-                print("Invalid input. Please enter a number between 0 and", len(options))
+                print(
+                    "Invalid input. Please enter a number between 0 and", len(options)
+                )
                 continue
             break
         except ValueError:
@@ -48,6 +54,9 @@ def main():
 
 if __name__ == "__main__":
     # Setup logging
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                        format='<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s')
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
+    )
     main()

@@ -1,6 +1,9 @@
 from datetime import datetime
+
 from thistle_gulch.bridge import RuntimeBridge
 from . import Demo
+
+CATEGORY = "Simulation Commands"
 
 
 class SetStartTimeDemo(Demo):
@@ -8,7 +11,8 @@ class SetStartTimeDemo(Demo):
         super().__init__(
             name="Set Start Time",
             description="Set the start time of the simulation.",
-            function=self.set_start_time_demo
+            category=CATEGORY,
+            function=self.set_start_time_demo,
         )
 
     def set_start_time_demo(self, bridge: RuntimeBridge):
