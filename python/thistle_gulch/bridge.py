@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 # module level converter to convert between objects and dicts.
 converter = cattrs.Converter(forbid_extra_keys=True)
+# Register a hook to convert datetime objects to and from isoformat strings.
+converter.register_unstructure_hook(datetime, lambda dt: dt.isoformat())
+converter.register_structure_hook(datetime, lambda dt: dt.fromisoformat(dt))
+
 saga_server.converter.forbid_extra_keys = False
 
 
@@ -37,6 +41,7 @@ class TGActionsRequest(saga_server.ActionsRequest):
 class TGConversationRequest(saga_server.ConversationRequest):
     """Enhanced ConversationRequest with a context_obj."""
     context_obj: PersonaContextObject = None
+
 
 """
 Sets up a server that can be used to generate actions for SAGA. Either HTTP or socketio can be used.
