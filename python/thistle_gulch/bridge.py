@@ -274,7 +274,7 @@ class RuntimeBridge:
             self.runtime.terminate()
             logger.info('Runtime [Stopped]')
 
-    async def send_message(self, msg_type, data, callback: Optional[Callable[[T],  Awaitable[None]]]):
+    async def send_message(self, msg_type, data, timeout=5) -> GenericMessage:
         """
                Send a request to the runtime.
                :param msg_type: type of message.
@@ -282,34 +282,78 @@ class RuntimeBridge:
                :param callback: [Optional] function to call when the server responds.
                """
 
-        async def convert_response_to_message(response_type: str, response_data: str):
-            if response_data is None:
-                response_data = '{}'
-                logging.error(f'[Message Response] {response_type} response_data is None.')
-            data = json.loads(response_data)
-            response_message = GenericMessage(response_type, data=data)
-            response_message.error = data.get('error')
-            if response_message.error:
-                logger.error(f"{response_message.type} Error: {response_message.error}")
-            await callback(response_message)
+        # Create a Future object that we will use to wait for the callback response
+        future = asyncio.Future()
+
+        # Define a callback function that will be called when the emit() receives a response
+        async def callback(response_type: str, response_data: str):
+            self.emit_lock.release()
+            # If the future is already done (cancelled), then we don't need to do anything.
+            if future.done():
+                return None
+            # Set the future result, which will unblock the send_message function.
+            future.set_result((response_type, response_data))
 
         if self.simulation.sim_id is None:
-            logging.error('Error: simulation client id is None.')
-            if callback is not None:
-                await callback(GenericMessage(type='error', error='simulation_client_id is None.'))
-            return
+            err = f'[Message Request] Error: simulation client id is None.'
+            logging.error(err)
+            raise ValueError(err)
 
+        # Create a reference for the message so that we can match the response to the request.
         reference = uuid.uuid4().hex
-        msg = GenericMessage(type=msg_type, data=data, reference=reference)
-        serialized_message = json.dumps(converter.unstructure(msg))
+        # Create a GenericMessage object and serialize it to a string so that it can be sent to the Runtime.
+        request_msg = GenericMessage(type=msg_type, data=data, reference=reference)
+        serialized_message = json.dumps(converter.unstructure(request_msg))
 
-        if callback is not None:
-            await self.sio.emit('messages', (msg.type, serialized_message), to=self.simulation.sim_id,
-                                callback=convert_response_to_message)
+        # Acquire the emit lock to prevent multiple emits from happening at the same time.
+        await self.emit_lock.acquire()
+        try:
+            await self.sio.emit('messages', (request_msg.type, serialized_message), to=self.simulation.sim_id,
+                                callback=callback)
+        except Exception as e:
+            err = f"[Message Request] Error sending message: {str(e)}"
+            logging.error(err)
+            # Release the emit lock if an error occurs.
+            self.emit_lock.release()
+            raise e
 
-        else:
-            await self.sio.emit('messages', (msg.type, serialized_message), to=self.simulation.sim_id)
+        # Wait for the future to have a result, with timeout
+        try:
+            # Wait for the Future object to have a result, with timeout
+            response_type, response_data = await asyncio.wait_for(future, timeout)
+        except asyncio.TimeoutError as e:
+            # Handle the case where the future times out
+            err = f"[Message Response] Response timed out after {timeout} seconds"
+            logging.error(err)
+            raise e
+        except Exception as e:
+            # Handle other exceptions that could occur
+            err = f"[Message Response] Response exception: {str(e)}"
+            logging.error(err)
+            raise e
 
+        # Parse the response_data and set the future result.
+        try:
+            data = json.loads(response_data)
+        except json.JSONDecodeError as e:
+            err = f'[Message Response] {response_type} Error decoding JSON: {str(e)}'
+            logging.error(err)
+            raise e
+
+        if data.get('error'):
+            err = f'[Message Response] {response_type} Runtime Error: {data.get("error")}'
+            logging.error(err)
+            raise ValueError(err)
+
+        # Validate that the response_data is a dictionary.
+        if not isinstance(data, dict):
+            err = f'[Message Response] Error: data not a dictionary.'
+            logging.error(err)
+            raise ValueError(err)
+
+        # Convert to a GenericMessage.
+        response = GenericMessage(type=response_type, data=data, reference=reference)
+        return response
 
 def main():
 
