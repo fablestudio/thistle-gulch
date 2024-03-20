@@ -25,7 +25,7 @@ class SetStartTimeDemo(Demo):
 
         async def on_ready(_):
             print(f"Setting the start time of the simulation to {date}")
-            await bridge.api.set_start_date(date)
+            await bridge.runtime.api.set_start_date(date)
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready

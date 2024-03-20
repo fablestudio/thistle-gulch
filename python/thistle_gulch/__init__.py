@@ -1,118 +1,123 @@
 import logging
-from subprocess import Popen
-from typing import List, Optional, Dict, Callable, TYPE_CHECKING, Any, Awaitable
 from datetime import datetime, timedelta
+import json
+from typing import Type, Awaitable, Any, Callable, Dict, TypeVar
+import cattrs
+from attr import define
+import uuid
+import traceback
+import sys
 
-if TYPE_CHECKING:
-    from .bridge import RuntimeBridge, GenericMessage
+T = TypeVar('T')
 
-
-# This makes it easier to get the current api for now - we can change this later.
-api = None
 logger = logging.getLogger(__name__)
 
-
-class Runtime:
-    def __init__(self, path: str, args: Optional[List[str]] = None):
-        self.path = path
-        self.args = args if args else []
-        self.process = None
-
-    def start(self):
-        self.process = Popen([self.path] + self.args)
-
-    def terminate(self):
-        self.process.terminate()
-        self.process.wait()
-
-    def __enter__(self):
-        self.start()
-
-    def __exit__(self, *args):
-        self.terminate()
+# module level converter to convert between objects and dicts.
+converter = cattrs.Converter(forbid_extra_keys=True)
+# Register a hook to convert datetime objects to and from isoformat strings.
+converter.register_unstructure_hook(datetime, lambda dt: dt.isoformat())
+converter.register_structure_hook(datetime, lambda dt: dt.fromisoformat(dt))
 
 
-class Simulation:
+def random_reference() -> str:
+    reference = uuid.uuid4().hex
+    return reference
+
+
+def parse_runtime_path_and_args(runtime_path_str: str, validate_path=True) -> (str, str):
+    split_args = runtime_path_str.split()
+    assert len(runtime_path_str) > 0, f"Error: Empty runtime_path"
+
+    runtime_arg_index = 1
+    runtime_path_str = split_args[0]
+    for runtime_arg_index in range(1, len(split_args)):
+        arg = split_args[runtime_arg_index]
+        # Detect the first runtime flag
+        if arg.startswith("-"):
+            break
+        # Re-join the runtime path if it has spaces
+        else:
+            runtime_path_str += " " + arg
+
+    # Validate runtime path
+    if validate_path:
+        import pathlib
+        path = pathlib.Path(runtime_path_str)
+        assert path.exists(), f"Error: --runtime path not found: \"{runtime_path_str}\""
+        assert path.is_file(), f"Error: --runtime path is not a file: \"{runtime_path_str}\""
+
+    runtime_args = split_args[runtime_arg_index:]
+    return runtime_path_str, runtime_args
+
+
+@define(slots=True)
+class GenericMessage:
+    """ A generic message that is received."""
+    type: str
+    data: dict = {}
+    reference: str = None
+    error: str = None
+
+
+class Route:
+    def __init__(self, msg_type: str, msg_class: Type[T], process_function: Callable[[str, T], Awaitable[None]]):
+        self.msg_type = msg_type
+        self.msg_class = msg_class
+        self.process_function = process_function
+
+
+class IncomingMessageRouter:
 
     def __init__(self):
-        # The current time - placeholder for now.
-        self.sim_time = datetime(1880, 1, 1, 8)
-        self.sim_id = None
+        self.routes: Dict[str, Route] = {}
 
-    def load(self):
-        """Load the simulation data """
-        # TODO: Load the metadata from the runtime.
-        pass
+    def add_route(self, route: Route):
+        self.routes[route.msg_type] = route
 
-    async def tick(self, delta: timedelta):
-        # TODO: Have the runtime send a TICK signal.
-        pass
+    async def handle_message(self, sid: str, message_str: str) -> Any:
+        logger.debug(f"[Message] received from SID {sid}: {message_str}")
+        try:
+            # Convert the message to a dictionary and validate that it has a type and that the type has a known route.
+            message = json.loads(message_str)
+            logger.info(
+                f"[Message] sid: {sid}, type: {message.get('type', 'unknown')}, ref: {message.get('reference', 'unknown')}")
+            msg_type = message.get('type')
+            if msg_type is None:
+                raise ValueError("Message is missing a type.")
+            if msg_type not in self.routes:
+                raise ValueError(f"Unknown message type: {msg_type}")
 
-    async def receive_request(self, msg, callback):
-        pass
+            # Convert the message to the appropriate type and process it.
+            request_type = self.routes[message['type']].msg_class
+            request = converter.structure(message, request_type)
+            result = await self.routes[message['type']].process_function(sid, request)
 
-    async def receive_message(self, msg):
-        pass
+            # If the result is None, then we don't send a response.
+            if result is None:
+                return
+
+            # Convert the result to a response and send it back.
+            response = converter.unstructure(result)
+            return response
+        except json.decoder.JSONDecodeError as e:
+            error = f"Error decoding JSON: {str(e)}"
+            ex = e
+        except cattrs.errors.ClassValidationError as e:
+            error = f"Error validating request: {json.dumps(cattrs.transform_error(e))}"
+            ex = e
+        except Exception as e:
+            error = f"Error processing request: {str(e)}"
+            ex = e
+        # If we get here, then there was an error.
+        logger.error(f"[Error] sid: {sid}, message: {message_str}, error: {error}, "
+                     f"stacktrace: {''.join(traceback.TracebackException.from_exception(ex).format())}")
+        response = GenericMessage('error', error=error)
+        output = converter.unstructure(response)
+        return output
 
 
-class API:
-
-    def __init__(self, bridge: "RuntimeBridge"):
-        self.bridge = bridge
-
-    async def resume(self) -> None:
-        """
-        Start or resume the simulation using the last known simulation speed
-
-        :param callback: An optional callback that is executed when the message response is received
-        """
-        logger.info("Resuming simulation")
-        await self.bridge.send_message('simulation-command', {
-            'command': 'resume',
-        })
-
-    async def pause(self) -> None:
-        """
-        Pause the simulation
-
-        :param callback: An optional callback that is executed when the message response is received
-        """
-        logger.info("Pausing simulation")
-        await self.bridge.send_message('simulation-command', {
-            'command': 'pause',
-        })
-
-    async def set_speed(self, speed: str) -> None:
-        """
-        Change the speed of the simulation
-
-        :param speed: A string representing one of the pre-defined speed constants:
-                'Realtime'
-                'OneMinutePerSecond'
-                'FiveMinutesPerSecond'
-                'TenMinutesPerSecond'
-                'TwentyMinutesPerSecond'
-
-        :param callback: An optional callback that is executed when the message response is received
-        """
-        logger.info(f"Setting simulation speed to {speed}")
-        await self.bridge.send_message('simulation-command', {
-            'command': 'set-speed',
-            'speed': speed,
-        })
-
-    async def set_start_date(self, iso_date: str) -> None:
-        """
-        Set the simulation start date using an ISO 8601 string
-
-        :param iso_date: Any parseable datetime string:
-            '2000-01-01' - Midnight on January 1, 2000
-            '2000-01-01T08:00:00.00' - 8am on January 1, 2000
-
-        :param callback: An optional callback that is executed when the message response is received
-        """
-        logger.info(f"Setting simulation start date to {iso_date}")
-        await self.bridge.send_message('simulation-command', {
-            'command': 'set-start-date',
-            'iso_date': iso_date,
-        })
+if __name__ == '__main__':
+    from . import bridge
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
+                        format='<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s')
+    bridge.main()
