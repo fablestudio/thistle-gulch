@@ -173,7 +173,7 @@ class RuntimeBridge:
 """
         )
 
-        if self.runtime is not None:
+        if self.config.runtime_path is not None:
             self.runtime.start()
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
