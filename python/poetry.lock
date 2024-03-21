@@ -533,12 +533,13 @@ python-dateutil = "^2.8.2"
 python-socketio = "^5.9.0"
 scikit-learn = "^1.3.2"
 tiktoken = "^0.5.1"
+types-pyyaml = "^6.0.12.20240311"
 
 [package.source]
 type = "git"
 url = "https://github.com/fablestudio/fable-saga.git"
 reference = "main"
-resolved_reference = "079f8cbffc07070fe3edc900ec2497605b0bb2c5"
+resolved_reference = "49f7f66f08bb7553172c197afc4be53173c9a9a1"
 
 [[package]]
 name = "fastavro"
@@ -3198,6 +3199,17 @@ grpc = ["grpcio (>=1.41.0)", "numpy (>=1.19.1)", "packaging (>=14.1)", "protobuf
 http = ["aiohttp (>=3.8.1,<4.0.0)", "geventhttpclient (>=1.4.4,<=2.0.2)", "numpy (>=1.19.1)", "python-rapidjson (>=0.9.1)"]
 
 [[package]]
+name = "types-pyyaml"
+version = "6.0.12.20240311"
+description = "Typing stubs for PyYAML"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-PyYAML-6.0.12.20240311.tar.gz", hash = "sha256:a9e0f0f88dc835739b0c1ca51ee90d04ca2a897a71af79de9aec5f38cb0a5342"},
+    {file = "types_PyYAML-6.0.12.20240311-py3-none-any.whl", hash = "sha256:b845b06a1c7e54b8e5b4c683043de0d9caf205e7434b3edc678ff2411979b8f6"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.10.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -3439,4 +3451,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "487952aff3b2f23d46733ef8e07cdb8107962f23c2ab38990146aba673fc5a04"
+content-hash = "06c6ab4ddc6ae956c539ea26ffd93eff0fbacaeb4dbd9c3be7921a8605da2a18"
