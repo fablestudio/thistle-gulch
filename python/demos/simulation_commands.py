@@ -20,8 +20,6 @@ class SetStartTimeDemo(Demo):
         Set the start time of the simulation.
 
         :param bridge: The bridge to the runtime.
-        :param start_time: The start time of the simulation.
-        :return: None
         """
 
         datestr = input("Enter the start hour (HH - 24hour)")

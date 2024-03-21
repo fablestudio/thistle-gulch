@@ -1,14 +1,15 @@
-import logging
-from datetime import datetime, timedelta
 import json
-from typing import Type, Awaitable, Any, Callable, Dict, TypeVar
+import logging
+import sys
+import traceback
+import uuid
+from datetime import datetime
+from typing import Type, Awaitable, Any, Callable, Dict, TypeVar, Tuple, Optional, List
+
 import cattrs
 from attr import define
-import uuid
-import traceback
-import sys
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 converter = cattrs.Converter(forbid_extra_keys=True)
 # Register a hook to convert datetime objects to and from isoformat strings.
 converter.register_unstructure_hook(datetime, lambda dt: dt.isoformat())
-converter.register_structure_hook(datetime, lambda dt: dt.fromisoformat(dt))
+converter.register_structure_hook(datetime, lambda dt, _: dt.fromisoformat(dt))
 
 
 def random_reference() -> str:
@@ -24,7 +25,16 @@ def random_reference() -> str:
     return reference
 
 
-def parse_runtime_path_and_args(runtime_path_str: str, validate_path=True) -> (str, str):
+def json_strict_loads(s: str) -> Dict:
+    ret = json.loads(s)
+    if not isinstance(ret, dict):
+        raise TypeError(f"Expected a JSON object, but got {type(ret)}")
+    return ret
+
+
+def parse_runtime_path_and_args(
+    runtime_path_str: str, validate_path=True
+) -> Tuple[str, List[str]]:
     split_args = runtime_path_str.split()
     assert len(runtime_path_str) > 0, f"Error: Empty runtime_path"
 
@@ -42,9 +52,12 @@ def parse_runtime_path_and_args(runtime_path_str: str, validate_path=True) -> (s
     # Validate runtime path
     if validate_path:
         import pathlib
+
         path = pathlib.Path(runtime_path_str)
-        assert path.exists(), f"Error: --runtime path not found: \"{runtime_path_str}\""
-        assert path.is_file(), f"Error: --runtime path is not a file: \"{runtime_path_str}\""
+        assert path.exists(), f'Error: --runtime path not found: "{runtime_path_str}"'
+        assert (
+            path.is_file()
+        ), f'Error: --runtime path is not a file: "{runtime_path_str}"'
 
     runtime_args = split_args[runtime_arg_index:]
     return runtime_path_str, runtime_args
@@ -52,15 +65,21 @@ def parse_runtime_path_and_args(runtime_path_str: str, validate_path=True) -> (s
 
 @define(slots=True)
 class GenericMessage:
-    """ A generic message that is received."""
+    """A generic message that is received."""
+
     type: str
     data: dict = {}
-    reference: str = None
-    error: str = None
+    reference: Optional[str] = None
+    error: Optional[str] = None
 
 
 class Route:
-    def __init__(self, msg_type: str, msg_class: Type[T], process_function: Callable[[str, T], Awaitable[None]]):
+    def __init__(
+        self,
+        msg_type: str,
+        msg_class: Type[T],
+        process_function: Callable[[T], Awaitable[GenericMessage]],
+    ):
         self.msg_type = msg_type
         self.msg_class = msg_class
         self.process_function = process_function
@@ -76,21 +95,23 @@ class IncomingMessageRouter:
 
     async def handle_message(self, sid: str, message_str: str) -> Any:
         logger.debug(f"[Message] received from SID {sid}: {message_str}")
+        ex: Optional[Exception] = None
         try:
             # Convert the message to a dictionary and validate that it has a type and that the type has a known route.
             message = json.loads(message_str)
             logger.info(
-                f"[Message] sid: {sid}, type: {message.get('type', 'unknown')}, ref: {message.get('reference', 'unknown')}")
-            msg_type = message.get('type')
+                f"[Message] sid: {sid}, type: {message.get('type', 'unknown')}, ref: {message.get('reference', 'unknown')}"
+            )
+            msg_type = message.get("type")
             if msg_type is None:
                 raise ValueError("Message is missing a type.")
             if msg_type not in self.routes:
                 raise ValueError(f"Unknown message type: {msg_type}")
 
             # Convert the message to the appropriate type and process it.
-            request_type = self.routes[message['type']].msg_class
+            request_type = self.routes[message["type"]].msg_class
             request = converter.structure(message, request_type)
-            result = await self.routes[message['type']].process_function(sid, request)
+            result = await self.routes[message["type"]].process_function(request)
 
             # If the result is None, then we don't send a response.
             if result is None:
@@ -109,15 +130,23 @@ class IncomingMessageRouter:
             error = f"Error processing request: {str(e)}"
             ex = e
         # If we get here, then there was an error.
-        logger.error(f"[Error] sid: {sid}, message: {message_str}, error: {error}, "
-                     f"stacktrace: {''.join(traceback.TracebackException.from_exception(ex).format())}")
-        response = GenericMessage('error', error=error)
+        if ex is not None:
+            logger.error(
+                f"[Error] sid: {sid}, message: {message_str}, error: {error}, "
+                f"stacktrace: {''.join(traceback.TracebackException.from_exception(ex).format())}"
+            )
+
+        response = GenericMessage("error", error=error)
         output = converter.unstructure(response)
         return output
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from . import bridge
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout,
-                        format='<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s')
+
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
+    )
     bridge.main()

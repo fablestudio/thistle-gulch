@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Optional
 
 import cattrs
 import fable_saga
@@ -29,7 +30,7 @@ class PrintActionsAndPickFirstDemo(Demo):
     def print_actions_and_pick_first(self, bridge: thistle_gulch.bridge.RuntimeBridge):
         """Server for SAGA."""
 
-        class PrintActionsAndPickFirst:
+        class PrintActionsAndPickFirst(saga_server.SagaServer):
             """Server for SAGA."""
 
             def __init__(self, llm: saga_server.BaseLanguageModel = None):
@@ -37,12 +38,12 @@ class PrintActionsAndPickFirstDemo(Demo):
                 self.agent = fable_saga.SagaAgent(llm)
 
             async def generate_actions(
-                self, req: thistle_gulch.bridge.TGActionsRequest
+                self, req: saga_server.ActionsRequest
             ) -> saga_server.ActionsResponse:
                 # Generate actions
                 try:
                     assert isinstance(
-                        req, saga_server.ActionsRequest
+                        req, thistle_gulch.bridge.TGActionsRequest
                     ), f"Invalid request type: {type(req)}"
                     actions = await self.agent.generate_actions(
                         req.context, req.skills, req.retries, req.verbose, req.model
@@ -55,7 +56,7 @@ class PrintActionsAndPickFirstDemo(Demo):
                         actions.scores = [actions.scores[0]]
 
                     response = saga_server.ActionsResponse(
-                        actions=actions, reference=req.reference
+                        actions=actions, reference=req.reference, error=None
                     )
                     if actions.error is not None:
                         response.error = f"Generation Error: {actions.error}"
@@ -85,7 +86,7 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
     ):
         """Server for SAGA."""
 
-        class SkipSagaAlwaysDoTheDefaultAction:
+        class SkipSagaAlwaysDoTheDefaultAction(saga_server.SagaServer):
             """Server for SAGA."""
 
             def __init__(self, llm: saga_server.BaseLanguageModel = None):
@@ -109,7 +110,8 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
                         },
                     )
                     actions = fable_saga.GeneratedActions(
-                        options=[default_action], scores=[1.0], error=None
+                        options=[default_action],
+                        scores=[1.0],
                     )
 
                     response = saga_server.ActionsResponse(
@@ -142,7 +144,7 @@ class ReplaceContextWithYamlDumpDemo(Demo):
     ):
         """Server for SAGA."""
 
-        class ReplaceContextWithYamlDump:
+        class ReplaceContextWithYamlDump(saga_server.SagaServer):
             """Server for SAGA."""
 
             def __init__(self, llm: saga_server.BaseLanguageModel = None):
@@ -183,12 +185,12 @@ class ReplaceContextWithYamlDumpDemo(Demo):
                 self.context_template += "\n\n# Context\n ```Yaml\n{context_dump}\n```"
 
             async def generate_actions(
-                self, req: thistle_gulch.bridge.TGActionsRequest
+                self, req: saga_server.ActionsRequest
             ) -> saga_server.ActionsResponse:
                 # Generate actions
                 try:
                     assert isinstance(
-                        req, saga_server.ActionsRequest
+                        req, thistle_gulch.bridge.TGActionsRequest
                     ), f"Invalid request type: {type(req)}"
 
                     # Get a dictionary representation of the context object so that we can turn it into a YAML string.
@@ -231,7 +233,7 @@ class UseLlama2ModelDemo(Demo):
     def use_llama2_model(self, bridge: thistle_gulch.bridge.RuntimeBridge):
         """Server for SAGA."""
 
-        class UseLlama2Model:
+        class UseLlama2Model(saga_server.SagaServer):
             """Server for SAGA."""
 
             def __init__(self):
@@ -241,20 +243,20 @@ class UseLlama2ModelDemo(Demo):
                 self.llm = AsyncOllama(model="codellama:13b-instruct")
                 self.agent = fable_saga.SagaAgent(self.llm)
 
-                def generate_chain(_) -> LLMChain:
+                def generate_chain(_: Optional[str]) -> LLMChain:
                     return LLMChain(
                         llm=self.llm, prompt=self.agent.generate_actions_prompt
                     )
 
-                self.agent.generate_chain = generate_chain
+                self.agent.__setattr__("actions_endpoint", generate_chain)
 
             async def generate_actions(
-                self, req: thistle_gulch.bridge.TGActionsRequest
+                self, req: saga_server.ActionsRequest
             ) -> saga_server.ActionsResponse:
                 # Generate actions
                 try:
                     assert isinstance(
-                        req, saga_server.ActionsRequest
+                        req, thistle_gulch.bridge.TGActionsRequest
                     ), f"Invalid request type: {type(req)}"
                     actions = await self.agent.generate_actions(
                         req.context, req.skills, req.retries, req.verbose, req.model
@@ -268,7 +270,7 @@ class UseLlama2ModelDemo(Demo):
                         actions.scores = [actions.scores[0]]
 
                     response = saga_server.ActionsResponse(
-                        actions=actions, reference=req.reference
+                        actions=actions, reference=req.reference, error=None
                     )
                     if actions.error is not None:
                         response.error = f"Generation Error: {actions.error}"

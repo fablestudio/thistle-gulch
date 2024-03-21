@@ -29,4 +29,5 @@ class DefaultSagaServerDemo(Demo):
             name="[Default] Saga Server",
             description="Just run the default SAGA server, which is the default behavior of the bridge.",
             function=lambda bridge: None,
+            category="Default",
         )

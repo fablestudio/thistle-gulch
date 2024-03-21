@@ -1,22 +1,28 @@
 import asyncio
-from subprocess import Popen
-from typing import Optional, List
 import json
+from subprocess import Popen
+from typing import Optional, List, Tuple, TYPE_CHECKING
 
-import socketio
+if TYPE_CHECKING:
+    import socketio
 
 from . import GenericMessage, converter, logger, random_reference
 from .api import API
 
 
 class Runtime:
-    def __init__(self, sio: socketio.AsyncServer, path: Optional[str] = None, args: Optional[List[str]] = None):
+    def __init__(
+        self,
+        sio: "socketio.AsyncServer",
+        path: Optional[str] = None,
+        args: Optional[List[str]] = None,
+    ):
         self.sio = sio
         self.path = path
         self.args = args if args else []
-        self.process = None
+        self.process: Optional[Popen[bytes]] = None
         self.emit_lock = asyncio.Lock()
-        self.sid = None
+        self.sid: Optional[str] = None
         self.api = API(self)
 
     def start(self):
@@ -30,11 +36,13 @@ class Runtime:
         self.process = Popen([self.path] + self.args)
 
     def terminate(self):
+        logger.info("[Runtime] Shutting Down ...")
         if self.process and self.process.poll() is None:
             self.process.terminate()
             self.process.wait()
+            logger.info("[Runtime] Process terminated.")
         else:
-            logger.warning("No process to terminate.")
+            logger.warning("[Runtime] No process to terminate.")
 
     def __enter__(self):
         self.start()
@@ -43,12 +51,12 @@ class Runtime:
         self.terminate()
 
     async def on_connect(self, sid: str):
-        """ Connect to the runtime. """
+        """Connect to the runtime."""
         # TODO: Decide what to do when the runtime disconnects and reconnects.
         self.sid = sid
 
     async def on_disconnect(self, sid):
-        """ Disconnect from the runtime. """
+        """Disconnect from the runtime."""
         # TODO: Decide what to do when the runtime disconnects.
         pass
 
@@ -68,19 +76,19 @@ class Runtime:
         """
 
         # Create a Future object that we will use to wait for the callback response
-        future = asyncio.Future()
+        future: asyncio.Future[Tuple[str, str]] = asyncio.Future()
 
         # Define a callback function that will be called when the emit() receives a response
-        async def callback(resp_type: str, resp_data: str):
+        async def callback(resp_type: str, resp_data_str: str):
             self.emit_lock.release()
             # If the future is already done (cancelled), then we don't need to do anything.
             if future.done():
                 return None
             # Set the future result, which will unblock the send_message function.
-            future.set_result((resp_type, resp_data))
+            future.set_result((resp_type, resp_data_str))
 
         if self.sid is None:
-            err = f'[Message Request] Error: simulation sid is None.'
+            err = f"[Message Request] Error: simulation sid is None."
             logger.error(err)
             raise ValueError(err)
 
@@ -93,8 +101,12 @@ class Runtime:
         # Acquire the emit lock to prevent multiple emits from happening at the same time.
         await self.emit_lock.acquire()
         try:
-            await self.sio.emit('messages', (request_msg.type, serialized_message), to=self.sid,
-                                callback=callback)
+            await self.sio.emit(
+                "messages",
+                (request_msg.type, serialized_message),
+                to=self.sid,
+                callback=callback,
+            )
         except Exception as e:
             err = f"[Message Request] Error sending message: {str(e)}"
             logger.error(err)
@@ -105,7 +117,7 @@ class Runtime:
         # Wait for the future to have a result, with timeout
         try:
             # Wait for the Future object to have a result, with timeout
-            response_type, response_data = await asyncio.wait_for(future, timeout)
+            response_type, response_data_str = await asyncio.wait_for(future, timeout)
         except asyncio.TimeoutError as e:
             # Handle the case where the future times out
             err = f"[Message Response] Response timed out after {timeout} seconds"
@@ -119,20 +131,22 @@ class Runtime:
 
         # Parse the response_data and set the future result.
         try:
-            data = json.loads(response_data)
+            data = json.loads(response_data_str)
         except json.JSONDecodeError as e:
-            err = f'[Message Response] {response_type} Error decoding JSON: {str(e)}'
+            err = f"[Message Response] {response_type} Error decoding JSON: {str(e)}"
             logger.error(err)
             raise e
 
-        if data.get('error'):
-            err = f'[Message Response] {response_type} Runtime Error: {data.get("error")}'
+        if data.get("error"):
+            err = (
+                f'[Message Response] {response_type} Runtime Error: {data.get("error")}'
+            )
             logger.error(err)
             raise ValueError(err)
 
         # Validate that the response_data is a dictionary.
         if not isinstance(data, dict):
-            err = f'[Message Response] Error: data not a dictionary.'
+            err = f"[Message Response] Error: data not a dictionary."
             logger.error(err)
             raise ValueError(err)
 
