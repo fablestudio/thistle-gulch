@@ -58,11 +58,9 @@ class API:
 
     async def set_start_date(self, date: datetime) -> None:
         """
-        Set the simulation start date using an ISO 8601 string
+        Set the simulation start date. Only works if the simulation has not been started yet.
 
-        :param iso_date: Any parseable datetime string:
-            '2000-01-01' - Midnight on January 1, 2000
-            '2000-01-01T08:00:00.00' - 8am on January 1, 2000
+        :param date: A datetime object representing the start date of the simulation
         """
         logger.debug(f"Setting simulation start date to {date.isoformat()}")
         await self.runtime.send_message(

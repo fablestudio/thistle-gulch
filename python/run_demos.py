@@ -62,5 +62,4 @@ if __name__ == "__main__":
     )
     thistle_gulch.logger.setLevel(logging.INFO)
 
-    import openai
     main()
