@@ -16,7 +16,7 @@ class API:
         """
         Start or resume the simulation using the last known simulation speed
         """
-        logger.info("Resuming simulation")
+        logger.debug("Resuming simulation")
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -28,7 +28,7 @@ class API:
         """
         Pause the simulation
         """
-        logger.info("Pausing simulation")
+        logger.debug("Pausing simulation")
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -47,7 +47,7 @@ class API:
                 'TenMinutesPerSecond'
                 'TwentyMinutesPerSecond'
         """
-        logger.info(f"Setting simulation speed to {speed}")
+        logger.debug(f"Setting simulation speed to {speed}")
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -58,13 +58,11 @@ class API:
 
     async def set_start_date(self, date: datetime) -> None:
         """
-        Set the simulation start date using an ISO 8601 string
+        Set the simulation start date. Only works if the simulation has not been started yet.
 
-        :param iso_date: Any parseable datetime string:
-            '2000-01-01' - Midnight on January 1, 2000
-            '2000-01-01T08:00:00.00' - 8am on January 1, 2000
+        :param date: A datetime object representing the start date of the simulation
         """
-        logger.info(f"Setting simulation start date to {date.isoformat()}")
+        logger.debug(f"Setting simulation start date to {date.isoformat()}")
         await self.runtime.send_message(
             "simulation-command",
             {

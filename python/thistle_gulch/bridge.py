@@ -144,17 +144,17 @@ class RuntimeBridge:
         # Add routes
         async def on_ready_handler(ready_response: GenericMessage):
             """Handler for the simulation-ready message."""
-            logger.info(f"[Simulation Ready] received..")
+            logger.debug(f"[Simulation Ready] received..")
 
             # Call the on_ready callback if it exists.
             if self.on_ready is not None:
                 # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
-                logger.info(f"[Simulation Ready] Calling on_ready callback..")
+                logger.debug(f"[Simulation Ready] Calling on_ready callback..")
                 await self.on_ready(self)
             else:
-                logger.info(f"[Simulation Ready] No on_ready callback registered..")
+                logger.debug(f"[Simulation Ready] No on_ready callback registered..")
 
-            logger.info(f"[Simulation Ready] Resuming simulation..")
+            logger.debug(f"[Simulation Ready] Resuming simulation..")
             await self.runtime.api.resume()
 
         self.router.add_route(

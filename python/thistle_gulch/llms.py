@@ -1,5 +1,5 @@
 import json
-from typing import Any, Iterator, List, Optional, AsyncIterator
+from typing import Any, List, Optional, AsyncIterator
 
 import aiohttp
 from langchain.callbacks.manager import (
@@ -11,7 +11,7 @@ from langchain.schema.messages import (
     BaseMessage,
 )
 from langchain.schema.output import GenerationChunk, LLMResult
- 
+
 
 def _stream_response_to_generation_chunk(
     stream_response: str,
