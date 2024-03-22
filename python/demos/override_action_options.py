@@ -50,7 +50,6 @@ class PrintActionsAndPickFirstDemo(Demo):
                     )
 
                     # Override action options by first printing the action options to the console. Then, only pass back the first action option.
-                    print(json.dumps(cattrs.unstructure(actions.options), indent=2))
                     if len(actions.options) > 1:
                         actions.options = [actions.options[0]]
                         actions.scores = [actions.scores[0]]
@@ -264,7 +263,6 @@ class UseLlama2ModelDemo(Demo):
 
                     # Override action options by first printing the action options to the console.
                     # Then, only pass back the first action option.
-                    print(json.dumps(cattrs.unstructure(actions.options), indent=2))
                     if len(actions.options) > 1:
                         actions.options = [actions.options[0]]
                         actions.scores = [actions.scores[0]]

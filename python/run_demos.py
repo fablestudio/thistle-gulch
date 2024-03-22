@@ -4,6 +4,7 @@ from typing import List
 
 import demos.override_action_options as action_overrides
 import demos.simulation_commands as simulation_commands
+import thistle_gulch
 import thistle_gulch.bridge as tg_bridge
 from demos import Demo, DefaultSagaServerDemo
 
@@ -55,8 +56,11 @@ def main():
 if __name__ == "__main__":
     # Setup logging
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.WARNING,
         stream=sys.stdout,
         format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
     )
+    thistle_gulch.logger.setLevel(logging.INFO)
+
+    import openai
     main()

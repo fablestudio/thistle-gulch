@@ -16,7 +16,7 @@ class API:
         """
         Start or resume the simulation using the last known simulation speed
         """
-        logger.info("Resuming simulation")
+        logger.debug("Resuming simulation")
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -28,7 +28,7 @@ class API:
         """
         Pause the simulation
         """
-        logger.info("Pausing simulation")
+        logger.debug("Pausing simulation")
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -47,7 +47,7 @@ class API:
                 'TenMinutesPerSecond'
                 'TwentyMinutesPerSecond'
         """
-        logger.info(f"Setting simulation speed to {speed}")
+        logger.debug(f"Setting simulation speed to {speed}")
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -64,7 +64,7 @@ class API:
             '2000-01-01' - Midnight on January 1, 2000
             '2000-01-01T08:00:00.00' - 8am on January 1, 2000
         """
-        logger.info(f"Setting simulation start date to {date.isoformat()}")
+        logger.debug(f"Setting simulation start date to {date.isoformat()}")
         await self.runtime.send_message(
             "simulation-command",
             {
