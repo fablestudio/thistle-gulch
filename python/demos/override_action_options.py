@@ -1,18 +1,13 @@
-import json
-import logging
 from typing import Optional
 
 import cattrs
 import fable_saga
+import thistle_gulch.bridge
 from fable_saga import server as saga_server
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-
-import thistle_gulch.bridge
+from thistle_gulch import logger
 from . import Demo
-
-logger = logging.getLogger(__name__)
-
 
 CATEGORY = "Action Generation"
 
@@ -48,7 +43,7 @@ class PrintActionsAndPickFirstDemo(Demo):
                     actions = await self.agent.generate_actions(
                         req.context, req.skills, req.retries, req.verbose, req.model
                     )
-
+                    logger.info(actions.options)
                     # Override action options by first printing the action options to the console. Then, only pass back the first action option.
                     if len(actions.options) > 1:
                         actions.options = [actions.options[0]]
@@ -232,6 +227,16 @@ class UseLlama2ModelDemo(Demo):
     def use_llama2_model(self, bridge: thistle_gulch.bridge.RuntimeBridge):
         """Server for SAGA."""
 
+        default_model = "codellama:13b-instruct"
+        model = input(
+            "Enter the running ollama model name (default: codellama:13b-instruct): "
+        )
+
+        ask_debug = input("Enable generation debug mode? (y/N): ")
+
+        model = model if model else default_model
+        print(f"Using model: {model}")
+
         class UseLlama2Model(saga_server.SagaServer):
             """Server for SAGA."""
 
@@ -239,7 +244,10 @@ class UseLlama2ModelDemo(Demo):
                 super().__init__()
                 from thistle_gulch.llms import AsyncOllama
 
-                self.llm = AsyncOllama(model="codellama:13b-instruct")
+                self.llm = AsyncOllama(model=model)
+                if ask_debug.lower() == "y":
+                    self.llm.debug_generation = True
+
                 self.agent = fable_saga.SagaAgent(self.llm)
 
                 def generate_chain(_: Optional[str]) -> LLMChain:
@@ -247,7 +255,7 @@ class UseLlama2ModelDemo(Demo):
                         llm=self.llm, prompt=self.agent.generate_actions_prompt
                     )
 
-                self.agent.__setattr__("actions_endpoint", generate_chain)
+                self.agent.__setattr__("generate_chain", generate_chain)
 
             async def generate_actions(
                 self, req: saga_server.ActionsRequest
@@ -261,12 +269,7 @@ class UseLlama2ModelDemo(Demo):
                         req.context, req.skills, req.retries, req.verbose, req.model
                     )
 
-                    # Override action options by first printing the action options to the console.
-                    # Then, only pass back the first action option.
-                    if len(actions.options) > 1:
-                        actions.options = [actions.options[0]]
-                        actions.scores = [actions.scores[0]]
-
+                    logger.info(actions.options)
                     response = saga_server.ActionsResponse(
                         actions=actions, reference=req.reference, error=None
                     )
