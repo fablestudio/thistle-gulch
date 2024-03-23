@@ -255,7 +255,7 @@ class UseLlama2ModelDemo(Demo):
                         llm=self.llm, prompt=self.agent.generate_actions_prompt
                     )
 
-                self.agent.__setattr__("actions_endpoint", generate_chain)
+                self.agent.__setattr__("generate_chain", generate_chain)
 
             async def generate_actions(
                 self, req: saga_server.ActionsRequest
