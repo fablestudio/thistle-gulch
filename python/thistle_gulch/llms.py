@@ -27,6 +27,8 @@ def _stream_response_to_generation_chunk(
 class AsyncOllama(Ollama):
     # ...
 
+    debug_generation: bool = False
+
     async def _create_stream(
         self,
         prompt: str,
@@ -122,6 +124,8 @@ class AsyncOllama(Ollama):
                 if final_chunk is None:
                     final_chunk = chunk
                 else:
+                    if self.debug_generation:
+                        print(chunk.text, end="")
                     final_chunk += chunk
                 if run_manager:
                     await run_manager.on_llm_new_token(
