@@ -55,10 +55,7 @@ class EnableAgentDemo(Demo):
 
         async def on_ready(_):
             print(f"{('Enabling' if enabled else 'Disabling')} agent: {persona_id}")
-            await bridge.runtime.api.enable_agent(
-                persona_id,
-                enabled
-            )
+            await bridge.runtime.api.enable_agent(persona_id, enabled)
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
