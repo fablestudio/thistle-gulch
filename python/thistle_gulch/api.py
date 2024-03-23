@@ -70,3 +70,22 @@ class API:
                 "iso_date": date,
             },
         )
+
+    async def enable_agent(self, persona_id: str, enabled: bool) -> None:
+        """
+        Enable or disable the LLM agent for the given persona_id.
+        Enabled agents generate their actions using the python Bridge.
+        Disabled agents generate their actions in the simulation Runtime using a simple scoring system.
+
+        :param persona_id: persona to modify
+        :param enabled: Flag to Enable or disable the agent
+        """
+        logger.debug(f"{('Enabling' if enabled else 'Disabling')} agent: {persona_id}")
+        await self.runtime.send_message(
+            "simulation-command",
+            {
+                "command": "enable-agent",
+                "persona_id": persona_id,
+                "enabled": enabled,
+            },
+        )

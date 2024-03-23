@@ -21,6 +21,7 @@ def main():
         action_overrides.ReplaceContextWithYamlDumpDemo(),
         action_overrides.UseLlama2ModelDemo(),
         simulation_commands.SetStartTimeDemo(),
+        simulation_commands.EnableAgentDemo(),
     ]
 
     # Print the available demos and prompt the user to select one.
