@@ -23,7 +23,7 @@ class SetStartTimeDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        datestr = input("Enter the start hour (HH - 24hour)")
+        datestr = input("Enter the start hour (HH - 24hour): ")
         date = datetime(1880, 1, 1, int(datestr))
 
         async def on_ready(_):
@@ -50,8 +50,8 @@ class EnableAgentDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id")
-        enable_str = input("Enable(1) or Disable(0) the agent?")
+        persona_id = input("Enter persona id: ")
+        enable_str = input("Enable(1) or Disable(0) the agent? ")
         enabled = True if enable_str == "1" else False
 
         async def on_ready(_):
@@ -78,11 +78,11 @@ class UpdateCharacterPropertyDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id")
+        persona_id = input("Enter persona id: ")
         property_name = input(
-            "Enter property name (energy, summary, description, backstory)"
+            "Enter property name (energy, summary, description, backstory): "
         )
-        property_value = input(f"Enter new value for {property_name}")
+        property_value = input(f"Enter new value for {property_name}: ")
 
         async def on_ready(_):
             print(f"Updating {persona_id} {property_name} to '{property_value}'")
@@ -90,7 +90,7 @@ class UpdateCharacterPropertyDemo(Demo):
                 persona_id, property_name, property_value
             )
 
-        print("Registering custom on_ready callback.")
+        print("Registering custom on_ready callback.")0
         bridge.on_ready = on_ready
 
 
@@ -110,7 +110,7 @@ class SimulationTickDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        seconds = int(input("Enter number of seconds to wait between ticks"))
+        seconds = int(input("Enter number of seconds to wait between ticks: "))
 
         async def on_tick(_, current_time: datetime):
             print(f"Current simulation time is {current_time}")
