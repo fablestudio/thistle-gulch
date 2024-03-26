@@ -90,7 +90,7 @@ class UpdateCharacterPropertyDemo(Demo):
                 persona_id, property_name, property_value
             )
 
-        print("Registering custom on_ready callback.")0
+        print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
 
 
