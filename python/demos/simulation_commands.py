@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from thistle_gulch.bridge import RuntimeBridge
 from . import Demo
@@ -91,3 +92,32 @@ class UpdateCharacterPropertyDemo(Demo):
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
+
+
+class SimulationTickDemo(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Simulation Tick",
+            description="Pause the simulation for the given number of seconds on every tick",
+            category=CATEGORY,
+            function=self.on_simulation_tick,
+        )
+
+    def on_simulation_tick(self, bridge: RuntimeBridge):
+        """
+        Pause the simulation for the given number of seconds on every tick
+
+        :param bridge: The bridge to the runtime.
+        """
+
+        seconds = int(input("Enter number of seconds to wait between ticks"))
+
+        async def on_tick(_, current_time: datetime):
+            print(f"Current simulation time is {current_time}")
+            print(f"Pausing simulation and waiting for {seconds} seconds")
+            await bridge.runtime.api.pause()
+            sleep(seconds)
+            await bridge.runtime.api.resume()
+
+        print("Registering custom on_tick callback.")
+        bridge.on_tick = on_tick
