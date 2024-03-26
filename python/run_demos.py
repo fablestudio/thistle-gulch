@@ -22,6 +22,7 @@ def main():
         action_overrides.UseLlama2ModelDemo(),
         simulation_commands.SetStartTimeDemo(),
         simulation_commands.EnableAgentDemo(),
+        simulation_commands.UpdateCharacterPropertyDemo(),
     ]
 
     # Print the available demos and prompt the user to select one.
