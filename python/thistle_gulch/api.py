@@ -89,3 +89,24 @@ class API:
                 "enabled": enabled,
             },
         )
+
+    async def update_character_property(
+        self, persona_id: str, property_name: str, value: str
+    ) -> None:
+        """
+        Update a property value for the given persona
+
+        :param persona_id: Persona to modify
+        :param property_name: Name of the property to modify
+        :param value: Value to assign to the property
+        """
+        logger.debug(f"Updating {persona_id} {property_name} to '{value}'")
+        await self.runtime.send_message(
+            "simulation-command",
+            {
+                "command": "update-character-property",
+                "persona_id": persona_id,
+                "property": property_name,
+                "value": value,
+            },
+        )
