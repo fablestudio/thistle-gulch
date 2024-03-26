@@ -78,7 +78,9 @@ class UpdateCharacterPropertyDemo(Demo):
         """
 
         persona_id = input("Enter persona id")
-        property_name = input("Enter property name (energy, summary, description, backstory)")
+        property_name = input(
+            "Enter property name (energy, summary, description, backstory)"
+        )
         property_value = input(f"Enter new value for {property_name}")
 
         async def on_ready(_):
