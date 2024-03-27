@@ -1,7 +1,8 @@
 import typing
 from datetime import datetime
 
-from . import logger
+from . import logger, converter
+from .data_models import PersonaContextObject
 
 if typing.TYPE_CHECKING:
     from .runtime import Runtime
@@ -82,7 +83,7 @@ class API:
         """
         logger.debug(f"{('Enabling' if enabled else 'Disabling')} agent: {persona_id}")
         await self.runtime.send_message(
-            "simulation-command",
+            "character-command",
             {
                 "command": "enable-agent",
                 "persona_id": persona_id,
@@ -102,11 +103,44 @@ class API:
         """
         logger.debug(f"Updating {persona_id} {property_name} to '{value}'")
         await self.runtime.send_message(
-            "simulation-command",
+            "character-command",
             {
                 "command": "update-character-property",
                 "persona_id": persona_id,
                 "property": property_name,
                 "value": value,
+            },
+        )
+
+    async def get_character_context(self, persona_id: str) -> PersonaContextObject:
+        """
+        Request all contextual information about a specific character
+
+        :param persona_id: Persona to modify
+        """
+        logger.debug(f"Requesting context for {persona_id}")
+        response = await self.runtime.send_message(
+            "character-command",
+            {"command": "request-character-context", "persona_id": persona_id},
+        )
+        context = converter.structure(
+            response.data.get("context_obj"), PersonaContextObject
+        )
+        return context
+
+    async def override_character_action(self, persona_id: str, action: dict) -> None:
+        """
+        Interrupt the character's current action with a new one
+
+        :param persona_id: Persona to modify
+        :param action: The new action to execute
+        """
+        logger.debug(f"Overriding action for {persona_id} with {action}")
+        await self.runtime.send_message(
+            "character-command",
+            {
+                "command": "override-character-action",
+                "persona_id": persona_id,
+                "action": action,
             },
         )

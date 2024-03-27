@@ -123,7 +123,7 @@ class Inventory:
 
 
 @define(slots=True)
-class Interactions:
+class Interactable:
     item_guid: str
     name: str
     description: str
@@ -138,7 +138,7 @@ class PersonaContextObject:
     observations: List[Observation]
     inventories: List[Inventory]
     conversations: List[Conversation]
-    interactions: List[Interactions]
+    interactables: List[Interactable]
     locations: List[Location]
     memories: List[PersonaMemories]
     default_action: str
