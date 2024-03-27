@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 converter = cattrs.Converter(forbid_extra_keys=True)
 # Register a hook to convert datetime objects to and from isoformat strings.
 converter.register_unstructure_hook(datetime, lambda dt: dt.isoformat())
-converter.register_structure_hook(datetime, lambda dt, _: dt.fromisoformat(dt))
+converter.register_structure_hook(datetime, lambda dt, _: datetime.fromisoformat(dt))
 
 
 def random_reference() -> str:
@@ -54,10 +54,10 @@ def parse_runtime_path_and_args(
         import pathlib
 
         path = pathlib.Path(runtime_path_str)
-        assert path.exists(), f'Error: --runtime path not found: "{runtime_path_str}"'
+        assert path.exists(), f"Error: --runtime path not found: '{runtime_path_str}'"
         assert (
             path.is_file()
-        ), f'Error: --runtime path is not a file: "{runtime_path_str}"'
+        ), f"Error: --runtime path is not a file: '{runtime_path_str}'"
 
     runtime_args = split_args[runtime_arg_index:]
     return runtime_path_str, runtime_args

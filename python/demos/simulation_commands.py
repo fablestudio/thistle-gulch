@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from thistle_gulch.bridge import RuntimeBridge
 from . import Demo
@@ -22,7 +23,7 @@ class SetStartTimeDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        datestr = input("Enter the start hour (HH - 24hour)")
+        datestr = input("Enter the start hour (HH - 24hour): ")
         date = datetime(1880, 1, 1, int(datestr))
 
         async def on_ready(_):
@@ -49,8 +50,8 @@ class EnableAgentDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id")
-        enable_str = input("Enable(1) or Disable(0) the agent?")
+        persona_id = input("Enter persona id: ")
+        enable_str = input("Enable(1) or Disable(0) the agent? ")
         enabled = True if enable_str == "1" else False
 
         async def on_ready(_):
@@ -77,11 +78,11 @@ class UpdateCharacterPropertyDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id")
+        persona_id = input("Enter persona id: ")
         property_name = input(
-            "Enter property name (energy, summary, description, backstory)"
+            "Enter property name (energy, summary, description, backstory): "
         )
-        property_value = input(f"Enter new value for {property_name}")
+        property_value = input(f"Enter new value for {property_name}: ")
 
         async def on_ready(_):
             print(f"Updating {persona_id} {property_name} to '{property_value}'")
@@ -91,3 +92,32 @@ class UpdateCharacterPropertyDemo(Demo):
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
+
+
+class SimulationTickDemo(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Simulation Tick",
+            description="Pause the simulation for the given number of seconds on every tick",
+            category=CATEGORY,
+            function=self.on_simulation_tick,
+        )
+
+    def on_simulation_tick(self, bridge: RuntimeBridge):
+        """
+        Pause the simulation for the given number of seconds on every tick
+
+        :param bridge: The bridge to the runtime.
+        """
+
+        seconds = int(input("Enter number of seconds to wait between ticks: "))
+
+        async def on_tick(_, current_time: datetime):
+            print(f"Current simulation time is {current_time}")
+            print(f"Pausing simulation and waiting for {seconds} seconds")
+            await bridge.runtime.api.pause()
+            sleep(seconds)
+            await bridge.runtime.api.resume()
+
+        print("Registering custom on_tick callback.")
+        bridge.on_tick = on_tick

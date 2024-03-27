@@ -23,6 +23,7 @@ def main():
         simulation_commands.SetStartTimeDemo(),
         simulation_commands.EnableAgentDemo(),
         simulation_commands.UpdateCharacterPropertyDemo(),
+        simulation_commands.SimulationTickDemo(),
     ]
 
     # Print the available demos and prompt the user to select one.

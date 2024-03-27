@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Callable, Optional, Awaitable
 
 import fable_saga.server as saga_server
@@ -13,6 +14,7 @@ from . import (
     Route,
     logger,
     parse_runtime_path_and_args,
+    converter,
 )
 from .data_models import PersonaContextObject
 
@@ -54,6 +56,9 @@ class RuntimeBridge:
         self.config = config
         self.router = IncomingMessageRouter()
         self.on_ready: Optional[Callable[[RuntimeBridge], Awaitable[None]]] = None
+        self.on_tick: Optional[Callable[[RuntimeBridge, datetime], Awaitable[None]]] = (
+            None
+        )
         self.emit_lock = asyncio.Lock()
 
         # Set up the async web server via aiohttp - this is the server that will handle the socketio connections.
@@ -146,6 +151,11 @@ class RuntimeBridge:
             """Handler for the simulation-ready message."""
             logger.debug(f"[Simulation Ready] received..")
 
+            logger.debug(
+                f"[Simulation Ready] Pausing simulation during initialization.."
+            )
+            await self.runtime.api.pause()
+
             # Call the on_ready callback if it exists.
             if self.on_ready is not None:
                 # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
@@ -160,6 +170,23 @@ class RuntimeBridge:
         self.router.add_route(
             Route("simulation-ready", GenericMessage, on_ready_handler)
         )
+
+        async def on_tick_handler(tick_response: GenericMessage):
+            """Handler for the simulation-ready message."""
+            logger.debug(f"[Simulation Tick] received..")
+
+            # Call the on_tick callback if it exists.
+            if self.on_tick is not None:
+                current_time = converter.structure(
+                    tick_response.data.get("current_time"), datetime
+                )
+                # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
+                logger.debug(f"[Simulation Tick] Calling on_tick callback..")
+                await self.on_tick(self, current_time)
+            else:
+                logger.debug(f"[Simulation Tick] No on_tick callback registered..")
+
+        self.router.add_route(Route("simulation-tick", GenericMessage, on_tick_handler))
 
     def run(self):
         print(
