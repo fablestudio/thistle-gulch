@@ -45,7 +45,7 @@ def parse_runtime_path_and_args(
         # Detect the first runtime flag
         if arg.startswith("-"):
             break
-        # Re-join the runtime path if it has spaces
+        # Re-join the runtime path if it has space
         else:
             runtime_path_str += " " + arg
 

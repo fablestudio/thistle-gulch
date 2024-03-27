@@ -1,11 +1,11 @@
 from typing import Optional
 
 import cattrs
-import fable_saga
-import thistle_gulch.bridge
+import fable_saga.actions
 from fable_saga import server as saga_server
-from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
+
+import thistle_gulch.bridge
 from thistle_gulch import logger
 from . import Demo
 
@@ -28,9 +28,9 @@ class PrintActionsAndPickFirstDemo(Demo):
         class PrintActionsAndPickFirst(saga_server.SagaServer):
             """Server for SAGA."""
 
-            def __init__(self, llm: saga_server.BaseLanguageModel = None):
+            def __init__(self, llm: Optional[saga_server.BaseLanguageModel] = None):
                 super().__init__()
-                self.agent = fable_saga.SagaAgent(llm)
+                self.agent = fable_saga.actions.ActionsAgent(llm)
 
             async def generate_actions(
                 self, req: saga_server.ActionsRequest
@@ -83,9 +83,9 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
         class SkipSagaAlwaysDoTheDefaultAction(saga_server.SagaServer):
             """Server for SAGA."""
 
-            def __init__(self, llm: saga_server.BaseLanguageModel = None):
+            def __init__(self, llm: Optional[saga_server.BaseLanguageModel] = None):
                 super().__init__()
-                self.agent = fable_saga.SagaAgent(llm)
+                self.agent = fable_saga.actions.ActionsAgent(llm)
 
             async def generate_actions(
                 self, req: saga_server.ActionsRequest
@@ -97,13 +97,13 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
                     ), f"Invalid request type: {type(req)}"
 
                     # Override action options by always picking the default action.
-                    default_action = fable_saga.Action(
+                    default_action = fable_saga.actions.Action(
                         skill="default_action",
                         parameters={
                             "goal": "The Override Action Options demo has chosen the default action."
                         },
                     )
-                    actions = fable_saga.GeneratedActions(
+                    actions = fable_saga.actions.GeneratedActions(
                         options=[default_action],
                         scores=[1.0],
                     )
@@ -141,10 +141,10 @@ class ReplaceContextWithYamlDumpDemo(Demo):
         class ReplaceContextWithYamlDump(saga_server.SagaServer):
             """Server for SAGA."""
 
-            def __init__(self, llm: saga_server.BaseLanguageModel = None):
+            def __init__(self, llm: Optional[saga_server.BaseLanguageModel] = None):
                 super().__init__()
-                self.agent = fable_saga.SagaAgent(llm)
-                self.agent.generate_actions_prompt = PromptTemplate.from_template(
+                self.agent = fable_saga.actions.ActionsAgent(llm)
+                self.agent.prompt_template = PromptTemplate.from_template(
                     """
         {context}
         
@@ -213,74 +213,3 @@ class ReplaceContextWithYamlDumpDemo(Demo):
 
         # Set the actions endpoint to the selected demo.
         bridge.config.actions_endpoint = ReplaceContextWithYamlDump()
-
-
-class UseLlama2ModelDemo(Demo):
-    def __init__(self):
-        super().__init__(
-            name="Use Llama2 Model",
-            description="Use the Llama2 model to generate actions.",
-            category=CATEGORY,
-            function=self.use_llama2_model,
-        )
-
-    def use_llama2_model(self, bridge: thistle_gulch.bridge.RuntimeBridge):
-        """Server for SAGA."""
-
-        default_model = "codellama:13b-instruct"
-        model = input(
-            "Enter the running ollama model name (default: codellama:13b-instruct): "
-        )
-
-        ask_debug = input("Enable generation debug mode? (y/N): ")
-
-        model = model if model else default_model
-        print(f"Using model: {model}")
-
-        class UseLlama2Model(saga_server.SagaServer):
-            """Server for SAGA."""
-
-            def __init__(self):
-                super().__init__()
-                from thistle_gulch.llms import AsyncOllama
-
-                self.llm = AsyncOllama(model=model)
-                if ask_debug.lower() == "y":
-                    self.llm.debug_generation = True
-
-                self.agent = fable_saga.SagaAgent(self.llm)
-
-                def generate_chain(_: Optional[str]) -> LLMChain:
-                    return LLMChain(
-                        llm=self.llm, prompt=self.agent.generate_actions_prompt
-                    )
-
-                self.agent.__setattr__("generate_chain", generate_chain)
-
-            async def generate_actions(
-                self, req: saga_server.ActionsRequest
-            ) -> saga_server.ActionsResponse:
-                # Generate actions
-                try:
-                    assert isinstance(
-                        req, thistle_gulch.bridge.TGActionsRequest
-                    ), f"Invalid request type: {type(req)}"
-                    actions = await self.agent.generate_actions(
-                        req.context, req.skills, req.retries, req.verbose, req.model
-                    )
-
-                    logger.info(actions.options)
-                    response = saga_server.ActionsResponse(
-                        actions=actions, reference=req.reference, error=None
-                    )
-                    if actions.error is not None:
-                        response.error = f"Generation Error: {actions.error}"
-                    return response
-                except Exception as e:
-                    logger.exception(str(e))
-                    return saga_server.ActionsResponse(
-                        actions=None, error=str(e), reference=req.reference
-                    )
-
-        # Set the actions endpoint to the selected demo.
-        bridge.config.actions_endpoint = UseLlama2Model()
