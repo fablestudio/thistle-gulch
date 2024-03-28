@@ -156,7 +156,10 @@ class RuntimeBridge:
             )
 
             runtime_version = ready_response.data.get("runtime_version")
-            if runtime_version != "local.build" and runtime_version != self.runtime.required_version:
+            if (
+                runtime_version != "local.build"
+                and runtime_version != self.runtime.required_version
+            ):
                 raise Exception(
                     f"Incorrect Runtime version detected - "
                     f"{self.runtime.required_version} was expected but found {runtime_version} instead"
