@@ -3,14 +3,12 @@ import sys
 from typing import List
 
 import demos.custom_models as custom_models
-import demos.override_action_options as action_overrides
-import demos.simulation_commands as simulation_commands
 import thistle_gulch
 import thistle_gulch.bridge as tg_bridge
 from demos import (
     Demo,
     DefaultSagaServerDemo,
-    override_action_options,
+    override_actions,
     simulation_commands,
     character_commands,
 )
@@ -23,9 +21,9 @@ def main():
     # A list of available demos and the corresponding endpoint they override.
     options: List[Demo] = [
         DefaultSagaServerDemo(),
-        action_overrides.PrintActionsAndPickFirstDemo(),
-        action_overrides.SkipSagaAlwaysDoTheDefaultActionDemo(),
-        action_overrides.ReplaceContextWithYamlDumpDemo(),
+        override_actions.PrintActionsAndPickFirstDemo(),
+        override_actions.SkipSagaAlwaysDoTheDefaultActionDemo(),
+        override_actions.ReplaceContextWithYamlDumpDemo(),
         custom_models.UseOllamaDemo(),
         simulation_commands.SetStartTimeDemo(),
         simulation_commands.SimulationTickDemo(),

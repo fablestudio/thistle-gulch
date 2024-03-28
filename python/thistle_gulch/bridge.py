@@ -6,6 +6,9 @@ import fable_saga.server as saga_server
 import socketio
 from aiohttp import web
 from attr import define
+from fable_saga.actions import ActionsAgent
+from fable_saga.conversations import ConversationAgent
+from fable_saga.server import BaseEndpoint, ActionsResponse
 
 from thistle_gulch.runtime import Runtime
 from . import (
@@ -30,11 +33,78 @@ class TGActionsRequest(saga_server.ActionsRequest):
     context_obj: Optional[PersonaContextObject] = None
 
 
+class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
+    """Server for SAGA."""
+
+    def __init__(self, agent: saga_server.ActionsAgent):
+        self.agent = agent
+
+    async def handle_request(
+        self, req: TGActionsRequest
+    ) -> saga_server.ActionsResponse:
+        # Generate actions
+        try:
+            assert isinstance(
+                req, TGActionsRequest
+            ), f"Invalid request type: {type(req)}"
+            actions = await self.agent.generate_actions(
+                req.context, req.skills, req.retries, req.verbose, req.model
+            )
+
+            logger.info(actions.options)
+            response = saga_server.ActionsResponse(
+                actions=actions, reference=req.reference, error=None
+            )
+            if actions.error is not None:
+                response.error = f"Generation Error: {actions.error}"
+            return response
+        except Exception as e:
+            logger.exception(str(e))
+            return saga_server.ActionsResponse(
+                actions=None, error=str(e), reference=req.reference
+            )
+
+
 @define(slots=True)
 class TGConversationRequest(saga_server.ConversationRequest):
     """Enhanced ConversationRequest with a context_obj."""
 
     context_obj: Optional[PersonaContextObject] = None
+
+
+class TGConversationEndpoint(saga_server.ConversationEndpoint):
+    """Server for SAGA."""
+
+    def __init__(self, agent: saga_server.ConversationAgent):
+        super().__init__(agent)
+
+    async def generate_conversation(
+        self, req: TGConversationRequest
+    ) -> saga_server.ConversationResponse:
+        # Generate conversation
+        try:
+            assert isinstance(
+                req, TGConversationRequest
+            ), f"Invalid request type: {type(req)}"
+            conversation = await self.agent.generate_conversation(
+                req.persona_guids,
+                req.context,
+                req.retries,
+                req.verbose,
+                req.model,
+            )
+
+            response = saga_server.ConversationResponse(
+                conversation=conversation, reference=req.reference, error=None
+            )
+            if conversation.error is not None:
+                response.error = f"Generation Error: {conversation.error}"
+            return response
+        except Exception as e:
+            logger.exception(str(e))
+            return saga_server.ConversationResponse(
+                conversation=None, error=str(e), reference=req.reference
+            )
 
 
 @define
@@ -44,10 +114,8 @@ class BridgeConfig:
     cors: str = "*"
     runtime_path: Optional[str] = None
     # Reuse the SAGA Actions and Conversation (Servers) as endpoints.
-    actions_endpoint: saga_server.SagaServer = saga_server.SagaServer()
-    conversation_endpoint: saga_server.ConversationServer = (
-        saga_server.ConversationServer()
-    )
+    actions_endpoint: BaseEndpoint = TGActionsEndpoint(ActionsAgent())
+    conversation_endpoint: BaseEndpoint = TGConversationEndpoint(ConversationAgent())
 
 
 class RuntimeBridge:
@@ -122,9 +190,7 @@ class RuntimeBridge:
             logger.debug(f"[Generate Actions] Request from {sid}: {message_str}")
             return await saga_server.generic_handler(
                 message_str,
-                TGActionsRequest,
-                self.config.actions_endpoint.generate_actions,
-                saga_server.ActionsResponse,
+                self.config.actions_endpoint,
             )
 
         # These are the events that the server listens on when emulating the SAGA server. [Deprecated]
@@ -133,10 +199,7 @@ class RuntimeBridge:
             logger.info(f"[Generate Conversation] Request from {sid}")
             logger.debug(f"[Generate Conversation] Request from {sid}: {message_str}")
             return await saga_server.generic_handler(
-                message_str,
-                TGConversationRequest,
-                self.config.conversation_endpoint.generate_conversation,
-                saga_server.ConversationResponse,
+                message_str, self.config.conversation_endpoint
             )
 
         ###

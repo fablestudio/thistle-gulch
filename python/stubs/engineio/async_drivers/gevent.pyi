@@ -1,14 +1,10 @@
-import gevent
 from _typeshed import Incomplete
 from engineio.async_drivers._websocket_wsgi import SimpleWebSocketWSGI as SimpleWebSocketWSGI
 
-SimpleWebSocketWSGI: Incomplete
 
-class Thread(gevent.Greenlet):
+class Thread(Incomplete):
     def __init__(self, target, args=[], kwargs={}) -> None: ...
 
-class WebSocketWSGI(SimpleWebSocketWSGI):
-    def __init__(self, handler, server) -> None: ...
 
 class WebSocketWSGI:
     app: Incomplete

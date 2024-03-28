@@ -5,7 +5,7 @@ import fable_saga.server
 import langchain_core.callbacks
 from langchain.chains import LLMChain
 
-import thistle_gulch.bridge
+from thistle_gulch.bridge import TGActionsRequest, RuntimeBridge, TGActionsEndpoint
 from thistle_gulch import logger
 from . import Demo
 
@@ -29,7 +29,7 @@ class UseOllamaDemo(Demo):
             function=self.use_llama2_model,
         )
 
-    def use_llama2_model(self, bridge: thistle_gulch.bridge.RuntimeBridge):
+    def use_llama2_model(self, bridge: RuntimeBridge):
         """Server for SAGA."""
 
         default_model = "codellama:13b-instruct"
@@ -44,11 +44,11 @@ class UseOllamaDemo(Demo):
         model = model if model else default_model
         print(f"Using model: {model}")
 
-        class UseLlama2Model(fable_saga.server.SagaServer):
+        class UseLlama2Model(TGActionsEndpoint):
             """Server for SAGA."""
 
-            def __init__(self):
-                super().__init__()
+            def __init__(self, agent: fable_saga.actions.ActionsAgent):
+                super().__init__(agent)
                 from langchain_community.llms import Ollama
 
                 self.llm = Ollama(
@@ -63,12 +63,12 @@ class UseOllamaDemo(Demo):
                 self.agent.__setattr__("generate_chain", generate_chain)
 
             async def generate_actions(
-                self, req: fable_saga.server.ActionsRequest
+                self, req: TGActionsRequest
             ) -> fable_saga.server.ActionsResponse:
                 # Generate actions
                 try:
                     assert isinstance(
-                        req, thistle_gulch.bridge.TGActionsRequest
+                        req, TGActionsRequest
                     ), f"Invalid request type: {type(req)}"
                     actions = await self.agent.generate_actions(
                         req.context, req.skills, req.retries, req.verbose, req.model
@@ -88,4 +88,6 @@ class UseOllamaDemo(Demo):
                     )
 
         # Set the actions endpoint to the selected demo.
-        bridge.config.actions_endpoint = UseLlama2Model()
+        bridge.config.actions_endpoint = UseLlama2Model(
+            fable_saga.actions.ActionsAgent()
+        )

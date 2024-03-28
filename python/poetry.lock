@@ -451,8 +451,8 @@ types-pyyaml = "^6.0.12.20240311"
 [package.source]
 type = "git"
 url = "https://github.com/fablestudio/fable-saga.git"
-reference = "SIM-2879-cleanup-naming-and-boilerplate"
-resolved_reference = "e0e84bab7c9cb7791ec100130d15d5884bdde2f6"
+reference = "main"
+resolved_reference = "ed6f6c273529d412a19ef69a4dac03584d1737d6"
 
 [[package]]
 name = "frozenlist"
@@ -1956,4 +1956,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5d6439796b2d9a6efd9b340e9a352ec086921d7a7a2ff08ecb2c14cef2a32b1d"
+content-hash = "06c6ab4ddc6ae956c539ea26ffd93eff0fbacaeb4dbd9c3be7921a8605da2a18"

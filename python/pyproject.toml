@@ -10,7 +10,7 @@ python = "^3.10"
 python-socketio = "^5.11.1"
 cattrs = "^23.2.3"
 aiohttp = "^3.9.3"
-fable-saga = { git = "https://github.com/fablestudio/fable-saga.git", rev = "SIM-2879-cleanup-naming-and-boilerplate" }
+fable-saga = { git = "https://github.com/fablestudio/fable-saga.git", rev = "main" }
 types-pyyaml = "^6.0.12.20240311"
 
 [tool.poetry.group.test.dependencies]
