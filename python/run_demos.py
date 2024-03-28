@@ -4,7 +4,13 @@ from typing import List
 
 import thistle_gulch
 import thistle_gulch.bridge as tg_bridge
-from demos import Demo, DefaultSagaServerDemo, override_action_options, simulation_commands, character_commands
+from demos import (
+    Demo,
+    DefaultSagaServerDemo,
+    override_action_options,
+    simulation_commands,
+    character_commands,
+)
 
 
 def main():
