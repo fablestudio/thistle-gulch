@@ -162,7 +162,7 @@ class RuntimeBridge:
             ):
                 raise Exception(
                     f"Incorrect Runtime version detected - "
-                    f"{self.runtime.required_version} was expected but found {runtime_version} instead"
+                    f"'{self.runtime.required_version}' was expected but '{runtime_version}' was found instead"
                 )
 
             logger.debug(
