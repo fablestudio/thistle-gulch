@@ -26,7 +26,7 @@ class Runtime:
         self.emit_lock = asyncio.Lock()
         self.sid: Optional[str] = None
         self.api = API(self)
-        self.start_date = Optional[datetime]
+        self.start_date: datetime
 
     def start(self):
         if self.process and self.process.poll() is None:

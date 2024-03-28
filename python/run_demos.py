@@ -29,6 +29,7 @@ def main():
         character_commands.EnableAgentDemo(),
         character_commands.UpdateCharacterPropertyDemo(),
         character_commands.OverrideCharacterAction(),
+        character_commands.RobBankAndArrestCriminal(),
     ]
 
     # Print the available demos and prompt the user to select one.

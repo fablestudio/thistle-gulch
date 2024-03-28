@@ -133,6 +133,8 @@ class Interactable:
 @define(slots=True)
 class PersonaContextObject:
     time: str
+    time_formatted: str
+    skills: List[dict]
     participants: List[str]
     personas: List[Persona]
     observations: List[Observation]
@@ -141,4 +143,5 @@ class PersonaContextObject:
     interactables: List[Interactable]
     locations: List[Location]
     memories: List[PersonaMemories]
+    current_action: str
     default_action: str

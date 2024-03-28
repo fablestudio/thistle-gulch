@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from thistle_gulch.bridge import RuntimeBridge
 from . import Demo
 
@@ -68,14 +69,14 @@ class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
             name="Override Character Action",
-            description="Manually trigger a specific action for an NPC",
+            description="Manually trigger a specific action for a character",
             category=CATEGORY,
             function=self.override_character_action_demo,
         )
 
     def override_character_action_demo(self, bridge: RuntimeBridge):
         """
-        Manually trigger a specific action for an NPC
+        Manually trigger a specific action for a character
 
         :param bridge: The bridge to the runtime.
         """
@@ -99,3 +100,82 @@ class OverrideCharacterAction(Demo):
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
+
+
+class RobBankAndArrestCriminal(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Rob Bank and Arrest Criminal",
+            description="Force a character to rob the bank and get arrested by the sheriff",
+            category=CATEGORY,
+            function=self.rob_bank_arrest_criminal_demo,
+        )
+        self.arrest_triggered = False
+        self.arrest_time: datetime
+
+    def rob_bank_arrest_criminal_demo(self, bridge: RuntimeBridge):
+        """
+        Force a character to rob the bank and get arrested by sheriff wyatt_cooper
+
+        :param bridge: The bridge to the runtime.
+        """
+
+        robber_id = input("Enter persona id to rob the bank: ")
+
+        async def on_ready(_):
+            self.arrest_time = bridge.runtime.start_date + timedelta(hours=1)
+
+            print(f"Getting character context for {robber_id}")
+            context = await bridge.runtime.api.get_character_context(robber_id)
+
+            # context.interactables is a list of all world objects/characters with interactions available
+            interactable_bank = next(
+                i for i in context.interactables if i.item_guid == "bank"
+            )
+            rob_bank_interaction_name = next(
+                name for name in interactable_bank.interactions if "Rob" in name
+            )
+
+            action = {
+                "skill": "interact",
+                "parameters": {
+                    "item_guid": interactable_bank.item_guid,
+                    "interaction": rob_bank_interaction_name,
+                    "goal": "Steal gold from the bank",
+                },
+            }
+            print(f"Force {robber_id} to rob the bank")
+            await bridge.runtime.api.override_character_action(robber_id, action)
+
+        async def on_tick(_, current_time: datetime):
+            # Only trigger the arrest once at the designated time
+            if self.arrest_triggered or current_time < self.arrest_time:
+                return
+
+            self.arrest_triggered = True
+
+            print(f"Getting character context for wyatt_cooper")
+            context = await bridge.runtime.api.get_character_context("wyatt_cooper")
+
+            # context.interactables is a list of all world objects/characters with interactions available
+            interactable_robber = next(
+                i for i in context.interactables if i.item_guid == robber_id
+            )
+            arrest_interaction_name = next(
+                name for name in interactable_robber.interactions if "Arrest" in name
+            )
+
+            action = {
+                "skill": "interact",
+                "parameters": {
+                    "item_guid": interactable_robber.item_guid,
+                    "interaction": arrest_interaction_name,
+                    "goal": "Arrest the bank robber",
+                },
+            }
+            print(f"Force wyatt_cooper to arrest {robber_id}")
+            await bridge.runtime.api.override_character_action("wyatt_cooper", action)
+
+        print("Registering custom on_ready and on_tick callbacks.")
+        bridge.on_ready = on_ready
+        bridge.on_tick = on_tick
