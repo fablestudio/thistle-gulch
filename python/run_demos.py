@@ -2,11 +2,15 @@ import logging
 import sys
 from typing import List
 
-import demos.override_action_options as action_overrides
-import demos.simulation_commands as simulation_commands
 import thistle_gulch
 import thistle_gulch.bridge as tg_bridge
-from demos import Demo, DefaultSagaServerDemo
+from demos import (
+    Demo,
+    DefaultSagaServerDemo,
+    override_action_options,
+    simulation_commands,
+    character_commands,
+)
 
 
 def main():
@@ -16,14 +20,15 @@ def main():
     # A list of available demos and the corresponding endpoint they override.
     options: List[Demo] = [
         DefaultSagaServerDemo(),
-        action_overrides.PrintActionsAndPickFirstDemo(),
-        action_overrides.SkipSagaAlwaysDoTheDefaultActionDemo(),
-        action_overrides.ReplaceContextWithYamlDumpDemo(),
-        action_overrides.UseLlama2ModelDemo(),
+        override_action_options.PrintActionsAndPickFirstDemo(),
+        override_action_options.SkipSagaAlwaysDoTheDefaultActionDemo(),
+        override_action_options.ReplaceContextWithYamlDumpDemo(),
+        override_action_options.UseLlama2ModelDemo(),
         simulation_commands.SetStartTimeDemo(),
-        simulation_commands.EnableAgentDemo(),
-        simulation_commands.UpdateCharacterPropertyDemo(),
         simulation_commands.SimulationTickDemo(),
+        character_commands.EnableAgentDemo(),
+        character_commands.UpdateCharacterPropertyDemo(),
+        character_commands.OverrideCharacterAction(),
     ]
 
     # Print the available demos and prompt the user to select one.
