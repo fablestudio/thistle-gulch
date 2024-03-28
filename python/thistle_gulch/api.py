@@ -70,6 +70,7 @@ class API:
                 "iso_date": date,
             },
         )
+        self.runtime.start_date = date
 
     async def enable_agent(self, persona_id: str, enabled: bool) -> None:
         """

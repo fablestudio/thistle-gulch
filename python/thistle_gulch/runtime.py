@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import datetime
 from subprocess import Popen
 from typing import Optional, List, Tuple, TYPE_CHECKING
 
@@ -17,6 +18,7 @@ class Runtime:
         path: Optional[str] = None,
         args: Optional[List[str]] = None,
     ):
+        self.required_version = "1.45.1-beta"
         self.sio = sio
         self.path = path
         self.args = args if args else []
@@ -24,6 +26,7 @@ class Runtime:
         self.emit_lock = asyncio.Lock()
         self.sid: Optional[str] = None
         self.api = API(self)
+        self.start_date = Optional[datetime]
 
     def start(self):
         if self.process and self.process.poll() is None:
