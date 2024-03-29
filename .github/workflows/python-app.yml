@@ -43,4 +43,4 @@ jobs:
           cd python && poetry run black --check .
       - name: Check types with mypy
         run: |
-          cd python && poetry run mypy
+          cd python && poetry run mypy .
