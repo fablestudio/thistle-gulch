@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import datetime
 from typing import Callable, Optional, Awaitable
 
@@ -18,6 +19,8 @@ from . import (
     logger,
     parse_runtime_path_and_args,
     converter,
+    MessageSystem,
+    IncomingRoutes,
 )
 from .data_models import PersonaContextObject
 
@@ -51,7 +54,6 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
                 req.context, req.skills, req.retries, req.verbose, req.model
             )
 
-            logger.info(actions.options)
             response = saga_server.ActionsResponse(
                 actions=actions, reference=req.reference, error=None
             )
@@ -107,15 +109,69 @@ class TGConversationEndpoint(saga_server.ConversationEndpoint):
             )
 
 
+class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
+
+    def __init__(self, bridge: "RuntimeBridge"):
+        self.bridge = bridge
+
+    async def handle_request(self, msg: GenericMessage):
+        """Handler for the simulation-ready message."""
+        logger.debug(f"[Simulation Ready] received..")
+
+        self.bridge.runtime.start_date = converter.structure(
+            msg.data.get("start_date"), datetime
+        )
+
+        runtime_version = msg.data.get("runtime_version")
+        if (
+            runtime_version != "local.build"
+            and runtime_version != self.bridge.runtime.required_version
+        ):
+            raise Exception(
+                f"Incorrect Runtime version detected - "
+                f"'{self.bridge.runtime.required_version}' was expected but '{runtime_version}' was found instead"
+            )
+
+        logger.debug(f"[Simulation Ready] Pausing simulation during initialization..")
+        await self.bridge.runtime.api.pause()
+
+        # Call the on_ready callback if it exists.
+        if self.bridge.on_ready is not None:
+            # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
+            logger.debug(f"[Simulation Ready] Calling on_ready callback..")
+            await self.bridge.on_ready(self.bridge)
+        else:
+            logger.debug(f"[Simulation Ready] No on_ready callback registered..")
+
+        logger.debug(f"[Simulation Ready] Resuming simulation..")
+        await self.bridge.runtime.api.resume()
+
+
+class OnSimulationTickEndpoint(BaseEndpoint[GenericMessage, None]):
+
+    def __init__(self, bridge: "RuntimeBridge"):
+        self.bridge = bridge
+
+    async def handle_request(self, msg: GenericMessage):
+        """Handler for the simulation-tick message."""
+        logger.debug(f"[Simulation Tick] received..")
+
+        # Call the on_tick callback if it exists.
+        if self.bridge.on_tick is not None:
+            current_time = converter.structure(msg.data.get("current_time"), datetime)
+            # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
+            logger.debug(f"[Simulation Tick] Calling on_tick callback..")
+            await self.bridge.on_tick(self.bridge, current_time)
+        else:
+            logger.debug(f"[Simulation Tick] No on_tick callback registered..")
+
+
 @define
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
     cors: str = "*"
     runtime_path: Optional[str] = None
-    # Reuse the SAGA Actions and Conversation (Servers) as endpoints.
-    actions_endpoint: BaseEndpoint = TGActionsEndpoint(ActionsAgent())
-    conversation_endpoint: BaseEndpoint = TGConversationEndpoint(ConversationAgent())
 
 
 class RuntimeBridge:
@@ -172,35 +228,34 @@ class RuntimeBridge:
             logger.info("[Socketio] Disconnected: " + sid)
             await self.runtime.on_disconnect(sid)
 
-        # Set up the socketio event handlers. These are basically channels that the server listens on.
-        # The first one is a catch-all for unhandled events.
+        ###
+        # OLD RUNTIME BRIDGE ENDPOINTS (USE INDIVIDUAL CHANNELS AND ROUTERS)
+        ###
+
         @sio.on("*")
-        def catch_all(event, sid, *data):
-            """Catch all unhandled events that have one message. (common)"""
-            logger.error(f"[Socketio] Unhandled event: {event} {sid} {data}")
+        async def catch_all(event, sid, *data):
+            """Set up the socketio event handlers. These are basically channels that the server listens on.
+            This is a catch-all for otherwise unhandled events with a matching @sio.on(NAME).
+            """
 
-        ###
-        # STANDARD SAGA SERVER ENDPOINTS (LEGACY)
-        ###
-
-        # These are the events that the server listens on when emulating the SAGA server. [Deprecated]
-        @sio.on("generate-actions")
-        async def generate_actions(sid, message_str: str):
-            logger.info(f"[Generate Actions] Request from {sid}")
-            logger.debug(f"[Generate Actions] Request from {sid}: {message_str}")
-            return await saga_server.generic_handler(
+            # Check if the event is handled by the router.
+            route = self.router.routes.get(event)
+            if not route:
+                logger.error(f"[Socketio] Unhandled event: {event} {sid} {data}")
+                return
+            if len(data) != 1 or not isinstance(data[0], str):
+                logger.error(
+                    f"[Socketio] Unhandled event: {event} {sid} {data}: expected 1 data item, got {len(data)}"
+                )
+                return
+            message_str = data[0]
+            # Process the message using the route's process_function.
+            logger.debug(f"[Endpoint] Received {event} from {sid}")
+            resp = await saga_server.generic_handler(
                 message_str,
-                self.config.actions_endpoint,
+                route.endpoint,
             )
-
-        # These are the events that the server listens on when emulating the SAGA server. [Deprecated]
-        @sio.on("generate-conversation")
-        async def generate_conversation(sid, message_str: str):
-            logger.info(f"[Generate Conversation] Request from {sid}")
-            logger.debug(f"[Generate Conversation] Request from {sid}: {message_str}")
-            return await saga_server.generic_handler(
-                message_str, self.config.conversation_endpoint
-            )
+            return resp
 
         ###
         # NEW RUNTIME BRIDGE ENDPOINTS (USES SINGLE STANDARD MESSAGES CHANNEL AND ROUTER)
@@ -209,61 +264,29 @@ class RuntimeBridge:
         async def on_incoming_messages(sid, message_str: str):
             return await self.router.handle_message(sid, message_str)
 
-        # Add routes
-        async def on_ready_handler(ready_response: GenericMessage):
-            """Handler for the simulation-ready message."""
-            logger.debug(f"[Simulation Ready] received..")
-
-            self.runtime.start_date = converter.structure(
-                ready_response.data.get("start_date"), datetime
-            )
-
-            runtime_version = ready_response.data.get("runtime_version")
-            if (
-                runtime_version != "local.build"
-                and runtime_version != self.runtime.required_version
-            ):
-                raise Exception(
-                    f"Incorrect Runtime version detected - "
-                    f"'{self.runtime.required_version}' was expected but '{runtime_version}' was found instead"
-                )
-
-            logger.debug(
-                f"[Simulation Ready] Pausing simulation during initialization.."
-            )
-            await self.runtime.api.pause()
-
-            # Call the on_ready callback if it exists.
-            if self.on_ready is not None:
-                # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
-                logger.debug(f"[Simulation Ready] Calling on_ready callback..")
-                await self.on_ready(self)
-            else:
-                logger.debug(f"[Simulation Ready] No on_ready callback registered..")
-
-            logger.debug(f"[Simulation Ready] Resuming simulation..")
-            await self.runtime.api.resume()
-
+        ###
+        # ADD ROUTES
+        ###
         self.router.add_route(
-            Route("simulation-ready", GenericMessage, on_ready_handler)
+            Route("simulation-ready", OnReadyEndpoint(self), logging.INFO)
         )
-
-        async def on_tick_handler(tick_response: GenericMessage):
-            """Handler for the simulation-ready message."""
-            logger.debug(f"[Simulation Tick] received..")
-
-            # Call the on_tick callback if it exists.
-            if self.on_tick is not None:
-                current_time = converter.structure(
-                    tick_response.data.get("current_time"), datetime
-                )
-                # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
-                logger.debug(f"[Simulation Tick] Calling on_tick callback..")
-                await self.on_tick(self, current_time)
-            else:
-                logger.debug(f"[Simulation Tick] No on_tick callback registered..")
-
-        self.router.add_route(Route("simulation-tick", GenericMessage, on_tick_handler))
+        self.router.add_route(Route("simulation-tick", OnSimulationTickEndpoint(self)))
+        self.router.add_route(
+            Route(
+                IncomingRoutes.generate_actions.value,
+                TGActionsEndpoint(ActionsAgent()),
+                logging.DEBUG,
+                MessageSystem.ENDPOINTS,
+            )
+        )
+        self.router.add_route(
+            Route(
+                IncomingRoutes.generate_conversations.value,
+                saga_server.ConversationEndpoint(ConversationAgent()),
+                logging.DEBUG,
+                MessageSystem.ENDPOINTS,
+            )
+        )
 
     def run(self):
         print(

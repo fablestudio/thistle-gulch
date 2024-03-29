@@ -3,7 +3,7 @@ import fable_saga.actions
 from fable_saga import server as saga_server
 from langchain.prompts import PromptTemplate
 
-from thistle_gulch import logger
+from thistle_gulch import logger, IncomingRoutes, Route
 from thistle_gulch.bridge import TGActionsEndpoint, RuntimeBridge, TGActionsRequest
 from . import Demo
 
@@ -43,8 +43,11 @@ class PrintActionsAndPickFirstDemo(Demo):
                 return resp
 
         # Set the actions endpoint to the selected demo.
-        bridge.config.actions_endpoint = PrintActionsAndPickFirst(
-            saga_server.ActionsAgent()
+        bridge.router.add_route(
+            Route(
+                IncomingRoutes.generate_actions.value,
+                PrintActionsAndPickFirst(fable_saga.actions.ActionsAgent()),
+            )
         )
 
 
@@ -90,8 +93,11 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
                 return response
 
         # Set the actions endpoint to the selected demo.
-        bridge.config.actions_endpoint = SkipSagaAlwaysDoTheDefaultAction(
-            fable_saga.actions.ActionsAgent()
+        bridge.router.add_route(
+            Route(
+                IncomingRoutes.generate_actions.value,
+                SkipSagaAlwaysDoTheDefaultAction(fable_saga.actions.ActionsAgent()),
+            )
         )
 
 
@@ -172,6 +178,9 @@ and the chosen skill options.""".replace(
                 return response
 
         # Set the actions endpoint to the selected demo.
-        bridge.config.actions_endpoint = ReplaceContextWithYamlDump(
-            fable_saga.actions.ActionsAgent()
+        bridge.router.add_route(
+            Route(
+                IncomingRoutes.generate_actions.value,
+                ReplaceContextWithYamlDump(fable_saga.actions.ActionsAgent()),
+            )
         )

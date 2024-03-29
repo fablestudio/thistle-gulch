@@ -5,11 +5,11 @@ import traceback
 import uuid
 from datetime import datetime
 from typing import Type, Awaitable, Any, Callable, Dict, TypeVar, Tuple, Optional, List
+from enum import Enum
 
 import cattrs
 from attr import define
-
-T = TypeVar("T")
+from fable_saga.server import BaseEndpoint, get_generic_types
 
 logger = logging.getLogger(__name__)
 
@@ -73,16 +73,26 @@ class GenericMessage:
     error: Optional[str] = None
 
 
+class MessageSystem(Enum):
+    """The message system to use."""
+
+    MESSAGES = "messages"
+    ENDPOINTS = "endpoints"
+
+
+class IncomingRoutes(Enum):
+    """The message types to use."""
+
+    generate_actions = "generate-actions"
+    generate_conversations = "generate-conversation"
+
+
+@define
 class Route:
-    def __init__(
-        self,
-        msg_type: str,
-        msg_class: Type[T],
-        process_function: Callable[[T], Awaitable[GenericMessage]],
-    ):
-        self.msg_type = msg_type
-        self.msg_class = msg_class
-        self.process_function = process_function
+    msg_type: str
+    endpoint: BaseEndpoint
+    log_level: int = logging.DEBUG
+    system: MessageSystem = MessageSystem.MESSAGES
 
 
 class IncomingMessageRouter:
@@ -95,11 +105,11 @@ class IncomingMessageRouter:
 
     async def handle_message(self, sid: str, message_str: str) -> Any:
         logger.debug(f"[Message] received from SID {sid}: {message_str}")
-        ex: Optional[Exception] = None
+        ex: Exception
         try:
             # Convert the message to a dictionary and validate that it has a type and that the type has a known route.
             message = json.loads(message_str)
-            logger.info(
+            logger.debug(
                 f"[Message] sid: {sid}, type: {message.get('type', 'unknown')}, ref: {message.get('reference', 'unknown')}"
             )
             msg_type = message.get("type")
@@ -107,11 +117,14 @@ class IncomingMessageRouter:
                 raise ValueError("Message is missing a type.")
             if msg_type not in self.routes:
                 raise ValueError(f"Unknown message type: {msg_type}")
+            route = self.routes[msg_type]
 
             # Convert the message to the appropriate type and process it.
-            request_type = self.routes[message["type"]].msg_class
+            request_type, response_type = get_generic_types(route.endpoint)
             request = converter.structure(message, request_type)
-            result = await self.routes[message["type"]].process_function(request)
+            logger.log(route.log_level, f"[Message] request: {request}")
+            result = await route.endpoint.handle_request(request)
+            logger.log(route.log_level, f"[Message] response: {result}")
 
             # If the result is None, then we don't send a response.
             if result is None:
