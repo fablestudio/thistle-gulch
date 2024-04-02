@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional, List, Dict
-
 from attrs import define
+from fable_saga.actions import Skill
 
 
 @define(slots=True)
@@ -134,7 +134,7 @@ class Interactable:
 class PersonaContextObject:
     time: str
     time_formatted: str
-    skills: List[dict]
+    skills: List[Skill]
     participants: List[str]
     personas: List[Persona]
     observations: List[Observation]

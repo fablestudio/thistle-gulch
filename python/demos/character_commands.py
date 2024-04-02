@@ -69,14 +69,14 @@ class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
             name="Override Character Action",
-            description="Manually trigger a specific action for a character",
+            description="Force a character to go to the first available world location",
             category=CATEGORY,
             function=self.override_character_action_demo,
         )
 
     def override_character_action_demo(self, bridge: RuntimeBridge):
         """
-        Manually trigger a specific action for a character
+        Force a character to go to the first available world location
 
         :param bridge: The bridge to the runtime.
         """
@@ -123,6 +123,7 @@ class RobBankAndArrestCriminal(Demo):
         robber_id = input("Enter persona id to rob the bank: ")
 
         async def on_ready(_):
+            # Arrest the robber 1 hour after the simulation starts
             self.arrest_time = bridge.runtime.start_date + timedelta(hours=1)
 
             print(f"Getting character context for {robber_id}")
@@ -179,3 +180,62 @@ class RobBankAndArrestCriminal(Demo):
         print("Registering custom on_ready and on_tick callbacks.")
         bridge.on_ready = on_ready
         bridge.on_tick = on_tick
+
+
+class CustomConversation(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Custom Conversation",
+            description="Provide custom dialogue for a set characters to perform",
+            category=CATEGORY,
+            function=self.custom_conversation_demo,
+        )
+
+    def custom_conversation_demo(self, bridge: RuntimeBridge):
+        """
+        Provide custom dialogue for a set characters to perform
+
+        :param bridge: The bridge to the runtime.
+        """
+
+        speaker_1_id = input("Enter speaker 1 id: ")
+        speaker_2_id = input("Enter speaker 2 id: ")
+
+        conversation = [
+            {
+                "persona_id": speaker_1_id,
+                "dialogue": "Did you hear about the murder last night?",
+            },
+            {"persona_id": speaker_2_id, "dialogue": "What?! Who was killed?"},
+            {
+                "persona_id": speaker_1_id,
+                "dialogue": "I don't know, but this isn't a good look for the town. We're developing a reputation.",
+            },
+            {
+                "persona_id": speaker_2_id,
+                "dialogue": "I'm gonna stock up on ammunition. This place is getting dangerous.'",
+            },
+        ]
+
+        async def on_ready(_):
+            action = {
+                "skill": "converse_with",
+                "parameters": {
+                    "persona_guid": speaker_2_id,  # The conversation companion - in this example speaker_1 is the initiator and speaker_2 is the companion
+                    "conversation": conversation,  # If no conversation is provided, one will be generated instead
+                    "topic": "the murder last night",
+                    "context": "",  # Only required if no conversation is provided
+                    "goal": "Discuss the recent murder",
+                },
+            }
+
+            print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
+            for turn in conversation:
+                speaker = turn.get("persona_id")
+                dialogue = turn.get("dialogue")
+                print(f"\t{speaker}: {dialogue}")
+
+            await bridge.runtime.api.override_character_action(speaker_1_id, action)
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready

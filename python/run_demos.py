@@ -31,6 +31,7 @@ def main():
         character_commands.UpdateCharacterPropertyDemo(),
         character_commands.OverrideCharacterAction(),
         character_commands.RobBankAndArrestCriminal(),
+        character_commands.CustomConversation(),
     ]
 
     # Print the available demos and prompt the user to select one.
