@@ -105,28 +105,40 @@ class FocusCharacter(Demo):
     def __init__(self):
         super().__init__(
             name="Focus Character",
-            description="Focus on a character - show the character UI and navigation path, and allow the player to take actions on their behalf",
+            description="Focus a character, follow them, then remove focus after 5 simulation ticks - focus shows the character UI and navigation path, and allows the player to take actions on their behalf",
             category=CATEGORY,
             function=self.focus_character_demo,
         )
 
     def focus_character_demo(self, bridge: RuntimeBridge):
         """
-        Place focus on a specific character, then follow them
+        Focus a character, follow them, then remove focus after 10 ticks
 
         :param bridge: The bridge to the runtime.
         """
 
         persona_id = input("Enter persona id: ")
 
+        # Focus on and follow the character at simulation start
         async def on_ready(_):
             print(f"Focus {persona_id}")
             await bridge.runtime.api.focus_character(persona_id)
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
 
+        tick_count = 0
+
+        # Stop following the character after 10 simulation ticks
+        async def on_tick(_, now: datetime):
+            nonlocal tick_count
+            tick_count += 1
+            if tick_count == 10:
+                print(f"Remove focus from {persona_id}")
+                await bridge.runtime.api.focus_character("")
+
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
+        bridge.on_tick = on_tick
 
 
 class OverrideCharacterAction(Demo):

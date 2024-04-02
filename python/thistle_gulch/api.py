@@ -146,11 +146,26 @@ class API:
             },
         )
 
+    async def focus_character(self, persona_id: str) -> None:
+        """
+        Focusing a character shows the character UI and navigation path, and allows the player to take actions on their behalf
+
+        :param persona_id: Persona to focus. If none provided, the currently focused character will be removed from focus.
+        """
+        logger.debug(f"Focus {persona_id}")
+        await self.runtime.send_message(
+            "character-command",
+            {
+                "command": "focus_character",
+                "persona_id": persona_id,
+            },
+        )
+
     async def follow_character(self, persona_id: str, zoom: float) -> None:
         """
         Follow a specific character with the camera
 
-        :param persona_id: Persona to follow
+        :param persona_id: Persona to follow. If none provided, stop following the current character if any.
         :param zoom: The camera zoom amount between 0.0 (furthest) and 1.0 (closest)
         """
         logger.debug(f"Following {persona_id} with the camera")
@@ -160,20 +175,5 @@ class API:
                 "command": "follow_character",
                 "persona_id": persona_id,
                 "zoom": zoom,
-            },
-        )
-
-    async def focus_character(self, persona_id: str) -> None:
-        """
-        Focusing a character shows the character UI and navigation path, and allows the player to take actions on their behalf
-
-        :param persona_id: Persona to follow
-        """
-        logger.debug(f"Focus {persona_id}")
-        await self.runtime.send_message(
-            "camera-command",
-            {
-                "command": "focus_character",
-                "persona_id": persona_id,
             },
         )
