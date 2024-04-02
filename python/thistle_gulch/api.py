@@ -156,7 +156,7 @@ class API:
         await self.runtime.send_message(
             "character-command",
             {
-                "command": "focus_character",
+                "command": "focus-character",
                 "persona_id": persona_id,
             },
         )
@@ -172,7 +172,7 @@ class API:
         await self.runtime.send_message(
             "camera-command",
             {
-                "command": "follow_character",
+                "command": "follow-character",
                 "persona_id": persona_id,
                 "zoom": zoom,
             },
@@ -193,10 +193,10 @@ class API:
 
         :param position_x: X position in meters
         :param position_y: Y position in meters
-        :param position_y: Z position in meters
+        :param position_z: Z position in meters
         :param rotation_x: X rotation in degrees - euler angle between -360 and +360
         :param rotation_y: Y rotation in degrees - euler angle between -360 and +360
-        :param rotation_y: Z rotation in degrees - euler angle between -360 and +360
+        :param rotation_z: Z rotation in degrees - euler angle between -360 and +360
         :param field_of_view: Field of view in degrees - angle between 5 and 120
         """
         logger.debug(
@@ -205,7 +205,7 @@ class API:
         await self.runtime.send_message(
             "camera-command",
             {
-                "command": "place_camera",
+                "command": "place-camera",
                 "position_x": position_x,
                 "position_y": position_y,
                 "position_z": position_z,
