@@ -35,6 +35,7 @@ def main():
         character_commands.CustomConversation(),
         character_commands.FocusCharacter(),
         camera_commands.FollowCharacter(),
+        camera_commands.PlaceCamera(),
     ]
 
     while True:
