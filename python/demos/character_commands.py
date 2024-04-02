@@ -101,6 +101,34 @@ class UpdateCharacterPropertyDemo(Demo):
         bridge.on_ready = on_ready
 
 
+class FocusCharacter(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Focus Character",
+            description="Focus on a character - show the character UI and navigation path, and allow the player to take actions on their behalf",
+            category=CATEGORY,
+            function=self.focus_character_demo,
+        )
+
+    def focus_character_demo(self, bridge: RuntimeBridge):
+        """
+        Place focus on a specific character, then follow them
+
+        :param bridge: The bridge to the runtime.
+        """
+
+        persona_id = input("Enter persona id: ")
+
+        async def on_ready(_):
+            print(f"Focus {persona_id}")
+            await bridge.runtime.api.focus_character(persona_id)
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready
+
+
 class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(

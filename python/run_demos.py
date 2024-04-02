@@ -11,6 +11,7 @@ from demos import (
     override_actions,
     simulation_commands,
     character_commands,
+    camera_commands,
 )
 
 
@@ -32,6 +33,8 @@ def main():
         character_commands.OverrideCharacterAction(),
         character_commands.RobBankAndArrestCriminal(),
         character_commands.CustomConversation(),
+        character_commands.FocusCharacter(),
+        camera_commands.FollowCharacter(),
     ]
 
     while True:
