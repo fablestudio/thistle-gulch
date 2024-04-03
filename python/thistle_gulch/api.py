@@ -145,3 +145,73 @@ class API:
                 "action": action,
             },
         )
+
+    async def focus_character(self, persona_id: str) -> None:
+        """
+        Focusing a character shows the character UI and navigation path, and allows the player to take actions on their behalf
+
+        :param persona_id: Persona to focus. If none provided, the currently focused character will be removed from focus.
+        """
+        logger.debug(f"Focus {persona_id}")
+        await self.runtime.send_message(
+            "character-command",
+            {
+                "command": "focus-character",
+                "persona_id": persona_id,
+            },
+        )
+
+    async def follow_character(self, persona_id: str, zoom: float) -> None:
+        """
+        Follow a specific character with the camera
+
+        :param persona_id: Persona to follow. If none provided, stop following the current character if any.
+        :param zoom: The camera zoom amount between 0.0 (furthest) and 1.0 (closest)
+        """
+        logger.debug(f"Following {persona_id} with the camera")
+        await self.runtime.send_message(
+            "camera-command",
+            {
+                "command": "follow-character",
+                "persona_id": persona_id,
+                "zoom": zoom,
+            },
+        )
+
+    async def place_camera(
+        self,
+        position_x: float,
+        position_y: float,
+        position_z: float,
+        rotation_x: float,
+        rotation_y: float,
+        rotation_z: float,
+        field_of_view: float,
+    ) -> None:
+        """
+        Place the camera at a specific position and rotation
+
+        :param position_x: X position in meters
+        :param position_y: Y position in meters
+        :param position_z: Z position in meters
+        :param rotation_x: X rotation in degrees - euler angle between -360 and +360
+        :param rotation_y: Y rotation in degrees - euler angle between -360 and +360
+        :param rotation_z: Z rotation in degrees - euler angle between -360 and +360
+        :param field_of_view: Field of view in degrees - angle between 5 and 120
+        """
+        logger.debug(
+            f"Placing camera at \n\tposition: {position_x, position_y, position_z}\n\trotation: {rotation_x, rotation_y, rotation_z}\n\tfov: {field_of_view}"
+        )
+        await self.runtime.send_message(
+            "camera-command",
+            {
+                "command": "place-camera",
+                "position_x": position_x,
+                "position_y": position_y,
+                "position_z": position_z,
+                "rotation_x": rotation_x,
+                "rotation_y": rotation_y,
+                "rotation_z": rotation_z,
+                "field_of_view": field_of_view,
+            },
+        )

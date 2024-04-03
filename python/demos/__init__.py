@@ -55,7 +55,7 @@ def formatted_input(
     """
     Get input from the user, with a default value.
     :param prompt: The prompt to display to the user.
-    :param default: The default value to use if the user does not enter anything.
+    :param default: The default value to use if the user does not enter anything. It is still validated.
     :param validator: A function that takes the user's input and returns the validated input.
         Raises an exception if the input is invalid. Note return value is the new input and may not be a string.
     :return: The user's input, or the default value if the user did not enter anything.
@@ -63,6 +63,11 @@ def formatted_input(
     prefix = "\n->"
     while True:
         user_input = input(f"{prefix} {prompt}: ")
+        # If the user just pressed enter, and there is a default value, use the default value.
+        # The default value is still validated, so it needs to start as a string, and then the
+        # validator can convert it to the correct type.
+        if user_input == "" and default:
+            user_input = default
         # If a validator is provided, use it to validate the input and consider its result the new input.
         if validator:
             try:
@@ -72,15 +77,6 @@ def formatted_input(
             except Exception as e:
                 print(f"{prefix} {e}")
                 continue
-        # If the user didn't just press enter, return the user's input.
-        if user_input != "":
-            return user_input
-        # otherwise, if there is a default value, return the default value.
-        elif default:
-            return default
-        # If the user did not enter anything, and there is no default value, prompt again.
-        else:
-            pass
 
 
 async def formatted_input_async(

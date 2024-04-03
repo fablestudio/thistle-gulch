@@ -101,6 +101,53 @@ class UpdateCharacterPropertyDemo(Demo):
         bridge.on_ready = on_ready
 
 
+class FocusCharacter(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Focus Character",
+            summary="Focus a character, follow them, then remove focus after 10 ticks",
+            category=CATEGORY,
+            function=self.focus_character_demo,
+        )
+
+    def focus_character_demo(self, bridge: RuntimeBridge):
+        """
+        Focus a character, follow them, then remove focus after 10 simulation ticks.
+        When a character is focused:
+            * The character details UI appears in the top-left corner.
+            * Their current navigation path is highlighted.
+            * The player can take actions on behalf of the character by selecting other objects in
+              the Runtime and choosing an option from their context menu.
+        """
+
+        persona_id: str
+        tick_count = 0
+
+        # Focus on and follow the character at simulation start
+        async def on_ready(_):
+            nonlocal persona_id
+            persona_list = await get_persona_list(bridge)
+            persona_id = await choose_from_list("Enter persona id", persona_list)
+
+            print(f"Focus {persona_id}")
+            await bridge.runtime.api.focus_character(persona_id)
+
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+        # Stop focusing the character after 10 simulation ticks
+        async def on_tick(_, now: datetime):
+            nonlocal tick_count, persona_id
+            tick_count += 1
+            if tick_count == 10:
+                print(f"Remove focus from {persona_id}")
+                await bridge.runtime.api.focus_character("")
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready
+        bridge.on_tick = on_tick
+
+
 class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
