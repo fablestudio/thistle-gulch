@@ -70,3 +70,90 @@ See the [Runtime Wiki](https://github.com/fablestudio/thistle-gulch/wiki/Runtime
 There are lots of ways to customize Thistle Gulch, with more coming in each release. Head over to
 the [WIKI](https://github.com/fablestudio/thistle-gulch/wiki) for more in-depth discussion on how to customize Thistle
 Gulch.
+
+## Skills and Actions
+The Thistle Gulch characters have "Skills" that are basically things they know how to do. Actions are specific implementations of skills. For instance
+`go_to` is a skill with a skill definition below. If you have a character use `go_to` to then move to the saloon, then that is an example of an action.
+Another skill is `exchange`, but a character could use this skill to rob the bank `(receive: gold, give: thank you note)`, give something
+`(receive: nothing, give: gold)`, or exchange money with a store to buy an item. There are also skills for `converse_with`, `wait`, `reflect`, `interact`, and `take_to`. 
+
+Thistle Gulch uses SAGA, which in turn uses an LLM like OpenAI to generate and score action options for you by default, but you can override this
+to drive any actions you like.
+
+Here is the current list of skills you can use to create actions:
+```Json
+[
+  {
+    "name":"default_action",
+    "description":"The default action to take when no other action is specified. Characters should typically pick default when the priority is high.",
+    "parameters":{
+      "goal":"<str: goal of the movement>"
+    }
+  },
+  {
+    "name":"go_to",
+    "description":"Go to a location in the world",
+    "parameters":{
+      "destination":"<str: persona_guid, item_guid, or location.name to go to>",
+      "goal":"<str: goal of the movement>"
+    }
+  },
+  {
+    "name":"converse_with",
+    "description":"Walk to another character and talk to them",
+    "parameters":{
+      "persona_guid":"<str: guid of the persona to converse with. You cannot talk to yourself.>",
+      "topic":"<str: topic of the conversation>",
+      "context":"<str: lots of helpful details the conversation generator can use to generate a conversation. It only has access to the context and the topic you provide, so be very detailed.>",
+      "goal":"<str: goal of the conversation>"
+    }
+  },
+  {
+    "name":"wait",
+    "description":"Wait for a period of time while observing the world",
+    "parameters":{
+      "duration":"<int: number of minutes to wait>",
+      "goal":"<str: goal of the waiting>"
+    }
+  },
+  {
+    "name":"reflect",
+    "description":"Think about things in order to synthesize new ideas and specific plans",
+    "parameters":{
+      "focus":"<str: the focus of the reflection>",
+      "result:":"<str: The result of the reflection, e.g. a new plan or understanding you will remember.>",
+      "goal":"<str: goal of reflecting>"
+    }
+  },
+  {
+    "name":"interact",
+    "description":"Interact with an item in the world",
+    "parameters":{
+      "item_guid":"str: The id of the item to interact with",
+      "interaction":"str: The name of the interaction from the list per item.",
+      "goal":"<str: goal of interaction>"
+    }
+  },
+  {
+    "name":"take_to",
+    "description":"Take an item or person to a location in the world",
+    "parameters":{
+      "guid":"<str: persona_guid, item_guid to take to a location>",
+      "destination":"<str: persona_guid, item_guid, or location.name to take the item or npc to>",
+      "goal":"<str: goal of the take_to>"
+    }
+  },
+  {
+    "name":"exchange",
+    "description":"Exchange resources with another person, shop, or storage. Create new resources as needed, but they must be tangible inventory objects, not ideas or information.",
+    "parameters":{
+      "give_guid":"<str: Resource guid to give>",
+      "give_amount":"<int: Resource amount to give. Must be greater than 0>",
+      "receive_guid":"<str: Resource guid to receive>",
+      "receive_amount":"<int: Resource amount to receive. Must be greater than 0>",
+      "goal":"<str: goal of the exchange>",
+      "counterparty_guid":"<str: (optional) owner_guid to exchange resources with. If not specified, the closest counterparty will be used>"
+    }
+  }
+]
+```
