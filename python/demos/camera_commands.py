@@ -84,17 +84,24 @@ class PlaceCamera(Demo):
                 pos = float(pos_str)
                 return pos
 
+            print(
+                "NOTE: Just press enter to use the default values of a saloon camera."
+            )
+
             position_x = await formatted_input_async(
-                "Enter camera position X in meters: ",
+                "Enter camera position X in meters",
                 validator=validate_position,
+                default="18.14",
             )
             position_y = await formatted_input_async(
-                "Enter camera position Y in meters: ",
+                "Enter camera position Y in meters",
                 validator=validate_position,
+                default="3.55",
             )
             position_z = await formatted_input_async(
-                "Enter camera position Z in meters: ",
+                "Enter camera position Z in meters",
                 validator=validate_position,
+                default="-8.26",
             )
 
             # Camera rotation
@@ -105,16 +112,19 @@ class PlaceCamera(Demo):
                 return rot
 
             rotation_x = await formatted_input_async(
-                "Enter camera rotation X in degrees (+/-360.0): ",
+                "Enter camera rotation X in degrees (+/-360.0)",
                 validator=validate_rotation,
+                default="10.81",
             )
             rotation_y = await formatted_input_async(
-                "Enter camera rotation Y in degrees (+/-360.0): ",
+                "Enter camera rotation Y in degrees (+/-360.0)",
                 validator=validate_rotation,
+                default="205.097",
             )
             rotation_z = await formatted_input_async(
-                "Enter camera rotation Z in degrees (+/-360.0): ",
+                "Enter camera rotation Z in degrees (+/-360.0)",
                 validator=validate_rotation,
+                default="0",
             )
 
             # Camera field of view
@@ -127,6 +137,7 @@ class PlaceCamera(Demo):
             field_of_view = await formatted_input_async(
                 "Enter camera field of view in degrees (5-120): ",
                 validator=validate_fov,
+                default="13.1",
             )
 
             print(
