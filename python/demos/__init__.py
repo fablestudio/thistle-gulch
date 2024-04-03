@@ -1,6 +1,97 @@
-from typing import Callable
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from typing import Callable, Optional, List, Any, Dict
 
 from thistle_gulch.bridge import RuntimeBridge
+
+
+async def choose_from_list(
+    text: str, options: List[str] | Dict[str, str], exclude: Optional[List[str]] = None
+) -> str:
+    """
+    Helper for choosing one option from a list of options.
+    :rtype: object
+    :param options: The list of string options to choose from.
+    :param text: The text to display to the user.
+    :param exclude: A list of options to exclude from the list.
+    :return:
+    """
+    options_list = options.copy()
+    if isinstance(options, dict):
+        options_list = list(options.keys())
+
+    if exclude:
+        options_list = [c for c in options_list if c not in exclude]
+
+    def validator(choice: str) -> str:
+        if choice == "":
+            if isinstance(options, list):
+                print(options_list)
+            if isinstance(options, dict):
+                for key in options_list:
+                    print(f"* [{key}]: {options[key]}")
+            raise ValueError("You must pick from this list..")
+        if choice in options_list:
+            return choice
+        raise ValueError(f"Invalid choice: {choice}")
+
+    input_text = text + " [Enter for list]: "
+    return await formatted_input_async(input_text, validator=validator)
+
+
+async def get_persona_list(bridge) -> Dict[str, str]:
+    # Get the character context for jack_kane, just to get the list of persona ids.
+    context = await bridge.runtime.api.get_character_context("jack_kane")
+    return dict(
+        [(persona.persona_guid, persona.summary) for persona in context.personas]
+    )
+
+
+def formatted_input(
+    prompt: str,
+    default: Optional[str] = None,
+    validator: Optional[Callable[[str], Any]] = None,
+) -> Any:
+    """
+    Get input from the user, with a default value.
+    :param prompt: The prompt to display to the user.
+    :param default: The default value to use if the user does not enter anything.
+    :param validator: A function that takes the user's input and returns the validated input.
+        Raises an exception if the input is invalid. Note return value is the new input and may not be a string.
+    :return: The user's input, or the default value if the user did not enter anything.
+    """
+    prefix = "\n->"
+    while True:
+        user_input = input(f"{prefix} {prompt}: ")
+        # If a validator is provided, use it to validate the input and consider its result the new input.
+        if validator:
+            try:
+                # If the validator raises an exception, print the exception and prompt again.
+                user_input = validator(user_input)
+                return user_input
+            except Exception as e:
+                print(f"{prefix} {e}")
+                continue
+        # If the user didn't just press enter, return the user's input.
+        if user_input != "":
+            return user_input
+        # otherwise, if there is a default value, return the default value.
+        elif default:
+            return default
+        # If the user did not enter anything, and there is no default value, prompt again.
+        else:
+            pass
+
+
+async def formatted_input_async(
+    prompt: str,
+    default: Optional[str] = None,
+    validator: Optional[Callable[[str], Any]] = None,
+) -> Any:
+    with ThreadPoolExecutor(1, "AsyncInput") as executor:
+        return await asyncio.get_event_loop().run_in_executor(
+            executor, formatted_input, prompt, default, validator
+        )
 
 
 class Demo:
