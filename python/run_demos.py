@@ -34,34 +34,54 @@ def main():
         character_commands.CustomConversation(),
     ]
 
-    # Print the available demos and prompt the user to select one.
-    print("\n -= Available Demos =- ")
-    last_category = None
-    for i, item in enumerate(options):
-        if item.category != last_category:
-            print(f"\n -= {item.category} =-")
-            last_category = item.category
-        print(f"> {i}: {item.name} - {item.description}")
     while True:
-        try:
-            print()
-            pick = int(input("Pick a demo to run: "))
-            if pick >= len(options) or pick < 0:
-                print(
-                    "Invalid input. Please enter a number between 0 and", len(options)
-                )
-                continue
-            break
-        except ValueError:
-            print("Invalid input. Please enter a number.")
+        # Print the available demos and prompt the user to select one.
+        print("\n -= Available Demos =- ")
+        last_category = None
+        for i, item in enumerate(options):
+            if item.category != last_category:
+                print(f"\n -= {item.category} =-")
+                last_category = item.category
+            print(f"> {i}: {item.name} - {item.description}")
+        while True:
+            try:
+                print()
+                value = input("Pick a demo to run: ")
+                # Set the default to 0 if the user does not enter anything.
+                if value == "":
+                    pick = 0
+                else:
+                    pick = int(value)
+                if pick >= len(options) or pick < 0:
+                    print(
+                        "Invalid input. Please enter a number between 0 and",
+                        len(options),
+                    )
+                    continue
+                break
+            except ValueError:
+                print("Invalid input. Please enter a number.")
 
-    # Set the actions endpoint to the selected demo.
-    item = options[pick]
-    item.function(bridge)
-    #
-    # elif item[1] == "actions_endpoint":
-    #     tg_bridge.BridgeConfig.actions_endpoint = item[0]()
-    bridge.run()
+        # Set the actions endpoint to the selected demo.
+        item = options[pick]
+
+        print("=" * 80)
+        print(f"DEMO: {item.name}")
+        print(f"CATEGORY: {item.category}")
+        print(f"SUMMARY: {item.description}")
+        # Allow for a much more detailed description of the demo to be printed.
+        if item.function.__doc__:
+            print(f"DETAILS: {item.function.__doc__}")
+        print("=" * 80)
+        continue_demo = input("Run this demo? [Y/n]: ")
+        if continue_demo.lower() not in ["y", "yes", ""]:
+            continue
+
+        print(f"Setting Up Demo...")
+        item.function(bridge)
+        print(f"Running Demo...")
+
+        bridge.run()
 
 
 if __name__ == "__main__":

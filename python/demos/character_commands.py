@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta
 from thistle_gulch.bridge import RuntimeBridge
-from . import Demo
+from . import Demo, choose_from_list, get_persona_list, formatted_input_async
 
 CATEGORY = "Character Commands"
 
 
+# noinspection PyAttributeOutsideInit
 class EnableAgentDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Enable Agent",
-            description="Enable or disable an agent after the simulation has started. An enabled agent uses the python bridge to generate its actions.",
+            summary="Enable or disable an agent after the simulation has started. An enabled agent uses the python bridge to generate its actions.",
             category=CATEGORY,
             function=self.enable_agent_demo,
         )
@@ -21,11 +22,22 @@ class EnableAgentDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id: ")
-        enable_str = input("Enable(1) or Disable(0) the agent? ")
-        enabled = True if enable_str == "1" else False
-
         async def on_ready(_):
+            persona_list = await get_persona_list(bridge)
+            persona_id = await choose_from_list("Enter persona id", persona_list)
+
+            # Validate that the user entered 0 or 1
+            def validate_enable_str(enable_str: str) -> bool:
+                if enable_str not in ["0", "1"]:
+                    raise ValueError(
+                        f"Invalid option {enable_str}. Please enter 0 or 1."
+                    )
+                return True if enable_str == "1" else False
+
+            enabled = await formatted_input_async(
+                "Enable(1) or Disable(0) the agent? ", validator=validate_enable_str
+            )
+
             print(f"{('Enabling' if enabled else 'Disabling')} agent: {persona_id}")
             await bridge.runtime.api.enable_agent(persona_id, enabled)
 
@@ -37,7 +49,7 @@ class UpdateCharacterPropertyDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Update Character Property",
-            description="Change a property value for the given persona",
+            summary="Change a property value for the given persona",
             category=CATEGORY,
             function=self.update_character_property,
         )
@@ -49,17 +61,41 @@ class UpdateCharacterPropertyDemo(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id: ")
-        property_name = input(
-            "Enter property name (energy, summary, description, backstory): "
-        )
-        property_value = input(f"Enter new value for {property_name}: ")
-
         async def on_ready(_):
+            persona_list = await get_persona_list(bridge)
+            persona_id = await choose_from_list("Enter persona id", persona_list)
+            print()
+
+            def validate_property_name(property_name: str) -> str:
+                if property_name not in [
+                    "energy",
+                    "summary",
+                    "description",
+                    "backstory",
+                ]:
+                    raise ValueError(f"Invalid property name: {property_name}")
+                return property_name
+
+            property_name = await formatted_input_async(
+                "Enter property name (energy, summary, description, backstory): ",
+                validator=validate_property_name,
+            )
+
+            property_value = await formatted_input_async(
+                f"Enter new value for {property_name}"
+            )
+
             print(f"Updating {persona_id} {property_name} to '{property_value}'")
             await bridge.runtime.api.update_character_property(
                 persona_id, property_name, property_value
             )
+
+            enable_agent = await formatted_input_async(
+                "Do you want to enable this agent as well? (Y/n)", default="Y"
+            )
+            if enable_agent.lower() == "y":
+                print(f"Enabling Agent: {persona_id}'")
+                await bridge.runtime.api.enable_agent(persona_id, True)
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
@@ -69,7 +105,7 @@ class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
             name="Override Character Action",
-            description="Force a character to go to the first available world location",
+            summary="Manually trigger a specific GOTO action for a character",
             category=CATEGORY,
             function=self.override_character_action_demo,
         )
@@ -81,20 +117,27 @@ class OverrideCharacterAction(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        persona_id = input("Enter persona id: ")
-
         async def on_ready(_):
+
+            persona_list = await get_persona_list(bridge)
+            persona_id = await choose_from_list("Enter persona id", persona_list)
+
             print(f"Getting character context for {persona_id}")
             context = await bridge.runtime.api.get_character_context(persona_id)
-            location = context.locations[0]
+
+            location_id = await choose_from_list(
+                "Pick a location_id for this persona to go to:",
+                [loc.name for loc in context.locations],
+            )
 
             action = {
                 "skill": "go_to",
                 "parameters": {
-                    "destination": location.name,
+                    "destination": location_id,
                     "goal": "Visit the first available location",
                 },
             }
+
             print(f"Overriding action for {persona_id} with {action}")
             await bridge.runtime.api.override_character_action(persona_id, action)
 
@@ -106,12 +149,10 @@ class RobBankAndArrestCriminal(Demo):
     def __init__(self):
         super().__init__(
             name="Rob Bank and Arrest Criminal",
-            description="Force a character to rob the bank and get arrested by the sheriff",
+            summary="Force a character to rob the bank and get arrested by the sheriff",
             category=CATEGORY,
             function=self.rob_bank_arrest_criminal_demo,
         )
-        self.arrest_triggered = False
-        self.arrest_time: datetime
 
     def rob_bank_arrest_criminal_demo(self, bridge: RuntimeBridge):
         """
@@ -120,11 +161,22 @@ class RobBankAndArrestCriminal(Demo):
         :param bridge: The bridge to the runtime.
         """
 
-        robber_id = input("Enter persona id to rob the bank: ")
+        robber_id: str
+        arrest_triggered = False
+        arrest_time: datetime
 
         async def on_ready(_):
-            # Arrest the robber 1 hour after the simulation starts
-            self.arrest_time = bridge.runtime.start_date + timedelta(hours=1)
+            nonlocal robber_id, arrest_time
+            persona_list = await get_persona_list(bridge)
+            # Choose the persona to rob the bank, excluding wyatt_cooper since he will arrest the robber.
+            robber_id = await choose_from_list(
+                "Enter persona id to rob the bank",
+                persona_list,
+                exclude=["wyatt_cooper"],
+            )
+
+            # Arrest the robber 10 minutes after the simulation starts
+            arrest_time = bridge.runtime.start_date + timedelta(minutes=10)
 
             print(f"Getting character context for {robber_id}")
             context = await bridge.runtime.api.get_character_context(robber_id)
@@ -145,15 +197,16 @@ class RobBankAndArrestCriminal(Demo):
                     "goal": "Steal gold from the bank",
                 },
             }
-            print(f"Force {robber_id} to rob the bank")
+            print(f"Force {robber_id} to rob the bank using action:\n{action}")
             await bridge.runtime.api.override_character_action(robber_id, action)
 
         async def on_tick(_, current_time: datetime):
+            nonlocal arrest_triggered, robber_id, arrest_time
             # Only trigger the arrest once at the designated time
-            if self.arrest_triggered or current_time < self.arrest_time:
+            if arrest_triggered or current_time < arrest_time:
                 return
 
-            self.arrest_triggered = True
+            arrest_triggered = True
 
             print(f"Getting character context for wyatt_cooper")
             context = await bridge.runtime.api.get_character_context("wyatt_cooper")
@@ -174,7 +227,7 @@ class RobBankAndArrestCriminal(Demo):
                     "goal": "Arrest the bank robber",
                 },
             }
-            print(f"Force wyatt_cooper to arrest {robber_id}")
+            print(f"Force wyatt_cooper to arrest {robber_id} using action:\n{action}")
             await bridge.runtime.api.override_character_action("wyatt_cooper", action)
 
         print("Registering custom on_ready and on_tick callbacks.")
@@ -186,7 +239,7 @@ class CustomConversation(Demo):
     def __init__(self):
         super().__init__(
             name="Custom Conversation",
-            description="Provide custom dialogue for a set characters to perform",
+            summary="Provide custom dialogue for a set characters to perform",
             category=CATEGORY,
             function=self.custom_conversation_demo,
         )
@@ -194,30 +247,33 @@ class CustomConversation(Demo):
     def custom_conversation_demo(self, bridge: RuntimeBridge):
         """
         Provide custom dialogue for a set characters to perform
-
-        :param bridge: The bridge to the runtime.
         """
 
-        speaker_1_id = input("Enter speaker 1 id: ")
-        speaker_2_id = input("Enter speaker 2 id: ")
-
-        conversation = [
-            {
-                "persona_id": speaker_1_id,
-                "dialogue": "Did you hear about the murder last night?",
-            },
-            {"persona_id": speaker_2_id, "dialogue": "What?! Who was killed?"},
-            {
-                "persona_id": speaker_1_id,
-                "dialogue": "I don't know, but this isn't a good look for the town. We're developing a reputation.",
-            },
-            {
-                "persona_id": speaker_2_id,
-                "dialogue": "I'm gonna stock up on ammunition. This place is getting dangerous.'",
-            },
-        ]
-
         async def on_ready(_):
+            personas = await get_persona_list(bridge)
+            speaker_1_id = await choose_from_list(
+                "Enter speaker 1 id", options=personas
+            )
+            speaker_2_id = await choose_from_list(
+                "Enter speaker 2 id", options=personas
+            )
+
+            conversation = [
+                {
+                    "persona_id": speaker_1_id,
+                    "dialogue": "Did you hear about the murder last night?",
+                },
+                {"persona_id": speaker_2_id, "dialogue": "What?! Who was killed?"},
+                {
+                    "persona_id": speaker_1_id,
+                    "dialogue": "I don't know, but this isn't a good look for the town. We're developing a reputation.",
+                },
+                {
+                    "persona_id": speaker_2_id,
+                    "dialogue": "I'm gonna stock up on ammunition. This place is getting dangerous.'",
+                },
+            ]
+
             action = {
                 "skill": "converse_with",
                 "parameters": {

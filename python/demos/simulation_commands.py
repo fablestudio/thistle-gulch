@@ -11,7 +11,7 @@ class SetStartTimeDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Set Start Time",
-            description="Set the start time of the simulation.",
+            summary="Set the start time of the simulation.",
             category=CATEGORY,
             function=self.set_start_time_demo,
         )
@@ -39,7 +39,7 @@ class SimulationTickDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Simulation Tick",
-            description="Pause the simulation for the given number of seconds on every tick",
+            summary="Pause the simulation for the given number of seconds on every tick",
             category=CATEGORY,
             function=self.on_simulation_tick,
         )
