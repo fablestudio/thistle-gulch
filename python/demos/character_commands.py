@@ -5,11 +5,12 @@ from . import Demo
 CATEGORY = "Character Commands"
 
 
+# noinspection PyAttributeOutsideInit
 class EnableAgentDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Enable Agent",
-            description="Enable or disable an agent after the simulation has started. An enabled agent uses the python bridge to generate its actions.",
+            summary="Enable or disable an agent after the simulation has started. An enabled agent uses the python bridge to generate its actions.",
             category=CATEGORY,
             function=self.enable_agent_demo,
         )
@@ -37,7 +38,7 @@ class UpdateCharacterPropertyDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Update Character Property",
-            description="Change a property value for the given persona",
+            summary="Change a property value for the given persona",
             category=CATEGORY,
             function=self.update_character_property,
         )
@@ -69,7 +70,7 @@ class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
             name="Override Character Action",
-            description="Force a character to go to the first available world location",
+            summary="Manually trigger a specific GOTO action for a character",
             category=CATEGORY,
             function=self.override_character_action_demo,
         )
@@ -106,7 +107,7 @@ class RobBankAndArrestCriminal(Demo):
     def __init__(self):
         super().__init__(
             name="Rob Bank and Arrest Criminal",
-            description="Force a character to rob the bank and get arrested by the sheriff",
+            summary="Force a character to rob the bank and get arrested by the sheriff",
             category=CATEGORY,
             function=self.rob_bank_arrest_criminal_demo,
         )
@@ -186,7 +187,7 @@ class CustomConversation(Demo):
     def __init__(self):
         super().__init__(
             name="Custom Conversation",
-            description="Provide custom dialogue for a set characters to perform",
+            summary="Provide custom dialogue for a set characters to perform",
             category=CATEGORY,
             function=self.custom_conversation_demo,
         )

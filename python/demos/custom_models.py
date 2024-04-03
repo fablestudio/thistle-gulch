@@ -88,7 +88,7 @@ class UseOllamaDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Use an Ollama Model",
-            description="Use Ollama to generate actions and conversations. You must have the Ollama server running.",
+            summary="Use Ollama to generate actions and conversations. You must have the Ollama server running.",
             category=CATEGORY,
             function=self.use_llama2_model,
         )

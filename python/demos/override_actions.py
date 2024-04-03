@@ -15,7 +15,7 @@ class PrintActionsAndPickFirstDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Print Actions and Pick First",
-            description="Print the action options to the console and then only pass back the first action option.",
+            summary="Print the action options to the console and then only pass back the first action option.",
             category=CATEGORY,
             function=self.print_actions_and_pick_first,
         )
@@ -56,7 +56,7 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Skip Saga Always Do The Default Action",
-            description="Override action options by always picking the default action.",
+            summary="Override action options by always picking the default action.",
             category=CATEGORY,
             function=self.skip_saga_always_do_the_default_action,
         )
@@ -105,7 +105,7 @@ class ReplaceContextWithYamlDumpDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Replace Context with Yaml Dump",
-            description="Replace the context in the request with a YAML dump of the context object.",
+            summary="Replace the context in the request with a YAML dump of the context object.",
             category=CATEGORY,
             function=self.replace_context_with_yaml_dump,
         )
