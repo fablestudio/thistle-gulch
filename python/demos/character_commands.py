@@ -89,8 +89,13 @@ class UpdateCharacterPropertyDemo(Demo):
             await bridge.runtime.api.update_character_property(
                 persona_id, property_name, property_value
             )
-            print(f"Enabling Agent: {persona_id}'")
-            await bridge.runtime.api.enable_agent(persona_id, True)
+
+            enable_agent = await formatted_input_async(
+                "Do you want to enable this agent as well? (Y/n)", default="Y"
+            )
+            if enable_agent.lower() == "y":
+                print(f"Enabling Agent: {persona_id}'")
+                await bridge.runtime.api.enable_agent(persona_id, True)
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
