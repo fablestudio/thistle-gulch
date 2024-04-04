@@ -11,16 +11,24 @@ class SetStartTimeDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Set Start Time",
-            summary="Set the start time of the simulation.",
+            summary="Set the start time of the simulation",
             category=CATEGORY,
             function=self.set_start_time_demo,
         )
 
     def set_start_time_demo(self, bridge: RuntimeBridge):
         """
-        Set the start time of the simulation.
+        On simulation start, a new start date is assigned which determines the "Day 1" for the simulation clock.
+        The scene lighting and environment also update to match the time of day. The start date must be set in the
+        on_ready callback - attempting to set it in the on_tick callback will result in an error. The current start
+        date is accessible via the Runtime class.
 
-        :param bridge: The bridge to the runtime.
+        API calls:
+            set_start_date()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/simulation_commands.py
         """
 
         datestr = input("Enter the start hour (HH - 24hour): ")
@@ -39,16 +47,24 @@ class SimulationTickDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Simulation Tick",
-            summary="Pause the simulation for the given number of seconds on every tick",
+            summary="Demonstrates basic usage of the bridge.on_tick() callback",
             category=CATEGORY,
             function=self.on_simulation_tick,
         )
 
     def on_simulation_tick(self, bridge: RuntimeBridge):
         """
-        Pause the simulation for the given number of seconds on every tick
+        On every simulation tick, the simulation is paused by the Bridge for the given number of seconds and then
+        resumed to simulate a long-running process. While paused, the Runtime time controls are disabled and the
+        simulation can only be un-paused by sending a 'resume' command from the Bridge.
 
-        :param bridge: The bridge to the runtime.
+        API calls:
+            pause()
+            resume()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/simulation_commands.py
         """
 
         seconds = int(input("Enter number of seconds to wait between ticks: "))

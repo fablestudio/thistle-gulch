@@ -21,7 +21,14 @@ class FollowCharacter(Demo):
         Follow a specific character with the camera, then stop following after 10 simulation ticks.
         The camera will track the character as they walk around the world until the player manually moves the camera
         with WASD, presses ESC, left-clicks another object, or right-clicks anywhere in the screen. A followed
-        character's chat bubble is always visible along with any other conversation partners.
+        character's name tag and chat bubble is always visible along with any other conversation partners.
+
+        API calls:
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/camera_commands.py
         """
 
         persona_id: str
@@ -39,7 +46,7 @@ class FollowCharacter(Demo):
                 return zoom_val
 
             zoom = await formatted_input_async(
-                "Enter camera zoom amount between 0.0 (furthest) and 1.0 (closest): ",
+                "Enter camera zoom amount between 0.0 (furthest) and 1.0 (closest)",
                 validator=validate_zoom,
             )
 
@@ -72,9 +79,15 @@ class PlaceCamera(Demo):
 
     def place_camera_demo(self, bridge: RuntimeBridge):
         """
-        Place the camera in the scene with a specific position, rotation, and field of view. The place_camera command
-        temporarily switches to the "God" camera mode - Press ESC or right-click anywhere in the screen to restore the
-        default camera mode.
+        Place the camera in the scene with a specific position, rotation, and field of view. This temporarily switches
+        to the "God" camera mode - Press ESC or click anywhere in the screen to restore the default camera mode.
+
+        API calls:
+            place_camera()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/camera_commands.py
         """
 
         # Place the camera at simulation start
@@ -135,7 +148,7 @@ class PlaceCamera(Demo):
                 return fov
 
             field_of_view = await formatted_input_async(
-                "Enter camera field of view in degrees (5-120): ",
+                "Enter camera field of view in degrees (5-120)",
                 validator=validate_fov,
                 default="13.1",
             )

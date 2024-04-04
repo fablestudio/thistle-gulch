@@ -35,7 +35,7 @@ async def choose_from_list(
             return choice
         raise ValueError(f"Invalid choice: {choice}")
 
-    input_text = text + " [Enter for list]: "
+    input_text = text + " [Enter for list]"
     return await formatted_input_async(input_text, validator=validator)
 
 
@@ -77,6 +77,8 @@ def formatted_input(
             except Exception as e:
                 print(f"{prefix} {e}")
                 continue
+        else:
+            return user_input
 
 
 async def formatted_input_async(
