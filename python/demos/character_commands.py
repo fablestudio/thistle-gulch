@@ -18,9 +18,9 @@ class EnableAgentDemo(Demo):
     def enable_agent_demo(self, bridge: RuntimeBridge):
         """
         On simulation start, the chosen character's bridge agent is enabled or disabled. Enabled agents use the
-        Bridge to generate their actions and will contribute to the overall cost of running the simulation. Disabled
-        agents choose their actions directly in the simulation Runtime using a simple scoring system instead of sending
-        requests to the Bridge.
+        Bridge to generate their actions and will contribute to the overall cost of running the simulation [when using
+        a paid LLM service like OpenAI.] Disabled agents choose their actions directly in the simulation Runtime using
+        a simpler utility AI based on scored affordances (like the SIMs) instead of sending requests to the Bridge.
 
         API calls:
             enable_agent()
