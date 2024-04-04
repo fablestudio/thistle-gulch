@@ -10,16 +10,25 @@ class EnableAgentDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Enable Agent",
-            summary="Enable or disable an agent after the simulation has started. An enabled agent uses the python bridge to generate its actions.",
+            summary="Enable or disable an agent",
             category=CATEGORY,
             function=self.enable_agent_demo,
         )
 
     def enable_agent_demo(self, bridge: RuntimeBridge):
         """
-        Enable or disable an agent
+        On simulation start, the chosen character's bridge agent is enabled or disabled. Enabled agents use the
+        Bridge to generate their actions and will contribute to the overall cost of running the simulation. Disabled
+        agents choose their actions directly in the simulation Runtime using a simple scoring system instead of sending
+        requests to the Bridge.
 
-        :param bridge: The bridge to the runtime.
+        API calls:
+            enable_agent()
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
         async def on_ready(_):
@@ -41,6 +50,9 @@ class EnableAgentDemo(Demo):
             print(f"{('Enabling' if enabled else 'Disabling')} agent: {persona_id}")
             await bridge.runtime.api.enable_agent(persona_id, enabled)
 
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
+
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
 
@@ -56,9 +68,21 @@ class UpdateCharacterPropertyDemo(Demo):
 
     def update_character_property(self, bridge: RuntimeBridge):
         """
-        Change a property value for the given persona
+        On simulation start, the chosen character's property is updated to the value provided. The character's agent
+        may optionally be enabled which is useful for seeing the effect of the new value during action and conversation
+        generation. The character is also focused for ease of access to the character details UI to inspect the changes.
+        The currently available properties are energy, summary, description, and backstory, but this list will continue
+        to expand in the future.
 
-        :param bridge: The bridge to the runtime.
+        API calls:
+            update_character_property()
+            enable_agent()
+            follow_character()
+            focus_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
         async def on_ready(_):
@@ -77,7 +101,7 @@ class UpdateCharacterPropertyDemo(Demo):
                 return property_name
 
             property_name = await formatted_input_async(
-                "Enter property name (energy, summary, description, backstory): ",
+                "Enter property name (energy, summary, description, backstory)",
                 validator=validate_property_name,
             )
 
@@ -97,6 +121,12 @@ class UpdateCharacterPropertyDemo(Demo):
                 print(f"Enabling Agent: {persona_id}'")
                 await bridge.runtime.api.enable_agent(persona_id, True)
 
+            print(f"Focusing {persona_id}")
+            await bridge.runtime.api.focus_character(persona_id)
+
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
+
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
 
@@ -105,7 +135,7 @@ class FocusCharacter(Demo):
     def __init__(self):
         super().__init__(
             name="Focus Character",
-            summary="Focus a character, follow them, then remove focus after 10 ticks",
+            summary="Focus the simulation on a specific character",
             category=CATEGORY,
             function=self.focus_character_demo,
         )
@@ -118,6 +148,15 @@ class FocusCharacter(Demo):
             * Their current navigation path is highlighted.
             * The player can take actions on behalf of the character by selecting other objects in
               the Runtime and choosing an option from their context menu.
+            * Their name tag and chat bubble is always visible along with any other conversation partners.
+
+        API calls:
+            focus_character()
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
         persona_id: str
@@ -129,7 +168,7 @@ class FocusCharacter(Demo):
             persona_list = await get_persona_list(bridge)
             persona_id = await choose_from_list("Enter persona id", persona_list)
 
-            print(f"Focus {persona_id}")
+            print(f"Focusing {persona_id}")
             await bridge.runtime.api.focus_character(persona_id)
 
             print(f"Following {persona_id} with the camera")
@@ -152,16 +191,24 @@ class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
             name="Override Character Action",
-            summary="Manually trigger a specific GOTO action for a character",
+            summary="Manually trigger a custom action for a character",
             category=CATEGORY,
             function=self.override_character_action_demo,
         )
 
     def override_character_action_demo(self, bridge: RuntimeBridge):
         """
-        Force a character to go to the first available world location
+        On simulation start, the chosen character immediately starts navigating to the chosen location using the go_to skill.
+        The character context is utilized to discover all available locations before the character's action is triggered.
 
-        :param bridge: The bridge to the runtime.
+        API calls:
+            get_character_context()
+            override_character_action()
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
         async def on_ready(_):
@@ -173,7 +220,7 @@ class OverrideCharacterAction(Demo):
             context = await bridge.runtime.api.get_character_context(persona_id)
 
             location_id = await choose_from_list(
-                "Pick a location_id for this persona to go to:",
+                "Pick a location_id for this persona to go to",
                 [loc.name for loc in context.locations],
             )
 
@@ -187,6 +234,9 @@ class OverrideCharacterAction(Demo):
 
             print(f"Overriding action for {persona_id} with {action}")
             await bridge.runtime.api.override_character_action(persona_id, action)
+
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
@@ -203,11 +253,23 @@ class RobBankAndArrestCriminal(Demo):
 
     def rob_bank_arrest_criminal_demo(self, bridge: RuntimeBridge):
         """
-        Force a character to rob the bank and get arrested by sheriff wyatt_cooper
+        On simulation start, the robber character navigates to the bank, steals the gold, and attempts to hide the gold
+        in an alleyway. After 60 minutes of elapsed simulation time (60 seconds realtime), wyatt_cooper arrests the robber
+        and escorts them to the jail cell. The robber's character context is used to find the interactable 'bank' object
+        which contains the 'Rob Bank' interaction. Likewise, wyatt_cooper's context is used to find the 'Arrest Person'
+        interaction on the robber. These interactions are then used to construct an action that uses the 'interact' skill.
 
-        :param bridge: The bridge to the runtime.
+        API calls:
+            get_character_context()
+            override_character_action()
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
+        sheriff_id = "wyatt_cooper"
         robber_id: str
         arrest_triggered = False
         arrest_time: datetime
@@ -215,15 +277,16 @@ class RobBankAndArrestCriminal(Demo):
         async def on_ready(_):
             nonlocal robber_id, arrest_time
             persona_list = await get_persona_list(bridge)
-            # Choose the persona to rob the bank, excluding wyatt_cooper since he will arrest the robber.
+            # Choose the persona to rob the bank, excluding the sheriff since he will arrest the robber.
             robber_id = await choose_from_list(
                 "Enter persona id to rob the bank",
                 persona_list,
-                exclude=["wyatt_cooper"],
+                exclude=[sheriff_id],
             )
 
-            # Arrest the robber 10 minutes after the simulation starts
-            arrest_time = bridge.runtime.start_date + timedelta(minutes=10)
+            # Arrest the robber 60 minutes after the simulation starts
+            # This time span helps ensure that the robbery happens before the arrest
+            arrest_time = bridge.runtime.start_date + timedelta(minutes=60)
 
             print(f"Getting character context for {robber_id}")
             context = await bridge.runtime.api.get_character_context(robber_id)
@@ -247,6 +310,9 @@ class RobBankAndArrestCriminal(Demo):
             print(f"Force {robber_id} to rob the bank using action:\n{action}")
             await bridge.runtime.api.override_character_action(robber_id, action)
 
+            print(f"Following {robber_id} with the camera")
+            await bridge.runtime.api.follow_character(robber_id, 0.8)
+
         async def on_tick(_, current_time: datetime):
             nonlocal arrest_triggered, robber_id, arrest_time
             # Only trigger the arrest once at the designated time
@@ -255,8 +321,8 @@ class RobBankAndArrestCriminal(Demo):
 
             arrest_triggered = True
 
-            print(f"Getting character context for wyatt_cooper")
-            context = await bridge.runtime.api.get_character_context("wyatt_cooper")
+            print(f"Getting character context for {sheriff_id}")
+            context = await bridge.runtime.api.get_character_context(sheriff_id)
 
             # context.interactables is a list of all world objects/characters with interactions available
             interactable_robber = next(
@@ -274,8 +340,8 @@ class RobBankAndArrestCriminal(Demo):
                     "goal": "Arrest the bank robber",
                 },
             }
-            print(f"Force wyatt_cooper to arrest {robber_id} using action:\n{action}")
-            await bridge.runtime.api.override_character_action("wyatt_cooper", action)
+            print(f"Force {sheriff_id} to arrest {robber_id} using action:\n{action}")
+            await bridge.runtime.api.override_character_action(sheriff_id, action)
 
         print("Registering custom on_ready and on_tick callbacks.")
         bridge.on_ready = on_ready
@@ -293,7 +359,17 @@ class CustomConversation(Demo):
 
     def custom_conversation_demo(self, bridge: RuntimeBridge):
         """
-        Provide custom dialogue for a set characters to perform
+        Two characters carry out a custom pre-generated conversation. On simulation start, the camera begins following
+        the first character, both characters navigate towards each other, and then they exchange the given dialogue lines.
+        A custom action is used to trigger the conversation using the converse_with skill.
+
+        API calls:
+            override_character_action()
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
         async def on_ready(_):
@@ -339,6 +415,9 @@ class CustomConversation(Demo):
                 print(f"\t{speaker}: {dialogue}")
 
             await bridge.runtime.api.override_character_action(speaker_1_id, action)
+
+            print(f"Following {speaker_1_id} with the camera")
+            await bridge.runtime.api.follow_character(speaker_1_id, 0.8)
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
