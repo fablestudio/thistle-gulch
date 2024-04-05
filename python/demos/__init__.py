@@ -68,17 +68,18 @@ def formatted_input(
         # validator can convert it to the correct type.
         if user_input == "" and default:
             user_input = default
+            print(f"\tUsing default value of {default}")
         # If a validator is provided, use it to validate the input and consider its result the new input.
         if validator:
             try:
-                # If the validator raises an exception, print the exception and prompt again.
                 user_input = validator(user_input)
                 return user_input
+            # If the validator raises an exception, print the exception and prompt again.
             except Exception as e:
                 print(f"{prefix} {e}")
                 continue
-        else:
-            return user_input
+        break
+    return user_input
 
 
 async def formatted_input_async(
