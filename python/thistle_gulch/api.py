@@ -9,13 +9,19 @@ if typing.TYPE_CHECKING:
 
 
 class API:
+    """
+    See the wiki for more information: https://github.com/fablestudio/thistle-gulch/wiki/API
+    """
 
     def __init__(self, runtime: "Runtime"):
         self.runtime = runtime
 
     async def resume(self) -> None:
         """
-        Start or resume the simulation using the last known simulation speed
+        Start or resume the simulation using the last known simulation speed. Resume can only be called if the simulation
+        is currently paused or an error will be thrown. on_tick events are sent from the Runtime on every simulation
+        tick once it has been resumed. This has the same effect as pressing the Play button in the Runtime Time Panel
+        in the lower right corner of the UI.
         """
         logger.debug("Resuming simulation")
         await self.runtime.send_message(
@@ -27,7 +33,11 @@ class API:
 
     async def pause(self) -> None:
         """
-        Pause the simulation
+        Pause the simulation. The simulation time clock will no longer be incremented, on_tick events will no longer be
+        sent from the Runtime, and all characters will freeze in place. The Runtime remains interactive however - the
+        camera can still be moved and objects can be inspected. Pausing can be useful for executing long-running tasks
+        that need to completed before resuming the simulation. This has the same effect as pressing the Pause button in
+        the Runtime Time Panel in the lower right corner of the UI.
         """
         logger.debug("Pausing simulation")
         await self.runtime.send_message(
@@ -39,7 +49,10 @@ class API:
 
     async def set_speed(self, speed: str) -> None:
         """
-        Change the speed of the simulation
+        Change the speed of the simulation. The default play speed of the simulation is one minute of sim time per
+        second of real time, but sometimes this is too slow if we're waiting to see the effect of an action that takes
+        hours or days of simulation time to complete. A set of predefined speed constants is provided to allow the
+        simulation to run at up to 20 minutes of sim time per second of real time.
 
         :param speed: A string representing one of the pre-defined speed constants:
                 'Realtime'
@@ -59,7 +72,11 @@ class API:
 
     async def set_start_date(self, date: datetime) -> None:
         """
-        Set the simulation start date. Only works if the simulation has not been started yet.
+        Set the simulation start date and time. This is the date at which the "Day 1" of simulation time is calculated
+        in the Time Panel. By default, the simulation starts at 8am so this can be useful for changing the time of day
+        to something else, which in turn affects the environment lighting in the Runtime. Must be set in the on_resume
+        callback otherwise an error will be thrown - changing the date or time after the simulation has started is not
+        currently supported.
 
         :param date: A datetime object representing the start date of the simulation
         """
@@ -75,9 +92,10 @@ class API:
 
     async def enable_agent(self, persona_id: str, enabled: bool) -> None:
         """
-        Enable or disable the LLM agent for the given persona_id.
-        Enabled agents generate their actions using the python Bridge.
-        Disabled agents generate their actions in the simulation Runtime using a simple scoring system.
+        Enable or disable the Bridge agent for a specific character. Enabled agents generate their actions using the
+        python Bridge by sending requests to generate action options. Disabled agents generate their actions in the
+        simulation Runtime using a simple scoring system similar to the one used by The Sims. The agent state does not
+        affect conversation generation - all characters use the Bridge for this purpose.
 
         :param persona_id: persona to modify
         :param enabled: Flag to Enable or disable the agent
@@ -96,7 +114,10 @@ class API:
         self, persona_id: str, property_name: str, value: str
     ) -> None:
         """
-        Update a property value for the given persona
+        Set a character property to a new value. Characters in Thistle Gulch come with a set of pre-defined properties
+        such as energy, description, and backstory which ultimately define the behavior of the character in the
+        simulation via the generation of actions and conversations. For instance, changing a character's backstory
+        alters their motivations and can lead them to make very different decisions when interacting with other characters.
 
         :param persona_id: Persona to modify
         :param property_name: Name of the property to modify
@@ -115,7 +136,10 @@ class API:
 
     async def get_character_context(self, persona_id: str) -> PersonaContextObject:
         """
-        Request all contextual information about a specific character
+        Request all contextual information about a specific character and other relevant world states. This includes
+        things like available interactions, memories, conversations, current action, and other details. This information
+        can be used in many different ways: construct actions using skills, use the current time to trigger an event,
+        observe what other characters are doing or conversing about, finding available locations to travel to, etc.
 
         :param persona_id: Persona to modify
         """
@@ -131,7 +155,12 @@ class API:
 
     async def override_character_action(self, persona_id: str, action: dict) -> None:
         """
-        Interrupt the character's current action with a new one
+        Interrupt the character's current action with the one provided. An action is constructed using one of the
+        available skills and sent to the Runtime, which causes the character to immediately stop their current action
+        and begin the new one. This can be useful for orchestrating a series of events over time, or in response to
+        another action that was executed in the simulation. Keep in mind that while the action is guaranteed to start
+        executing, other events in the simulation may still interrupt it for various reasons (e.g. energy goes to zero,
+        character is arrested, etc.)
 
         :param persona_id: Persona to modify
         :param action: The new action to execute
@@ -148,7 +177,11 @@ class API:
 
     async def focus_character(self, persona_id: str) -> None:
         """
-        Focusing a character shows the character UI and navigation path, and allows the player to take actions on their behalf
+        Focusing a character shows the character UI and navigation path, and allows the player to take actions on their
+        behalf. A focused character's name label is highlighted, and their chat bubble (and those of any conversation
+        partners) will render on top of everything else. Calling focus_character with a null character id will clear the
+        focus state. Focusing does not cause the camera to follow the character - use the follow_character command if
+        this is desired.
 
         :param persona_id: Persona to focus. If none provided, the currently focused character will be removed from focus.
         """
@@ -163,7 +196,10 @@ class API:
 
     async def follow_character(self, persona_id: str, zoom: float) -> None:
         """
-        Follow a specific character with the camera
+        Follow a specific character with the camera. When triggered, the camera pivot instantly moves to the given
+        character and follows them as they navigate around the world. Calling follow_character with a null character id
+        will cause the camera to stop following. A followed character's name label and chat bubble (and those of any
+        conversation partners) will render on top of everything else.
 
         :param persona_id: Persona to follow. If none provided, stop following the current character if any.
         :param zoom: The camera zoom amount between 0.0 (furthest) and 1.0 (closest)
@@ -189,7 +225,9 @@ class API:
         field_of_view: float,
     ) -> None:
         """
-        Place the camera at a specific position and rotation
+        Place the camera with a specific position, rotation and field of view. This temporarily switches to the "God"
+        camera mode - Press ESC or click anywhere in the screen to restore the default camera mode. Useful for
+        programmatically moving the camera for cinematic purposes.
 
         :param position_x: X position in meters
         :param position_y: Y position in meters
