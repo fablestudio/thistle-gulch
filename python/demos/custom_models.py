@@ -55,20 +55,42 @@ class UseOllamaDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Use an Ollama Model",
-            summary="Use Ollama to generate actions and conversations. You must have the Ollama server running.",
+            summary="Use Ollama to generate actions and conversations. It's a local server that supports running multiple open models.",
             category=CATEGORY,
-            function=self.use_llama2_model,
+            function=self.use_ollama_model,
         )
         self.callback = DebugCallback()
 
-    def use_llama2_model(self, bridge: RuntimeBridge):
-        """Server for SAGA."""
+    def use_ollama_model(self, bridge: RuntimeBridge):
+        """WARNING: You must have the Ollama server running with the correct model to use this demo!
 
-        print(
-            "\nWARNING: You must have the Ollama server running with the correct model to use this demo! "
-            "Also, the default model works decently, but it's not as good as even GPT-3.5-tubo. It works very intermittently. "
-            "If you are interested in co-working on a fine-tuned Ollama model, please reach out to us on Discord."
-        )
+        This demo will override the default actions and conversation generation endpoints to use the Ollama server.
+        You will need to have the Ollama server running with the correct model before running this demo. Setup is
+        pretty simple, and you can download and install it here:
+            https://ollama.com/download
+
+        Once you have it installed, you need to load the model you want to use. The default model is `mistral:instruct`,
+        but you can find more models here: https://ollama.com/library. Be careful, some models are very large and may
+        take a long time to download and are very slow to run, even with a large GPU.
+
+        To run the default model, use the following command on your command line:
+        > ollama load mistral:instruct
+
+        That will take a few minutes to download the right model.
+
+        The default model works decently, but it's not as good as even GPT-3.5-tubo. It works very intermittently.
+        If you are interested in co-working on a fine-tuned Ollama model, please reach out to us on Discord.
+
+        Key API calls:
+            bridge.router.add_route() # Shows how to override the endpoints using custom LLMs.
+            Ollama() # Shows how to use a custom LLM model using LangChain LLMs.
+            DebugCallback() # Shows how to use a custom callback to debug the generation process.
+
+
+        See the LangChain docs and this Demo source code on Github for more information:
+            https://python.langchain.com/docs/integrations/llms/ollama/
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/custom_models.py
+        """
 
         default_model = "mistral:instruct"
         model = formatted_input(
@@ -132,6 +154,23 @@ class UseAnthropic(Demo):
         )
 
     def override_model_to_use_anthpropic(self, bridge: RuntimeBridge):
+        """
+        This demo will override the default actions and conversation generation endpoints to use the Anthropic server.
+        You will need to have an Anthropic API Key to use this demo. You can get an API key by creating an account at
+        https://console.anthropic.com/ and following the instructions. Once you have an API key, set it as an
+        environment variable using `export ANTHROPIC_API_KEY=your_api_key`. If you don't have the Anthropic library
+        installed, you can install it using `poetry install --with anthropic` or the demo will prompt you to install it.
+
+        Key API calls:
+            bridge.router.add_route()
+            Anthropic() # Shows how to use a custom LLM model using LangChain LLMs.
+            DebugCallback() # Shows how to use a custom callback to debug the generation process.
+
+        See the LangChain docs and this Demo source code on Github for more information:
+            https://python.langchain.com/docs/integrations/llms/anthropic/
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/custom_models.py
+            https://docs.anthropic.com/claude/docs/intro-to-claude
+        """
 
         # Check if the user has Anthropic installed.
         try:
