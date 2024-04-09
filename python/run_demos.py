@@ -26,6 +26,7 @@ def main():
         override_actions.SkipSagaAlwaysDoTheDefaultActionDemo(),
         override_actions.ReplaceContextWithYamlDumpDemo(),
         custom_models.UseOllamaDemo(),
+        custom_models.UseAnthropic(),
         simulation_commands.SetStartTimeDemo(),
         simulation_commands.SimulationTickDemo(),
         character_commands.EnableAgentDemo(),
