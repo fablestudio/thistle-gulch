@@ -123,13 +123,13 @@ files = [
 
 [[package]]
 name = "anthropic"
-version = "0.24.0"
+version = "0.25.0"
 description = "The official Python library for the anthropic API"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "anthropic-0.24.0-py3-none-any.whl", hash = "sha256:189e053f710d977a7f9d1db2ace00aa149a7e40b74a644fbb0757789e50db1fd"},
-    {file = "anthropic-0.24.0.tar.gz", hash = "sha256:0e194be9310c1d84fbc1a84cc0040317ee10dfb3221ae8ea053d40522ee64ecd"},
+    {file = "anthropic-0.25.0-py3-none-any.whl", hash = "sha256:b5dfe4dfebace1641a02cfda939cd6dffac0152ab305ca1ef0c11023043a51a2"},
+    {file = "anthropic-0.25.0.tar.gz", hash = "sha256:63372443e699da7ffb467b2d0eb5ee7740acf877368b364a1137d795ae4e4c16"},
 ]
 
 [package.dependencies]
@@ -149,7 +149,7 @@ vertex = ["google-auth (>=2,<3)"]
 name = "anyio"
 version = "4.3.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "anyio-4.3.0-py3-none-any.whl", hash = "sha256:048e05d0f6caeed70d731f3db756d35dcc1f35747c8c403364a8332c630441b8"},
@@ -433,7 +433,7 @@ typing-inspect = ">=0.4.0,<1"
 name = "defusedxml"
 version = "0.7.1"
 description = "XML bomb protection for Python stdlib modules"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 files = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
@@ -444,7 +444,7 @@ files = [
 name = "distro"
 version = "1.9.0"
 description = "Distro - an OS platform information API"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
@@ -467,7 +467,7 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "fable-saga"
-version = "0.0.0"
+version = "0.6.0.post1.dev0+d728521"
 description = "AI agents that turn skills into actions."
 optional = false
 python-versions = "^3.10"
@@ -478,22 +478,24 @@ develop = false
 aiohttp = "^3.8.5"
 cattrs = "^23.1.2"
 langchain = "^0.1.13"
-langchain-openai = "^0.1.1"
 numpy = "^1.26.4"
 python-socketio = "^5.9.0"
 types-pyyaml = "^6.0.12.20240311"
 
+[package.extras]
+openai = ["langchain-openai (>=0.1.1,<0.2.0)"]
+
 [package.source]
 type = "git"
 url = "https://github.com/fablestudio/fable-saga.git"
-reference = "main"
-resolved_reference = "ed6f6c273529d412a19ef69a4dac03584d1737d6"
+reference = "SIM-2893-openai-key"
+resolved_reference = "fd2509f42e7d1b175f430211194eceae8c040501"
 
 [[package]]
 name = "filelock"
 version = "3.13.4"
 description = "A platform independent file lock."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "filelock-3.13.4-py3-none-any.whl", hash = "sha256:404e5e9253aa60ad457cae1be07c0f0ca90a63931200a47d9b6a6af84fd7b45f"},
@@ -595,7 +597,7 @@ files = [
 name = "fsspec"
 version = "2024.3.1"
 description = "File-system specification"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "fsspec-2024.3.1-py3-none-any.whl", hash = "sha256:918d18d41bf73f0e2b261824baeb1b124bcf771767e3a26425cd7dec3332f512"},
@@ -712,7 +714,7 @@ files = [
 name = "httpcore"
 version = "1.0.5"
 description = "A minimal low-level HTTP client."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "httpcore-1.0.5-py3-none-any.whl", hash = "sha256:421f18bac248b25d310f3cacd198d55b8e6125c107797b609ff9b7a6ba7991b5"},
@@ -733,7 +735,7 @@ trio = ["trio (>=0.22.0,<0.26.0)"]
 name = "httpx"
 version = "0.27.0"
 description = "The next generation HTTP client."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
@@ -757,7 +759,7 @@ socks = ["socksio (==1.*)"]
 name = "huggingface-hub"
 version = "0.22.2"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
-optional = false
+optional = true
 python-versions = ">=3.8.0"
 files = [
     {file = "huggingface_hub-0.22.2-py3-none-any.whl", hash = "sha256:3429e25f38ccb834d310804a3b711e7e4953db5a9e420cc147a5e194ca90fd17"},
@@ -836,13 +838,13 @@ files = [
 
 [[package]]
 name = "langchain"
-version = "0.1.14"
+version = "0.1.15"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain-0.1.14-py3-none-any.whl", hash = "sha256:94f9b5df2421faaf762d4f43b9d65c270c2f701934580d281e4c6226deef7234"},
-    {file = "langchain-0.1.14.tar.gz", hash = "sha256:124c6244cf3957616b98f2df07dc2992fc40dff6ed1a62d8ee8a40f1e0260a40"},
+    {file = "langchain-0.1.15-py3-none-any.whl", hash = "sha256:3ac516463ae7f80047091f04592a1eea138321710bbc266005f9de238d71acd3"},
+    {file = "langchain-0.1.15.tar.gz", hash = "sha256:79d43035327fdcc5ac81a3db10f2b879f2bd5db3b268ef82bac7baf3ec32954e"},
 ]
 
 [package.dependencies]
@@ -850,8 +852,8 @@ aiohttp = ">=3.8.3,<4.0.0"
 async-timeout = {version = ">=4.0.0,<5.0.0", markers = "python_version < \"3.11\""}
 dataclasses-json = ">=0.5.7,<0.7"
 jsonpatch = ">=1.33,<2.0"
-langchain-community = ">=0.0.30,<0.1"
-langchain-core = ">=0.1.37,<0.2.0"
+langchain-community = ">=0.0.32,<0.1"
+langchain-core = ">=0.1.41,<0.2.0"
 langchain-text-splitters = ">=0.0.1,<0.1"
 langsmith = ">=0.1.17,<0.2.0"
 numpy = ">=1,<2"
@@ -877,35 +879,35 @@ text-helpers = ["chardet (>=5.1.0,<6.0.0)"]
 
 [[package]]
 name = "langchain-anthropic"
-version = "0.1.6"
+version = "0.1.7"
 description = "An integration package connecting AnthropicMessages and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_anthropic-0.1.6-py3-none-any.whl", hash = "sha256:5626f9f2f0d3cc1665a2f5817ea1856dbfa4c745bc6f95b7043c56b6ab85e0c1"},
-    {file = "langchain_anthropic-0.1.6.tar.gz", hash = "sha256:544e5c8c365964c594b80eb1db994e67d90722be9efde460229e5888524545de"},
+    {file = "langchain_anthropic-0.1.7-py3-none-any.whl", hash = "sha256:ae022d98eadeb8151145e417d0e2edc350740a117724a08d6b5d17481379c007"},
+    {file = "langchain_anthropic-0.1.7.tar.gz", hash = "sha256:113a7bcc297798692c64f569a73c0681450a706d9d6acdcac0102511b2958fac"},
 ]
 
 [package.dependencies]
 anthropic = ">=0.23.0,<1"
 defusedxml = ">=0.7.1,<0.8.0"
-langchain-core = ">=0.1.33,<0.2.0"
+langchain-core = ">=0.1.41,<0.2.0"
 
 [[package]]
 name = "langchain-community"
-version = "0.0.31"
+version = "0.0.32"
 description = "Community contributed LangChain integrations."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_community-0.0.31-py3-none-any.whl", hash = "sha256:905c01b978a1cef7fdcddd2d9241dedc9987db6f23ba1b58d974e38b1cdf2775"},
-    {file = "langchain_community-0.0.31.tar.gz", hash = "sha256:9a970bc2bb59bb4c204b696d8c62c2534f6ddb31005005cc1b7d7f934e58a5fc"},
+    {file = "langchain_community-0.0.32-py3-none-any.whl", hash = "sha256:406977009999952d0705de3806de2b4867e9bb8eda8ca154a59c7a8ed58da38d"},
+    {file = "langchain_community-0.0.32.tar.gz", hash = "sha256:1510217d646c8380f54e9850351f6d2a0b0dd73c501b666c6f4b40baa8160b29"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
 dataclasses-json = ">=0.5.7,<0.7"
-langchain-core = ">=0.1.37,<0.2.0"
+langchain-core = ">=0.1.41,<0.2.0"
 langsmith = ">=0.1.0,<0.2.0"
 numpy = ">=1,<2"
 PyYAML = ">=5.3"
@@ -915,17 +917,17 @@ tenacity = ">=8.1.0,<9.0.0"
 
 [package.extras]
 cli = ["typer (>=0.9.0,<0.10.0)"]
-extended-testing = ["aiosqlite (>=0.19.0,<0.20.0)", "aleph-alpha-client (>=2.15.0,<3.0.0)", "anthropic (>=0.3.11,<0.4.0)", "arxiv (>=1.4,<2.0)", "assemblyai (>=0.17.0,<0.18.0)", "atlassian-python-api (>=3.36.0,<4.0.0)", "azure-ai-documentintelligence (>=1.0.0b1,<2.0.0)", "beautifulsoup4 (>=4,<5)", "bibtexparser (>=1.4.0,<2.0.0)", "cassio (>=0.1.0,<0.2.0)", "chardet (>=5.1.0,<6.0.0)", "cloudpickle (>=2.0.0)", "cohere (>=4,<5)", "databricks-vectorsearch (>=0.21,<0.22)", "datasets (>=2.15.0,<3.0.0)", "dgml-utils (>=0.3.0,<0.4.0)", "elasticsearch (>=8.12.0,<9.0.0)", "esprima (>=4.0.1,<5.0.0)", "faiss-cpu (>=1,<2)", "feedparser (>=6.0.10,<7.0.0)", "fireworks-ai (>=0.9.0,<0.10.0)", "friendli-client (>=1.2.4,<2.0.0)", "geopandas (>=0.13.1,<0.14.0)", "gitpython (>=3.1.32,<4.0.0)", "google-cloud-documentai (>=2.20.1,<3.0.0)", "gql (>=3.4.1,<4.0.0)", "gradientai (>=1.4.0,<2.0.0)", "hdbcli (>=2.19.21,<3.0.0)", "hologres-vector (>=0.0.6,<0.0.7)", "html2text (>=2020.1.16,<2021.0.0)", "httpx (>=0.24.1,<0.25.0)", "javelin-sdk (>=0.1.8,<0.2.0)", "jinja2 (>=3,<4)", "jq (>=1.4.1,<2.0.0)", "jsonschema (>1)", "lxml (>=4.9.3,<6.0)", "markdownify (>=0.11.6,<0.12.0)", "motor (>=3.3.1,<4.0.0)", "msal (>=1.25.0,<2.0.0)", "mwparserfromhell (>=0.6.4,<0.7.0)", "mwxml (>=0.3.3,<0.4.0)", "newspaper3k (>=0.2.8,<0.3.0)", "numexpr (>=2.8.6,<3.0.0)", "nvidia-riva-client (>=2.14.0,<3.0.0)", "oci (>=2.119.1,<3.0.0)", "openai (<2)", "openapi-pydantic (>=0.3.2,<0.4.0)", "oracle-ads (>=2.9.1,<3.0.0)", "pandas (>=2.0.1,<3.0.0)", "pdfminer-six (>=20221105,<20221106)", "pgvector (>=0.1.6,<0.2.0)", "praw (>=7.7.1,<8.0.0)", "premai (>=0.3.25,<0.4.0)", "psychicapi (>=0.8.0,<0.9.0)", "py-trello (>=0.19.0,<0.20.0)", "pymupdf (>=1.22.3,<2.0.0)", "pypdf (>=3.4.0,<4.0.0)", "pypdfium2 (>=4.10.0,<5.0.0)", "pyspark (>=3.4.0,<4.0.0)", "rank-bm25 (>=0.2.2,<0.3.0)", "rapidfuzz (>=3.1.1,<4.0.0)", "rapidocr-onnxruntime (>=1.3.2,<2.0.0)", "rdflib (==7.0.0)", "requests-toolbelt (>=1.0.0,<2.0.0)", "rspace_client (>=2.5.0,<3.0.0)", "scikit-learn (>=1.2.2,<2.0.0)", "sqlite-vss (>=0.1.2,<0.2.0)", "streamlit (>=1.18.0,<2.0.0)", "sympy (>=1.12,<2.0)", "telethon (>=1.28.5,<2.0.0)", "tidb-vector (>=0.0.3,<1.0.0)", "timescale-vector (>=0.0.1,<0.0.2)", "tqdm (>=4.48.0)", "tree-sitter (>=0.20.2,<0.21.0)", "tree-sitter-languages (>=1.8.0,<2.0.0)", "upstash-redis (>=0.15.0,<0.16.0)", "vdms (>=0.0.20,<0.0.21)", "xata (>=1.0.0a7,<2.0.0)", "xmltodict (>=0.13.0,<0.14.0)", "zhipuai (>=1.0.7,<2.0.0)"]
+extended-testing = ["aiosqlite (>=0.19.0,<0.20.0)", "aleph-alpha-client (>=2.15.0,<3.0.0)", "anthropic (>=0.3.11,<0.4.0)", "arxiv (>=1.4,<2.0)", "assemblyai (>=0.17.0,<0.18.0)", "atlassian-python-api (>=3.36.0,<4.0.0)", "azure-ai-documentintelligence (>=1.0.0b1,<2.0.0)", "beautifulsoup4 (>=4,<5)", "bibtexparser (>=1.4.0,<2.0.0)", "cassio (>=0.1.0,<0.2.0)", "chardet (>=5.1.0,<6.0.0)", "cloudpickle (>=2.0.0)", "cohere (>=4,<5)", "databricks-vectorsearch (>=0.21,<0.22)", "datasets (>=2.15.0,<3.0.0)", "dgml-utils (>=0.3.0,<0.4.0)", "elasticsearch (>=8.12.0,<9.0.0)", "esprima (>=4.0.1,<5.0.0)", "faiss-cpu (>=1,<2)", "feedparser (>=6.0.10,<7.0.0)", "fireworks-ai (>=0.9.0,<0.10.0)", "friendli-client (>=1.2.4,<2.0.0)", "geopandas (>=0.13.1,<0.14.0)", "gitpython (>=3.1.32,<4.0.0)", "google-cloud-documentai (>=2.20.1,<3.0.0)", "gql (>=3.4.1,<4.0.0)", "gradientai (>=1.4.0,<2.0.0)", "hdbcli (>=2.19.21,<3.0.0)", "hologres-vector (>=0.0.6,<0.0.7)", "html2text (>=2020.1.16,<2021.0.0)", "httpx (>=0.24.1,<0.25.0)", "httpx-sse (>=0.4.0,<0.5.0)", "javelin-sdk (>=0.1.8,<0.2.0)", "jinja2 (>=3,<4)", "jq (>=1.4.1,<2.0.0)", "jsonschema (>1)", "lxml (>=4.9.3,<6.0)", "markdownify (>=0.11.6,<0.12.0)", "motor (>=3.3.1,<4.0.0)", "msal (>=1.25.0,<2.0.0)", "mwparserfromhell (>=0.6.4,<0.7.0)", "mwxml (>=0.3.3,<0.4.0)", "newspaper3k (>=0.2.8,<0.3.0)", "numexpr (>=2.8.6,<3.0.0)", "nvidia-riva-client (>=2.14.0,<3.0.0)", "oci (>=2.119.1,<3.0.0)", "openai (<2)", "openapi-pydantic (>=0.3.2,<0.4.0)", "oracle-ads (>=2.9.1,<3.0.0)", "pandas (>=2.0.1,<3.0.0)", "pdfminer-six (>=20221105,<20221106)", "pgvector (>=0.1.6,<0.2.0)", "praw (>=7.7.1,<8.0.0)", "premai (>=0.3.25,<0.4.0)", "psychicapi (>=0.8.0,<0.9.0)", "py-trello (>=0.19.0,<0.20.0)", "pyjwt (>=2.8.0,<3.0.0)", "pymupdf (>=1.22.3,<2.0.0)", "pypdf (>=3.4.0,<4.0.0)", "pypdfium2 (>=4.10.0,<5.0.0)", "pyspark (>=3.4.0,<4.0.0)", "rank-bm25 (>=0.2.2,<0.3.0)", "rapidfuzz (>=3.1.1,<4.0.0)", "rapidocr-onnxruntime (>=1.3.2,<2.0.0)", "rdflib (==7.0.0)", "requests-toolbelt (>=1.0.0,<2.0.0)", "rspace_client (>=2.5.0,<3.0.0)", "scikit-learn (>=1.2.2,<2.0.0)", "sqlite-vss (>=0.1.2,<0.2.0)", "streamlit (>=1.18.0,<2.0.0)", "sympy (>=1.12,<2.0)", "telethon (>=1.28.5,<2.0.0)", "tidb-vector (>=0.0.3,<1.0.0)", "timescale-vector (>=0.0.1,<0.0.2)", "tqdm (>=4.48.0)", "tree-sitter (>=0.20.2,<0.21.0)", "tree-sitter-languages (>=1.8.0,<2.0.0)", "upstash-redis (>=0.15.0,<0.16.0)", "vdms (>=0.0.20,<0.0.21)", "xata (>=1.0.0a7,<2.0.0)", "xmltodict (>=0.13.0,<0.14.0)"]
 
 [[package]]
 name = "langchain-core"
-version = "0.1.40"
+version = "0.1.41"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.1.40-py3-none-any.whl", hash = "sha256:618dbb7ab44d8b263b91e384db1ff07d0db256ae5bdafa0123a115b6a75a13f1"},
-    {file = "langchain_core-0.1.40.tar.gz", hash = "sha256:34c06fc0e6d3534b738c63f85403446b4be71161665b7e091f9bb19c914ec100"},
+    {file = "langchain_core-0.1.41-py3-none-any.whl", hash = "sha256:92d3da5ca0d5fb1606b3ab42bfd455c7b386fe4c38f6c0d44ba6014abf46147d"},
+    {file = "langchain_core-0.1.41.tar.gz", hash = "sha256:4002304883b251af8cb781f01c59f56aeee58be42c965dbbdeca0a3bfb8f96af"},
 ]
 
 [package.dependencies]
@@ -941,17 +943,17 @@ extended-testing = ["jinja2 (>=3,<4)"]
 
 [[package]]
 name = "langchain-openai"
-version = "0.1.1"
+version = "0.1.2"
 description = "An integration package connecting OpenAI and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_openai-0.1.1-py3-none-any.whl", hash = "sha256:5cf4df5d2550af673337eafedaeec014ba52f9a25aeb8451206ca254bed01e5c"},
-    {file = "langchain_openai-0.1.1.tar.gz", hash = "sha256:d10e9a9fc4c8ea99ca98f23808ce44c7dcdd65354ac07ad10afe874ecf3401ca"},
+    {file = "langchain_openai-0.1.2-py3-none-any.whl", hash = "sha256:45fab91803df22c6d5fce7c010df404569898372df5ae8cd03af50bef774d2ec"},
+    {file = "langchain_openai-0.1.2.tar.gz", hash = "sha256:cd391e61bd93ab72ae24d8e1f250257d6acff6d9e455e623363b8c171533050a"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.1.33,<0.2.0"
+langchain-core = ">=0.1.41,<0.2.0"
 openai = ">=1.10.0,<2.0.0"
 tiktoken = ">=0.5.2,<1"
 
@@ -974,13 +976,13 @@ extended-testing = ["lxml (>=5.1.0,<6.0.0)"]
 
 [[package]]
 name = "langsmith"
-version = "0.1.42"
+version = "0.1.45"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.42-py3-none-any.whl", hash = "sha256:1101c3b5cbd9e8d65471f32fbb99736403f1bc30954fdd233b2991a40c65aa03"},
-    {file = "langsmith-0.1.42.tar.gz", hash = "sha256:e41236fd043c83a39329913ec607ae31cd46dad78a09c4924eab4a29e954da17"},
+    {file = "langsmith-0.1.45-py3-none-any.whl", hash = "sha256:5a5b7fafe767fa28826c925f175875c09bf5368bfdb141286381a94bf737e6ef"},
+    {file = "langsmith-0.1.45.tar.gz", hash = "sha256:713206107df636db1edf30867d64b92495afb1f09d2fee0857a77b7a8ee083d5"},
 ]
 
 [package.dependencies]
@@ -1211,13 +1213,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.16.2"
+version = "1.17.0"
 description = "The official Python library for the openai API"
-optional = false
+optional = true
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.16.2-py3-none-any.whl", hash = "sha256:46a435380921e42dae218d04d6dd0e89a30d7f3b9d8a778d5887f78003cf9354"},
-    {file = "openai-1.16.2.tar.gz", hash = "sha256:c93d5efe5b73b6cb72c4cd31823852d2e7c84a138c0af3cbe4a8eb32b1164ab2"},
+    {file = "openai-1.17.0-py3-none-any.whl", hash = "sha256:72464cdb0602a57af87acb4888b1a48a1c02182cc9f09d2f2f3200b185223d5f"},
+    {file = "openai-1.17.0.tar.gz", hash = "sha256:72e6758cec080a3e5a9daf843178c975fed656fe0831919f4dd89bb62431724f"},
 ]
 
 [package.dependencies]
@@ -1586,7 +1588,7 @@ files = [
 name = "regex"
 version = "2023.12.25"
 description = "Alternative regular expression module, to replace re."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "regex-2023.12.25-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:0694219a1d54336fd0445ea382d49d36882415c0134ee1e8332afd1529f0baa5"},
@@ -1726,7 +1728,7 @@ docs = ["sphinx"]
 name = "sniffio"
 version = "1.3.1"
 description = "Sniff out which async library your code is running under"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
@@ -1838,7 +1840,7 @@ doc = ["reno", "sphinx", "tornado (>=4.5)"]
 name = "tiktoken"
 version = "0.6.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "tiktoken-0.6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:277de84ccd8fa12730a6b4067456e5cf72fef6300bea61d506c09e45658d41ac"},
@@ -1890,7 +1892,7 @@ blobfile = ["blobfile (>=2)"]
 name = "tokenizers"
 version = "0.15.2"
 description = ""
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "tokenizers-0.15.2-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:52f6130c9cbf70544287575a985bf44ae1bda2da7e8c24e97716080593638012"},
@@ -2028,7 +2030,7 @@ files = [
 name = "tqdm"
 version = "4.66.2"
 description = "Fast, Extensible Progress Meter"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "tqdm-4.66.2-py3-none-any.whl", hash = "sha256:1ee4f8a893eb9bef51c6e35730cebf234d5d0b6bd112b0271e10ed7c24a02bd9"},
@@ -2215,7 +2217,11 @@ files = [
 idna = ">=2.0"
 multidict = ">=4.0"
 
+[extras]
+anthropic = ["langchain-anthropic"]
+openai = ["langchain-openai"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ad42c3f2675bc376354e8d6be588b5787e34ff55aa1af612331a60aa2fbe2a3d"
+content-hash = "b81a4f510e0ad8babfe5d3830c0ebc831caf887a78a58c18fbc0dd6238a176b1"

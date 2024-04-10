@@ -32,7 +32,7 @@ under our standard Fable Studio EULA.
 2. Download and install the Thistle Gulch Runtime from itch.io.
 3. Clone this repo and `git checkout <tag>` the [latest release tag](https://github.com/fablestudio/thistle-gulch/releases).
 4. Change the directory to the `python` sub-folder.
-5. Run `poetry install` to create a virtual environment and install dependencies.
+5. Run `poetry install --extras openai` to create a virtual environment and install dependencies.
 6. Start a poetry shell with `poetry shell` to make sure you are using the correct python version and have the correct
    environment variables set.
 7. Run `python run_demos.py --runtime "<PATH_TO_ITCHIO_DIR>/ThistleGulch.exe -agents wyatt_cooper"` . (Runtime flags are
