@@ -2,6 +2,9 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Optional, List, Any, Dict
 
+from langchain_core.outputs import LLMResult
+from langchain_core.callbacks import AsyncCallbackHandler
+
 from thistle_gulch.bridge import RuntimeBridge
 
 
@@ -91,6 +94,47 @@ async def formatted_input_async(
         return await asyncio.get_event_loop().run_in_executor(
             executor, formatted_input, prompt, default, validator
         )
+
+
+def yes_no_validator(val: str) -> int:
+    val = val.lower()
+    if val == "y" or val == "yes":
+        return 1
+    if val == "n" or val == "no":
+        return 0
+    raise ValueError("Please enter 'y' or 'n'.")
+
+
+class DebugCallback(AsyncCallbackHandler):
+
+    def __init__(self):
+        self.response: str = ""
+        self.last_token: str = ""
+
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ):
+        # Reset the response and last good response.
+        self.response = ""
+        """Run on LLM start."""
+        print("\n-> Generating ..", flush=True)
+
+    def on_llm_end(self, response: LLMResult, **kwargs):
+        """Run on LLM end."""
+        print(
+            "\n-> Done!",
+            flush=True,
+        )
+
+    def on_llm_new_token(self, token: str, **kwargs):
+        """Run on new LLM token. Only available when streaming is enabled."""
+        self.response += token
+        # The json mode of ollama (mistra:instruct at least) sends a lot of newlines at the end of the response.
+        # We don't want to print them.
+        if token == "\n" and self.last_token == "\n":
+            return
+        print(token, end="", flush=True)
+        self.last_token = token
 
 
 class Demo:
