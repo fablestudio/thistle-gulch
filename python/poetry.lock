@@ -489,7 +489,7 @@ openai = ["langchain-openai (>=0.1.1,<0.2.0)"]
 type = "git"
 url = "https://github.com/fablestudio/fable-saga.git"
 reference = "SIM-2893-openai-key"
-resolved_reference = "fd2509f42e7d1b175f430211194eceae8c040501"
+resolved_reference = "712c90ae01434e4a344d1e6581bd05b4141de99f"
 
 [[package]]
 name = "filelock"

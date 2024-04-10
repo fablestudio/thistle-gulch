@@ -271,22 +271,6 @@ class RuntimeBridge:
             Route("simulation-ready", OnReadyEndpoint(self), logging.INFO)
         )
         self.router.add_route(Route("simulation-tick", OnSimulationTickEndpoint(self)))
-        self.router.add_route(
-            Route(
-                IncomingRoutes.generate_actions.value,
-                TGActionsEndpoint(ActionsAgent()),
-                logging.DEBUG,
-                MessageSystem.ENDPOINTS,
-            )
-        )
-        self.router.add_route(
-            Route(
-                IncomingRoutes.generate_conversations.value,
-                saga_server.ConversationEndpoint(ConversationAgent()),
-                logging.DEBUG,
-                MessageSystem.ENDPOINTS,
-            )
-        )
 
     def run(self):
         print(
@@ -304,6 +288,28 @@ class RuntimeBridge:
             self.runtime.start()
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
+
+        # Set the routes for SAGA stuff if not already defined using the defaults.
+        # This allows custom routes to be added before the server is started and
+        # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
+        if IncomingRoutes.generate_actions.value not in self.router.routes:
+            self.router.add_route(
+                Route(
+                    IncomingRoutes.generate_actions.value,
+                    TGActionsEndpoint(ActionsAgent()),
+                    logging.DEBUG,
+                    MessageSystem.ENDPOINTS,
+                )
+            )
+        if IncomingRoutes.generate_conversations.value not in self.router.routes:
+            self.router.add_route(
+                Route(
+                    IncomingRoutes.generate_conversations.value,
+                    saga_server.ConversationEndpoint(ConversationAgent()),
+                    logging.DEBUG,
+                    MessageSystem.ENDPOINTS,
+                )
+            )
 
         # This blocks until the server is stopped.
         logger.info("[Bridge] Starting")
