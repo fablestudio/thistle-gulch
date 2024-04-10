@@ -10,8 +10,14 @@ python = "^3.10"
 python-socketio = "^5.11.1"
 cattrs = "^23.2.3"
 aiohttp = "^3.9.3"
-fable-saga = { git = "https://github.com/fablestudio/fable-saga.git", rev = "main" }
+fable-saga = { git = "https://github.com/fablestudio/fable-saga.git", rev = "SIM-2893-openai-key" }
 types-pyyaml = "^6.0.12.20240311"
+langchain-openai = { version = "^0.1.1", optional = true }
+langchain-anthropic = { version = "^0.1.6", optional = true }
+
+[tool.poetry.extras]
+openai = ["langchain-openai"]
+anthropic = ["langchain-anthropic"]
 
 [tool.poetry.group.test.dependencies]
 # The only dependencies that should be added are
@@ -20,10 +26,6 @@ pytest = "^7.3.0"
 pytest-asyncio = "^0.21.1"
 mypy = "^1.9.0"
 black = "^24.3.0"
-
-[tool.poetry.group.anthropic.dependencies]
-# Required to run the claude3 demo.
-langchain-anthropic = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

@@ -159,7 +159,7 @@ class UseAnthropic(Demo):
         You will need to have an Anthropic API Key to use this demo. You can get an API key by creating an account at
         https://console.anthropic.com/ and following the instructions. Once you have an API key, set it as an
         environment variable using `export ANTHROPIC_API_KEY=your_api_key`. If you don't have the Anthropic library
-        installed, you can install it using `poetry install --with anthropic` or the demo will prompt you to install it.
+        installed, you can install it using `poetry install --extras "anthropic"` or the demo will prompt you to install it.
 
         Key API calls:
             bridge.router.add_route()
@@ -185,7 +185,7 @@ class UseAnthropic(Demo):
                 default="y",
             )
             if install:
-                os.system("poetry install --with anthropic")
+                os.system("poetry install --extras anthropic")
                 print("Trying to import ...")
                 from langchain_anthropic import ChatAnthropic
             else:
