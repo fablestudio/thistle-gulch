@@ -43,18 +43,30 @@ class DefaultSagaServerDemo(Demo):
             return False
 
         bridge.on_ready = on_ready
+        start_time: datetime.datetime
 
-        # async def on_tick(bridge: RuntimeBridge, current_time: datetime.datetime):
-        #     nonlocal intro_step
-        #     if intro_step == 0:
-        #         print("Welcome to the SAGA server! This is the default behavior.")
-        #         print("We will focus on Jack Kane and follow him with the camera.")
-        #         intro_step += 1
+        async def on_tick(bridge: RuntimeBridge, current_time: datetime.datetime):
+            nonlocal intro_step, start_time
+            if intro_step == 1:
+                print("Step two - save the start_time")
+                start_time = current_time
+                intro_step += 1
+            elif intro_step == 2:
+                if current_time - start_time > datetime.timedelta(seconds=10):
+                    await bridge.runtime.api.modal(
+                        "Demo Complete",
+                        "The default SAGA server demo is complete.",
+                        "Close",
+                    )
+                    intro_step += 1
+
+        bridge.on_tick = on_tick
 
         async def on_event(bridge: RuntimeBridge, name: str, data: str):
-            print(str)
-            await bridge.runtime.api.modal(
-                "Event", f"Event: {name} with data: {data}", "Continue"
-            )
+            nonlocal intro_step
+            if intro_step == 0:
+                print("Step one, resume the simulation.")
+                await bridge.runtime.api.resume()
+                intro_step += 1
 
         bridge.on_event = on_event
