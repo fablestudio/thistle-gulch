@@ -34,7 +34,7 @@ class FollowCharacter(Demo):
         persona_id: str
 
         # Follow the character at simulation start
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             nonlocal persona_id
             persona_list = await get_persona_list(bridge)
             persona_id = await choose_from_list("Enter persona id", persona_list)
@@ -52,6 +52,8 @@ class FollowCharacter(Demo):
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, zoom)
+
+            return True
 
         tick_count = 0
 
@@ -91,7 +93,7 @@ class PlaceCamera(Demo):
         """
 
         # Place the camera at simulation start
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             # Camera position
             def validate_position(pos_str: str) -> float:
                 pos = float(pos_str)
@@ -165,6 +167,8 @@ class PlaceCamera(Demo):
                 rotation_z,
                 field_of_view,
             )
+
+            return True
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready

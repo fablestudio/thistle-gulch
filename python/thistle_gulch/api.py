@@ -253,3 +253,24 @@ class API:
                 "field_of_view": field_of_view,
             },
         )
+
+    async def modal(self, title: str, message: str, confirm_text: str, pause: bool=True) -> None:
+        """
+        Display a modal dialog with a title and message. This is a blocking operation - the simulation will not continue
+        until the user dismisses the dialog. Modals are useful for getting user input or displaying important information
+        that requires immediate attention.
+
+        :param title: Title of the modal dialog
+        :param message: Message to display in the dialog
+        """
+        logger.debug(f"Displaying modal dialog with title: {title} and message: {message}")
+        await self.runtime.send_message(
+            "simulation-command",
+            {
+                "command": "modal",
+                "title": title,
+                "message": message,
+                "confirm_text": confirm_text,
+                "pause": pause,
+            },
+        )

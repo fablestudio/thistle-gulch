@@ -139,12 +139,14 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         if self.bridge.on_ready is not None:
             # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
             logger.debug(f"[Simulation Ready] Calling on_ready callback..")
-            await self.bridge.on_ready(self.bridge)
+            resume = await self.bridge.on_ready(self.bridge)
         else:
             logger.debug(f"[Simulation Ready] No on_ready callback registered..")
+            resume = True
 
-        logger.debug(f"[Simulation Ready] Resuming simulation..")
-        await self.bridge.runtime.api.resume()
+        if resume:
+            logger.debug(f"[Simulation Ready] Resuming simulation..")
+            await self.bridge.runtime.api.resume()
 
 
 class OnSimulationTickEndpoint(BaseEndpoint[GenericMessage, None]):
