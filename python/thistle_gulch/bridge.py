@@ -168,6 +168,26 @@ class OnSimulationTickEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Tick] No on_tick callback registered..")
 
 
+class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, None]):
+
+    def __init__(self, bridge: "RuntimeBridge"):
+        self.bridge = bridge
+
+    async def handle_request(self, msg: GenericMessage):
+        """Handler for the simulation-event message."""
+        logger.debug(f"[Simulation Event] received..")
+
+        # Call the on_event callback if it exists.
+        if self.bridge.on_event is not None:
+            event_name = msg.data.get("event_name", "")
+            event_data = msg.data.get("event_data", "")
+            # pass the bridge instance to the on_event callback so that it can send messages to the runtime.
+            logger.debug(f"[Simulation Event] Calling on_event callback..")
+            await self.bridge.on_event(self.bridge, event_name, event_data)
+        else:
+            logger.debug(f"[Simulation Event] No on_event callback registered..")
+
+
 @define
 class BridgeConfig:
     host: str = "localhost"
@@ -181,10 +201,13 @@ class RuntimeBridge:
     def __init__(self, config: BridgeConfig):
         self.config = config
         self.router = IncomingMessageRouter()
-        self.on_ready: Optional[Callable[[RuntimeBridge], Awaitable[None]]] = None
+        self.on_ready: Optional[Callable[[RuntimeBridge], Awaitable[bool]]] = None
         self.on_tick: Optional[Callable[[RuntimeBridge, datetime], Awaitable[None]]] = (
             None
         )
+        self.on_event: Optional[
+            Callable[[RuntimeBridge, str, str], Awaitable[None]]
+        ] = None
         self.emit_lock = asyncio.Lock()
 
         # Set up the async web server via aiohttp - this is the server that will handle the socketio connections.
@@ -273,6 +296,11 @@ class RuntimeBridge:
             Route("simulation-ready", OnReadyEndpoint(self), logging.INFO)
         )
         self.router.add_route(Route("simulation-tick", OnSimulationTickEndpoint(self)))
+        self.router.add_route(
+            Route(
+                IncomingRoutes.simulation_event.value, OnSimulationEventEndpoint(self)
+            )
+        )
 
     def run(self):
         print(

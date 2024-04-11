@@ -2,6 +2,7 @@ import datetime
 
 from . import Demo, RuntimeBridge
 
+
 class DefaultSagaServerDemo(Demo):
     def __init__(self):
         super().__init__(
@@ -32,19 +33,28 @@ class DefaultSagaServerDemo(Demo):
             # Then we move the camera to follow them.
             await bridge.runtime.api.follow_character("jack_kane", 0.8)
 
-            await bridge.runtime.api.modal("Welcome to the default SAGA server demo!", "This is the default behavior of the bridge. The SAGA server is generating actions and conversations for the agents in the simulation.", "Continue")
+            await bridge.runtime.api.modal(
+                "Welcome to the default SAGA server demo!",
+                "This is the default behavior of the bridge. The SAGA server is generating actions and conversations for the agents in the simulation.",
+                "Continue",
+            )
 
             # pause the simulation to allow the user to see everything.
             return False
+
         bridge.on_ready = on_ready
 
-        async def on_tick(bridge: RuntimeBridge, current_time: datetime.datetime):
-            nonlocal intro_step
-            if intro_step == 0:
-                print("Welcome to the SAGA server! This is the default behavior.")
-                print("We will focus on Jack Kane and follow him with the camera.")
-                intro_step += 1
+        # async def on_tick(bridge: RuntimeBridge, current_time: datetime.datetime):
+        #     nonlocal intro_step
+        #     if intro_step == 0:
+        #         print("Welcome to the SAGA server! This is the default behavior.")
+        #         print("We will focus on Jack Kane and follow him with the camera.")
+        #         intro_step += 1
 
-        bridge.on_tick = on_tick
+        async def on_event(bridge: RuntimeBridge, name: str, data: str):
+            print(str)
+            await bridge.runtime.api.modal(
+                "Event", f"Event: {name} with data: {data}", "Continue"
+            )
 
-
+        bridge.on_event = on_event

@@ -24,6 +24,7 @@ class API:
         in the lower right corner of the UI.
         """
         logger.debug("Resuming simulation")
+
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -254,7 +255,9 @@ class API:
             },
         )
 
-    async def modal(self, title: str, message: str, confirm_text: str, pause: bool=True) -> None:
+    async def modal(
+        self, title: str, message: str, confirm_text: str, pause: bool = True
+    ) -> None:
         """
         Display a modal dialog with a title and message. This is a blocking operation - the simulation will not continue
         until the user dismisses the dialog. Modals are useful for getting user input or displaying important information
@@ -263,7 +266,9 @@ class API:
         :param title: Title of the modal dialog
         :param message: Message to display in the dialog
         """
-        logger.debug(f"Displaying modal dialog with title: {title} and message: {message}")
+        logger.debug(
+            f"Displaying modal dialog with title: {title} and message: {message}"
+        )
         await self.runtime.send_message(
             "simulation-command",
             {
