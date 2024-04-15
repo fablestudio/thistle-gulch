@@ -31,7 +31,7 @@ class EnableAgentDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             persona_list = await get_persona_list(bridge)
             persona_id = await choose_from_list("Enter persona id", persona_list)
 
@@ -52,6 +52,8 @@ class EnableAgentDemo(Demo):
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            return True
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
@@ -85,7 +87,7 @@ class UpdateCharacterPropertyDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             persona_list = await get_persona_list(bridge)
             persona_id = await choose_from_list("Enter persona id", persona_list)
             print()
@@ -126,6 +128,8 @@ class UpdateCharacterPropertyDemo(Demo):
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            return True
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
@@ -173,6 +177,8 @@ class FocusCharacter(Demo):
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            return True
 
         # Stop focusing the character after 10 simulation ticks
         async def on_tick(_, now: datetime):
@@ -237,6 +243,8 @@ class OverrideCharacterAction(Demo):
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            return True
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
@@ -312,6 +320,8 @@ class RobBankAndArrestCriminal(Demo):
 
             print(f"Following {robber_id} with the camera")
             await bridge.runtime.api.follow_character(robber_id, 0.8)
+
+            return True
 
         async def on_tick(_, current_time: datetime):
             nonlocal arrest_triggered, robber_id, arrest_time

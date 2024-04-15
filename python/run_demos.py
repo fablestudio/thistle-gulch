@@ -7,11 +7,11 @@ import thistle_gulch
 import thistle_gulch.bridge as tg_bridge
 from demos import (
     Demo,
-    DefaultSagaServerDemo,
     override_actions,
     simulation_commands,
     character_commands,
     camera_commands,
+    default_demos,
 )
 
 
@@ -21,7 +21,7 @@ def main():
 
     # A list of available demos and the corresponding endpoint they override.
     options: List[Demo] = [
-        DefaultSagaServerDemo(),
+        default_demos.DefaultSagaServerDemo(),
         override_actions.PrintActionsAndPickFirstDemo(),
         override_actions.SkipSagaAlwaysDoTheDefaultActionDemo(),
         override_actions.ReplaceContextWithYamlDumpDemo(),
