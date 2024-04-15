@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 
 from thistle_gulch import logger, IncomingRoutes, Route
 from thistle_gulch.bridge import TGActionsEndpoint, RuntimeBridge, TGActionsRequest
-from . import Demo
+from . import Demo, choose_from_list
 
 CATEGORY = "Action Generation"
 
@@ -184,3 +184,57 @@ and the chosen skill options.""".replace(
                 ReplaceContextWithYamlDump(fable_saga.actions.ActionsAgent()),
             )
         )
+
+
+class OnActionComplete(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Action Complete",
+            summary="Manually trigger a custom action for a character when the previous action is done",
+            category=CATEGORY,
+            function=self.on_action_complete_demo,
+        )
+
+    def on_action_complete_demo(self, bridge: RuntimeBridge):
+        """
+        TODO
+
+        API calls:
+            TODO
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/override_actions.py
+        """
+
+        sheriff_id = "wyatt_cooper"
+
+        async def on_action_complete(_, persona_id: str, completed_action: str):
+
+            # Return None so all characters other than the sheriff use the generate-actions endpoint instead
+            if persona_id != sheriff_id:
+                return
+
+            await bridge.runtime.api.pause()
+
+            print(f"Getting character context for {persona_id}")
+            context = await bridge.runtime.api.get_character_context(persona_id)
+
+            location_id = await choose_from_list(
+                "Pick a location_id for this persona to go to",
+                [loc.name for loc in context.locations],
+            )
+
+            await bridge.runtime.api.resume()
+
+            # Return a new action for the character to replace the one that just completed
+            return fable_saga.actions.Action(
+                skill="go_to",
+                parameters={
+                    "destination": location_id,
+                    "goal": "Visit the first available location",
+                },
+            )
+
+        print("Registering custom on_action_complete callback.")
+        bridge.on_action_complete = on_action_complete

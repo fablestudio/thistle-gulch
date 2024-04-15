@@ -7,7 +7,7 @@ import fable_saga.server as saga_server
 import socketio
 from aiohttp import web
 from attr import define
-from fable_saga.actions import ActionsAgent
+from fable_saga.actions import ActionsAgent, Action
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
 
@@ -176,6 +176,14 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, None]):
     async def handle_request(self, msg: GenericMessage):
         """Handler for the simulation-event message."""
         logger.debug(f"[Simulation Event] received..")
+        
+        persona_id = msg.data.get("persona_id", "")
+            completed_action = msg.data.get("completed_action", "")
+            # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
+            logger.debug(f"[On Action Complete] Calling on_action_complete callback..")
+            action = await self.bridge.on_action_complete(
+                self.bridge, persona_id, completed_action
+            )
 
         # Call the on_event callback if it exists.
         if self.bridge.on_event is not None:
@@ -207,6 +215,9 @@ class RuntimeBridge:
         )
         self.on_event: Optional[
             Callable[[RuntimeBridge, str, str], Awaitable[None]]
+        ] = None
+        self.on_action_complete: Optional[
+            Callable[[RuntimeBridge, str, str], Awaitable[Action]]
         ] = None
         self.emit_lock = asyncio.Lock()
 
