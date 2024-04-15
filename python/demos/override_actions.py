@@ -197,10 +197,15 @@ class OnActionComplete(Demo):
 
     def on_action_complete_demo(self, bridge: RuntimeBridge):
         """
-        TODO
+        When the sheriff's current action completes, the simulation is paused and the user is prompted to enter a new
+        location for him to go. The simulation is then resumed and a custom action using the 'go_to' skill is returned
+        to the Runtime. For a full list of available skills see:
+        https://github.com/fablestudio/thistle-gulch?tab=readme-ov-file#skills-and-actions
 
         API calls:
-            TODO
+            pause()
+            resume()
+            get_character_context()
 
         See the API and Demo source code on Github for more information:
             https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
@@ -236,7 +241,7 @@ class OnActionComplete(Demo):
                 skill="go_to",
                 parameters={
                     "destination": location_id,
-                    "goal": "Visit the first available location",
+                    "goal": "Visit the user-chosen location",
                 },
             )
 
