@@ -215,16 +215,20 @@ class OnActionComplete(Demo):
             if persona_id != sheriff_id:
                 return
 
+            print(f"\n{persona_id}'s last action was: '{completed_action}'")
+
+            # Pause the simulation while we wait for user input
             await bridge.runtime.api.pause()
 
             print(f"Getting character context for {persona_id}")
             context = await bridge.runtime.api.get_character_context(persona_id)
 
             location_id = await choose_from_list(
-                "Pick a location_id for this persona to go to",
+                f"Enter a new location id for {persona_id} to go",
                 [loc.name for loc in context.locations],
             )
 
+            # Resume the simulation
             await bridge.runtime.api.resume()
 
             # Return a new action for the character to replace the one that just completed

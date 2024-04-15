@@ -1,13 +1,13 @@
 import asyncio
 import logging
 from datetime import datetime
-from typing import Callable, Optional, Awaitable
+from typing import Callable, Optional, Awaitable, Dict, Any
 
 import fable_saga.server as saga_server
 import socketio
 from aiohttp import web
 from attr import define
-from fable_saga.actions import ActionsAgent, Action
+from fable_saga.actions import ActionsAgent
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
 
@@ -57,7 +57,7 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
             response = saga_server.ActionsResponse(
                 actions=actions, reference=req.reference, error=None
             )
-            if actions.error is not None:
+            if actions.error:
                 response.error = f"Generation Error: {actions.error}"
             return response
         except Exception as e:
@@ -99,7 +99,7 @@ class TGConversationEndpoint(saga_server.ConversationEndpoint):
             response = saga_server.ConversationResponse(
                 conversation=conversation, reference=req.reference, error=None
             )
-            if conversation.error is not None:
+            if conversation.error:
                 response.error = f"Generation Error: {conversation.error}"
             return response
         except Exception as e:
@@ -168,32 +168,66 @@ class OnSimulationTickEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Tick] No on_tick callback registered..")
 
 
-class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, None]):
+class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
 
     def __init__(self, bridge: "RuntimeBridge"):
         self.bridge = bridge
 
-    async def handle_request(self, msg: GenericMessage):
+    async def handle_request(self, msg: GenericMessage) -> GenericMessage:
         """Handler for the simulation-event message."""
         logger.debug(f"[Simulation Event] received..")
-        
-        persona_id = msg.data.get("persona_id", "")
-            completed_action = msg.data.get("completed_action", "")
+
+        event_name = msg.data.get("event_name", "")
+        event_data = msg.data.get("event_data", {})
+        response_data: Dict[Any, Any] = {}
+
+        # Dedicated callback handling for on_action_complete
+        if (
+            self.bridge.on_action_complete is not None
+            and event_name == "on-action-complete"
+            and event_data
+        ):
+            persona_id = event_data.get("persona_id", "")
+            completed_action = event_data.get("completed_action", "")
             # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
             logger.debug(f"[On Action Complete] Calling on_action_complete callback..")
             action = await self.bridge.on_action_complete(
                 self.bridge, persona_id, completed_action
             )
+            response_data['action'] = action
 
         # Call the on_event callback if it exists.
         if self.bridge.on_event is not None:
-            event_name = msg.data.get("event_name", "")
-            event_data = msg.data.get("event_data", "")
             # pass the bridge instance to the on_event callback so that it can send messages to the runtime.
             logger.debug(f"[Simulation Event] Calling on_event callback..")
             await self.bridge.on_event(self.bridge, event_name, event_data)
         else:
             logger.debug(f"[Simulation Event] No on_event callback registered..")
+
+        return GenericMessage(
+            IncomingRoutes.simulation_event.value + "-response",
+            response_data,
+            msg.reference,
+        )
+
+
+class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
+
+    def __init__(self, bridge: "RuntimeBridge"):
+        self.bridge = bridge
+
+    async def handle_request(self, msg: GenericMessage):
+        """Handler for the on-error message."""
+        logger.debug(f"[Simulation Error] received..")
+
+        # Call the on_error callback if it exists.
+        if self.bridge.on_error is not None:
+            error = msg.data.get("error", "")
+            # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
+            logger.debug(f"[Simulation Error] Calling on_error callback..")
+            await self.bridge.on_error(self.bridge, error)
+        else:
+            logger.debug(f"[Simulation Error] No on_error callback registered..")
 
 
 @define
@@ -214,11 +248,18 @@ class RuntimeBridge:
             None
         )
         self.on_event: Optional[
-            Callable[[RuntimeBridge, str, str], Awaitable[None]]
+            Callable[[RuntimeBridge, str, dict], Awaitable[None]]
         ] = None
         self.on_action_complete: Optional[
-            Callable[[RuntimeBridge, str, str], Awaitable[Action]]
+            Callable[[RuntimeBridge, str, str], Awaitable[GenericMessage]]
         ] = None
+
+        # By default, we just log every error unless the user overrides the callback
+        async def on_error(_, msg: str):
+            logger.error(msg)
+
+        self.on_error: Callable[[RuntimeBridge, str], Awaitable[None]] = on_error
+
         self.emit_lock = asyncio.Lock()
 
         # Set up the async web server via aiohttp - this is the server that will handle the socketio connections.
@@ -304,12 +345,23 @@ class RuntimeBridge:
         # ADD ROUTES
         ###
         self.router.add_route(
-            Route("simulation-ready", OnReadyEndpoint(self), logging.INFO)
+            Route(
+                IncomingRoutes.simulation_ready.value,
+                OnReadyEndpoint(self),
+                logging.INFO,
+            )
         )
-        self.router.add_route(Route("simulation-tick", OnSimulationTickEndpoint(self)))
+        self.router.add_route(
+            Route(IncomingRoutes.simulation_tick.value, OnSimulationTickEndpoint(self))
+        )
         self.router.add_route(
             Route(
                 IncomingRoutes.simulation_event.value, OnSimulationEventEndpoint(self)
+            )
+        )
+        self.router.add_route(
+            Route(
+                IncomingRoutes.simulation_error.value, OnSimulationErrorEndpoint(self)
             )
         )
 

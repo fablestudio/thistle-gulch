@@ -62,7 +62,7 @@ class DefaultSagaServerDemo(Demo):
 
         bridge.on_tick = on_tick
 
-        async def on_event(bridge: RuntimeBridge, name: str, data: str):
+        async def on_event(bridge: RuntimeBridge, name: str, data: dict):
             nonlocal intro_step
             if intro_step == 0:
                 print("Step one, resume the simulation.")
