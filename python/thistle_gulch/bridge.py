@@ -194,7 +194,7 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
             action = await self.bridge.on_action_complete(
                 self.bridge, persona_id, completed_action
             )
-            response_data['action'] = action
+            response_data["action"] = action
 
         # Call the on_event callback if it exists.
         if self.bridge.on_event is not None:
