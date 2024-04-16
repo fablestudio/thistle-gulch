@@ -214,6 +214,23 @@ class OnActionComplete(Demo):
 
         sheriff_id = "wyatt_cooper"
 
+        async def on_ready(bridge) -> bool:
+            await bridge.runtime.api.focus_character(sheriff_id)
+            await bridge.runtime.api.follow_character(sheriff_id, 0.8)
+
+            # Set the sheriff's next action to go to the sheriff's station building to start.
+            # Once the sheriff arrives at the building, the on_action_complete callback will be triggered.
+            action = fable_saga.actions.Action(
+                skill="go_to",
+                parameters={
+                    "destination": "thistle_gulch.sheriff_station_building",
+                    "goal": "The sheriff's default action",
+                },
+            )
+            await bridge.runtime.api.override_character_action(sheriff_id, action)
+            return True
+        bridge.on_ready = on_ready
+
         async def on_action_complete(_, persona_id: str, completed_action: str):
 
             # Return None so all characters other than the sheriff use the generate-actions endpoint instead
