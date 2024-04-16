@@ -2,7 +2,7 @@ from datetime import datetime
 from time import sleep
 
 from thistle_gulch.bridge import RuntimeBridge
-from . import Demo, formatted_input_async, get_persona_list, choose_from_list
+from . import Demo, formatted_input_async, choose_from_list
 
 CATEGORY = "Camera Commands"
 
@@ -36,8 +36,14 @@ class FollowCharacter(Demo):
         # Follow the character at simulation start
         async def on_ready(_) -> bool:
             nonlocal persona_id
-            persona_list = await get_persona_list(bridge)
-            persona_id = await choose_from_list("Enter persona id", persona_list)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
+            persona_id = await choose_from_list("Enter persona id", personas)
 
             def validate_zoom(zoom_str: str) -> float:
                 zoom_val = float(zoom_str)

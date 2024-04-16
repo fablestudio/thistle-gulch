@@ -3,7 +3,7 @@ from typing import List
 from datetime import datetime
 
 from . import logger, converter
-from .data_models import PersonaContextObject
+from .data_models import PersonaContextObject, WorldContextObject
 
 if typing.TYPE_CHECKING:
     from .runtime import Runtime
@@ -136,14 +136,30 @@ class API:
             },
         )
 
+    async def get_world_context(self) -> WorldContextObject:
+        """
+        Request all contextual information from the simulation world. This includes things like available interactions,
+        memories, conversations, skills, etc. This information can be used in many different ways: construct actions
+        using skills, use the current time to trigger an event, observe what other characters are doing or conversing
+        about, finding available locations to travel to, etc.
+        """
+        logger.debug(f"Requesting world context")
+        response = await self.runtime.send_message(
+            "simulation-command",
+            {"command": "request-world-context"},
+        )
+        context = converter.structure(
+            response.data.get("context_obj"), WorldContextObject
+        )
+        return context
+
     async def get_character_context(self, persona_id: str) -> PersonaContextObject:
         """
-        Request all contextual information about a specific character and other relevant world states. This includes
-        things like available interactions, memories, conversations, current action, and other details. This information
-        can be used in many different ways: construct actions using skills, use the current time to trigger an event,
-        observe what other characters are doing or conversing about, finding available locations to travel to, etc.
+        Request contextual information about a specific character. This is useful for understanding the current state of
+        a character when generating actions or conversations for instance. The character context also contains the world
+        context for convenience.
 
-        :param persona_id: Persona to modify
+        :param persona_id: Persona to query
         """
         logger.debug(f"Requesting context for {persona_id}")
         response = await self.runtime.send_message(

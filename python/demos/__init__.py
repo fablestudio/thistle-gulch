@@ -42,14 +42,6 @@ async def choose_from_list(
     return await formatted_input_async(input_text, validator=validator)
 
 
-async def get_persona_list(bridge) -> Dict[str, str]:
-    # Get the character context for jack_kane, just to get the list of persona ids.
-    context = await bridge.runtime.api.get_character_context("jack_kane")
-    return dict(
-        [(persona.persona_guid, persona.summary) for persona in context.personas]
-    )
-
-
 def formatted_input(
     prompt: str,
     default: Optional[str] = None,

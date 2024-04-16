@@ -12,6 +12,9 @@ class Persona:
     description: str = ""
     backstory: str = ""
     energy_level: str = ""
+    position: List[float] = [0] * 3
+    location_id: str = ""
+    destination_id: str = ""
 
 
 @define(slots=True)
@@ -131,17 +134,23 @@ class Interactable:
 
 
 @define(slots=True)
-class PersonaContextObject:
+class WorldContextObject:
     time: str
     time_formatted: str
     skills: List[Skill]
-    participants: List[str]
     personas: List[Persona]
-    observations: List[Observation]
     inventories: List[Inventory]
     conversations: List[Conversation]
-    interactables: List[Interactable]
     locations: List[Location]
     memories: List[PersonaMemories]
+
+
+@define(slots=True)
+class PersonaContextObject:
+    time: str
+    participants: List[str]
+    observations: List[Observation]
+    interactables: List[Interactable]
     current_action: str
     default_action: str
+    world_context: WorldContextObject

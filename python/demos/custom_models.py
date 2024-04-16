@@ -32,12 +32,14 @@ class OllamaActionsEndpoint(TGActionsEndpoint):
         new_context = ""
         if req.context_obj is not None:
             new_context += f"CHARACTERS\n"
-            for persona in req.context_obj.personas:
+            for persona in req.context_obj.world_context.personas:
                 new_context += f"{persona.name} (guid: {persona.persona_guid}) \n"
 
             persona_guid = unstructure(req.context_obj.participants[0])
             this_persona = [
-                p for p in req.context_obj.personas if p.persona_guid == persona_guid
+                p
+                for p in req.context_obj.world_context.personas
+                if p.persona_guid == persona_guid
             ][0]
             new_context += "TASK:\n"
             new_context += f"You are the character {this_persona.name} (guid: {this_persona.persona_guid}).\n"
