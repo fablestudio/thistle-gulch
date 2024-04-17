@@ -2,7 +2,7 @@ import asyncio
 import json
 from datetime import datetime
 from subprocess import Popen
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import Optional, List, Tuple, TYPE_CHECKING, Dict, Any
 
 if TYPE_CHECKING:
     import socketio
@@ -27,6 +27,7 @@ class Runtime:
         self.sid: Optional[str] = None
         self.api = API(self)
         self.start_date: datetime
+        self.event_futures: Dict[str, asyncio.Future] = {}
 
     def start(self):
         if self.process and self.process.poll() is None:
@@ -69,7 +70,7 @@ class Runtime:
     async def receive_request(self, msg, callback):
         pass
 
-    async def send_message(self, msg_type, data, timeout=5) -> GenericMessage:
+    async def send_message(self, msg_type: str, data: Dict[str, Any], event_future:Optional[asyncio.Future]=None, timeout: int = 5) -> GenericMessage:
         """
         Send a request to the runtime.
         :param msg_type: type of message.
@@ -97,6 +98,8 @@ class Runtime:
 
         # Create a reference for the message so that we can match the response to the request.
         reference = random_reference()
+        if event_future:
+            self.event_futures[reference] = event_future
         # Create a GenericMessage object and serialize it to a string so that it can be sent to the Runtime.
         request_msg = GenericMessage(type=msg_type, data=data, reference=reference)
         serialized_message = json.dumps(converter.unstructure(request_msg))

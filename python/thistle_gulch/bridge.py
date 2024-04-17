@@ -181,8 +181,16 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
         event_data: Dict[Any, Any] = msg.data.get("event_data", {})
         response_data: Dict[Any, Any] = {}
 
+        # Check if the event has an event_future associated with it.
+        # If it does, set the result of the future and remove it from the event_futures dict.
+        # This is used for waiting on events in the runtime that were triggered by another api call. (eg. modals)
+        event_futures = self.bridge.runtime.event_futures
+        if msg.reference in event_futures:
+            event_futures[msg.reference].set_result(event_data)
+            del event_futures[msg.reference]
+
         # Dedicated callback handling for on_action_complete
-        if (
+        elif (
             self.bridge.on_action_complete is not None
             and event_name == "on-action-complete"
             and event_data
