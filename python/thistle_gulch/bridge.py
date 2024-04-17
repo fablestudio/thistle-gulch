@@ -7,7 +7,7 @@ import fable_saga.server as saga_server
 import socketio
 from aiohttp import web
 from attr import define
-from fable_saga.actions import ActionsAgent
+from fable_saga.actions import ActionsAgent, Action
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
 
@@ -177,8 +177,8 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
         """Handler for the simulation-event message."""
         logger.debug(f"[Simulation Event] received..")
 
-        event_name = msg.data.get("event_name", "")
-        event_data = msg.data.get("event_data", {})
+        event_name: str = msg.data.get("event_name", "")
+        event_data: Dict[Any, Any] = msg.data.get("event_data", {})
         response_data: Dict[Any, Any] = {}
 
         # Dedicated callback handling for on_action_complete
@@ -194,7 +194,8 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
             action = await self.bridge.on_action_complete(
                 self.bridge, persona_id, completed_action
             )
-            response_data["action"] = action
+            if action is not None:
+                response_data["action"] = action
 
         # Call the on_event callback if it exists.
         if self.bridge.on_event is not None:
@@ -251,7 +252,7 @@ class RuntimeBridge:
             Callable[[RuntimeBridge, str, dict], Awaitable[None]]
         ] = None
         self.on_action_complete: Optional[
-            Callable[[RuntimeBridge, str, str], Awaitable[GenericMessage]]
+            Callable[[RuntimeBridge, str, str], Awaitable[Optional[Action]]]
         ] = None
 
         # By default, we just log every error unless the user overrides the callback
