@@ -1,11 +1,15 @@
-import typing
-from typing import List
+import asyncio
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
+from asyncio import Future
+
+import cattrs
+from fable_saga.actions import Action
 
 from . import logger, converter
 from .data_models import PersonaContextObject, WorldContextObject
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from .runtime import Runtime
 
 
@@ -171,7 +175,9 @@ class API:
         )
         return context
 
-    async def override_character_action(self, persona_id: str, action: dict) -> None:
+    async def override_character_action(
+        self, persona_id: str, action: Action, future: Optional[Future] = None
+    ) -> None:
         """
         Interrupt the character's current action with the one provided. An action is constructed using one of the
         available skills and sent to the Runtime, which causes the character to immediately stop their current action
@@ -182,6 +188,8 @@ class API:
 
         :param persona_id: Persona to modify
         :param action: The new action to execute
+        :param future: [Optional] A future that can be awaited until the response is received. If not provided,
+            the on_action_completed callback will be called when the action is completed instead.
         """
         logger.debug(f"Overriding action for {persona_id} with {action}")
         await self.runtime.send_message(
@@ -189,8 +197,9 @@ class API:
             {
                 "command": "override-character-action",
                 "persona_id": persona_id,
-                "action": action,
+                "action": cattrs.unstructure(action),
             },
+            future,
         )
 
     async def focus_character(self, persona_id: str) -> None:
@@ -273,19 +282,29 @@ class API:
         )
 
     async def modal(
-        self, title: str, message: str, buttons: List[str], pause: bool = True
+        self,
+        title: str,
+        message: str,
+        buttons: List[str],
+        pause: bool = True,
+        future: Optional[Future] = None,
     ) -> None:
         """
-        Display a modal dialog with a title and message. This is a blocking operation - the simulation will not continue
-        until the user dismisses the dialog. Modals are useful for getting user input or displaying important information
-        that requires immediate attention.
+        Display a modal dialog with a title and message and button options. Modals are useful for getting user input
+        or displaying important information that requires immediate attention.
 
         :param title: Title of the modal dialog
         :param message: Message to display in the dialog
+        :param buttons: List of button labels to display in the dialog
+        :param pause: Flag to pause the simulation while the dialog is displayed or not. Set to False if
+            using a modal during the on_ready event.
+        :param future: [Optional] A future that can be awaited until the response is received. If not provided, the
+            on_event callback will be called when the choice is made instead.
         """
         logger.debug(
             f"Displaying modal dialog with title: {title} and message: {message}"
         )
+
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -295,4 +314,5 @@ class API:
                 "buttons": buttons,
                 "pause": pause,
             },
+            future,
         )

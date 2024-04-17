@@ -1,4 +1,7 @@
 from datetime import datetime, timedelta
+
+from fable_saga.actions import Action
+
 from thistle_gulch.bridge import RuntimeBridge
 from . import Demo, choose_from_list, formatted_input_async
 
@@ -254,13 +257,13 @@ class OverrideCharacterAction(Demo):
                 [loc.name for loc in context.world_context.locations],
             )
 
-            action = {
-                "skill": "go_to",
-                "parameters": {
+            action = Action(
+                "go_to",
+                {
                     "destination": location_id,
                     "goal": "Visit the first available location",
                 },
-            }
+            )
 
             print(f"Overriding action for {persona_id} with {action}")
             await bridge.runtime.api.override_character_action(persona_id, action)
@@ -337,14 +340,15 @@ class RobBankAndArrestCriminal(Demo):
                 name for name in interactable_bank.interactions if "Rob" in name
             )
 
-            action = {
-                "skill": "interact",
-                "parameters": {
+            action = Action(
+                "interact",
+                {
                     "item_guid": interactable_bank.item_guid,
                     "interaction": rob_bank_interaction_name,
                     "goal": "Steal gold from the bank",
                 },
-            }
+            )
+
             print(f"Force {robber_id} to rob the bank using action:\n{action}")
             await bridge.runtime.api.override_character_action(robber_id, action)
 
@@ -372,14 +376,15 @@ class RobBankAndArrestCriminal(Demo):
                 name for name in interactable_robber.interactions if "Arrest" in name
             )
 
-            action = {
-                "skill": "interact",
-                "parameters": {
+            action = Action(
+                "interact",
+                {
                     "item_guid": interactable_robber.item_guid,
                     "interaction": arrest_interaction_name,
                     "goal": "Arrest the bank robber",
                 },
-            }
+            )
+
             print(f"Force {sheriff_id} to arrest {robber_id} using action:\n{action}")
             await bridge.runtime.api.override_character_action(sheriff_id, action)
 
@@ -443,16 +448,16 @@ class CustomConversation(Demo):
                 },
             ]
 
-            action = {
-                "skill": "converse_with",
-                "parameters": {
+            action = Action(
+                "converse_with",
+                {
                     "persona_guid": speaker_2_id,  # The conversation companion - in this example speaker_1 is the initiator and speaker_2 is the companion
                     "conversation": conversation,  # If no conversation is provided, one will be generated instead
                     "topic": "the murder last night",
                     "context": "",  # Only required if no conversation is provided
                     "goal": "Discuss the recent murder",
                 },
-            }
+            )
 
             print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
             for turn in conversation:
