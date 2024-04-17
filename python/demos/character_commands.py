@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from thistle_gulch.bridge import RuntimeBridge
-from . import Demo, choose_from_list, get_persona_list, formatted_input_async
+from . import Demo, choose_from_list, formatted_input_async
 
 CATEGORY = "Character Commands"
 
@@ -32,8 +32,14 @@ class EnableAgentDemo(Demo):
         """
 
         async def on_ready(_) -> bool:
-            persona_list = await get_persona_list(bridge)
-            persona_id = await choose_from_list("Enter persona id", persona_list)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
+            persona_id = await choose_from_list("Enter persona id", personas)
 
             # Validate that the user entered 0 or 1
             def validate_enable_str(enable_str: str) -> bool:
@@ -88,8 +94,14 @@ class UpdateCharacterPropertyDemo(Demo):
         """
 
         async def on_ready(_) -> bool:
-            persona_list = await get_persona_list(bridge)
-            persona_id = await choose_from_list("Enter persona id", persona_list)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
+            persona_id = await choose_from_list("Enter persona id", personas)
             print()
 
             def validate_property_name(property_name: str) -> str:
@@ -169,8 +181,14 @@ class FocusCharacter(Demo):
         # Focus on and follow the character at simulation start
         async def on_ready(_) -> bool:
             nonlocal persona_id
-            persona_list = await get_persona_list(bridge)
-            persona_id = await choose_from_list("Enter persona id", persona_list)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
+            persona_id = await choose_from_list("Enter persona id", personas)
 
             print(f"Focusing {persona_id}")
             await bridge.runtime.api.focus_character(persona_id)
@@ -219,15 +237,21 @@ class OverrideCharacterAction(Demo):
 
         async def on_ready(_) -> bool:
 
-            persona_list = await get_persona_list(bridge)
-            persona_id = await choose_from_list("Enter persona id", persona_list)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
+            persona_id = await choose_from_list("Enter persona id", personas)
 
             print(f"Getting character context for {persona_id}")
             context = await bridge.runtime.api.get_character_context(persona_id)
 
             location_id = await choose_from_list(
                 "Pick a location_id for this persona to go to",
-                [loc.name for loc in context.locations],
+                [loc.name for loc in context.world_context.locations],
             )
 
             action = {
@@ -284,11 +308,17 @@ class RobBankAndArrestCriminal(Demo):
 
         async def on_ready(_) -> bool:
             nonlocal robber_id, arrest_time
-            persona_list = await get_persona_list(bridge)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
             # Choose the persona to rob the bank, excluding the sheriff since he will arrest the robber.
             robber_id = await choose_from_list(
                 "Enter persona id to rob the bank",
-                persona_list,
+                personas,
                 exclude=[sheriff_id],
             )
 
@@ -383,7 +413,13 @@ class CustomConversation(Demo):
         """
 
         async def on_ready(_) -> bool:
-            personas = await get_persona_list(bridge)
+            world_context = await bridge.runtime.api.get_world_context()
+            personas = dict(
+                [
+                    (persona.persona_guid, persona.summary)
+                    for persona in world_context.personas
+                ]
+            )
             speaker_1_id = await choose_from_list(
                 "Enter speaker 1 id", options=personas
             )
