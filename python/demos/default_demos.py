@@ -36,7 +36,7 @@ class DefaultSagaServerDemo(Demo):
             await bridge.runtime.api.modal(
                 "Welcome to the default SAGA server demo!",
                 "This is the default behavior of the bridge. The SAGA server is generating actions and conversations for the agents in the simulation.",
-                "Continue",
+                ["Continue"],
             )
 
             # pause the simulation to allow the user to see everything.
@@ -56,7 +56,7 @@ class DefaultSagaServerDemo(Demo):
                     await bridge.runtime.api.modal(
                         "Demo Complete",
                         "The default SAGA server demo is complete.",
-                        "Close",
+                        ["Close"],
                     )
                     intro_step += 1
 
