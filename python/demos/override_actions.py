@@ -1,11 +1,15 @@
+import asyncio.futures
+from typing import Optional
+
 import cattrs
 import fable_saga.actions
 from fable_saga import server as saga_server
+from fable_saga.actions import Action
 from langchain.prompts import PromptTemplate
 
 from thistle_gulch import logger, IncomingRoutes, Route
 from thistle_gulch.bridge import TGActionsEndpoint, RuntimeBridge, TGActionsRequest
-from . import Demo
+from . import Demo, choose_from_list
 
 CATEGORY = "Action Generation"
 
@@ -184,3 +188,106 @@ and the chosen skill options.""".replace(
                 ReplaceContextWithYamlDump(fable_saga.actions.ActionsAgent()),
             )
         )
+
+
+class OnActionComplete(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Action Complete",
+            summary="Manually trigger a custom action for a character when the previous action is done",
+            category=CATEGORY,
+            function=self.on_action_complete_demo,
+        )
+
+    def on_action_complete_demo(self, bridge: RuntimeBridge):
+        """
+        When the sheriff's current action completes, the simulation is paused and the user is prompted to enter a new
+        location for him to go. The simulation is then resumed and a custom action using the 'go_to' skill is returned
+        to the Runtime. For a full list of available skills see:
+        https://github.com/fablestudio/thistle-gulch?tab=readme-ov-file#skills-and-actions
+
+        API calls:
+            pause()
+            resume()
+            get_character_context()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/override_actions.py
+        """
+
+        sheriff_id = "wyatt_cooper"
+
+        location_list = ["sheriff_station_building", "the_saloon", "bank_building"]
+
+        future: asyncio.futures.Future
+
+        async def on_ready(bridge) -> bool:
+            await bridge.runtime.api.focus_character(sheriff_id)
+            await bridge.runtime.api.follow_character(sheriff_id, 0.8)
+
+            # Set the sheriff's next action to go to the sheriff's station building to start.
+            # Once the sheriff arrives at the building, the on_action_complete callback will be triggered.
+            action = fable_saga.actions.Action(
+                skill="go_to",
+                parameters={
+                    "destination": "thistle_gulch." + location_list[0],
+                    "goal": "Start the sheriff's day at the sheriff's station building",
+                },
+            )
+
+            await bridge.runtime.api.override_character_action(sheriff_id, action)
+            return True
+
+        bridge.on_ready = on_ready
+
+        async def on_action_complete(
+            _, persona_id: str, completed_action: str
+        ) -> Optional[Action]:
+
+            # Return None so all characters other than the sheriff use the generate-actions endpoint instead
+            if persona_id != sheriff_id:
+                return None
+
+            print(f"\n{persona_id}'s last action was: '{completed_action}'")
+
+            # Pause the simulation while we wait for user input
+            await bridge.runtime.api.pause()
+            # wait for the future to complete
+            nonlocal future
+            future = asyncio.get_event_loop().create_future()
+
+            await bridge.runtime.api.modal(
+                "Next GOTO Location",
+                f"The sheriff just completed the action: '{completed_action}'."
+                + "\n"
+                + "Choose the next location for the sheriff to go to.",
+                location_list,
+            )
+
+            action = await future
+            # Resume the simulation
+            await bridge.runtime.api.resume()
+            return action
+
+        print("Registering custom on_action_complete callback.")
+        bridge.on_action_complete = on_action_complete
+
+        async def on_event(_, name: str, data: dict):
+            nonlocal future
+            # Return a new action for the character to replace the one that just completed
+            if name == "modal-response":
+                choice_idx = data["choice"]
+                choice = location_list[choice_idx]
+
+                future.set_result(
+                    fable_saga.actions.Action(
+                        skill="go_to",
+                        parameters={
+                            "destination": "thistle_gulch." + choice,
+                            "goal": "Visit the user-chosen location",
+                        },
+                    )
+                )
+
+        bridge.on_event = on_event

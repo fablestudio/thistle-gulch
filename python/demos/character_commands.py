@@ -167,7 +167,7 @@ class FocusCharacter(Demo):
         tick_count = 0
 
         # Focus on and follow the character at simulation start
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             nonlocal persona_id
             persona_list = await get_persona_list(bridge)
             persona_id = await choose_from_list("Enter persona id", persona_list)
@@ -217,7 +217,7 @@ class OverrideCharacterAction(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
 
             persona_list = await get_persona_list(bridge)
             persona_id = await choose_from_list("Enter persona id", persona_list)
@@ -282,7 +282,7 @@ class RobBankAndArrestCriminal(Demo):
         arrest_triggered = False
         arrest_time: datetime
 
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             nonlocal robber_id, arrest_time
             persona_list = await get_persona_list(bridge)
             # Choose the persona to rob the bank, excluding the sheriff since he will arrest the robber.
@@ -382,7 +382,7 @@ class CustomConversation(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        async def on_ready(_):
+        async def on_ready(_) -> bool:
             personas = await get_persona_list(bridge)
             speaker_1_id = await choose_from_list(
                 "Enter speaker 1 id", options=personas
@@ -428,6 +428,8 @@ class CustomConversation(Demo):
 
             print(f"Following {speaker_1_id} with the camera")
             await bridge.runtime.api.follow_character(speaker_1_id, 0.8)
+
+            return True
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready

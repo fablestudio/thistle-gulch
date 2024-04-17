@@ -85,7 +85,10 @@ class IncomingRoutes(Enum):
 
     generate_actions = "generate-actions"
     generate_conversations = "generate-conversation"
+    simulation_ready = "simulation-ready"
     simulation_event = "simulation-event"
+    simulation_tick = "simulation-tick"
+    simulation_error = "simulation-error"
 
 
 @define

@@ -1,4 +1,5 @@
 import typing
+from typing import List
 from datetime import datetime
 
 from . import logger, converter
@@ -256,7 +257,7 @@ class API:
         )
 
     async def modal(
-        self, title: str, message: str, confirm_text: str, pause: bool = True
+        self, title: str, message: str, buttons: List[str], pause: bool = True
     ) -> None:
         """
         Display a modal dialog with a title and message. This is a blocking operation - the simulation will not continue
@@ -275,7 +276,7 @@ class API:
                 "command": "modal",
                 "title": title,
                 "message": message,
-                "confirm_text": confirm_text,
+                "buttons": buttons,
                 "pause": pause,
             },
         )

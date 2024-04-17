@@ -25,6 +25,7 @@ def main():
         override_actions.PrintActionsAndPickFirstDemo(),
         override_actions.SkipSagaAlwaysDoTheDefaultActionDemo(),
         override_actions.ReplaceContextWithYamlDumpDemo(),
+        override_actions.OnActionComplete(),
         custom_models.UseOllamaDemo(),
         custom_models.UseAnthropic(),
         simulation_commands.SetStartTimeDemo(),
