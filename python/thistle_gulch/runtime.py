@@ -70,7 +70,13 @@ class Runtime:
     async def receive_request(self, msg, callback):
         pass
 
-    async def send_message(self, msg_type: str, data: Dict[str, Any], event_future:Optional[asyncio.Future]=None, timeout: int = 5) -> GenericMessage:
+    async def send_message(
+        self,
+        msg_type: str,
+        data: Dict[str, Any],
+        event_future: Optional[asyncio.Future] = None,
+        timeout: int = 5,
+    ) -> GenericMessage:
         """
         Send a request to the runtime.
         :param msg_type: type of message.

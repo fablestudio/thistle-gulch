@@ -262,12 +262,12 @@ class OnActionComplete(Demo):
             choice = location_list[choice_idx]
 
             action = Action(
-                    skill="go_to",
-                    parameters={
-                        "destination": "thistle_gulch." + choice,
-                        "goal": "Visit the user-chosen location",
-                    },
-                )
+                skill="go_to",
+                parameters={
+                    "destination": "thistle_gulch." + choice,
+                    "goal": "Visit the user-chosen location",
+                },
+            )
 
             # Return the new action to the Runtime
             return action

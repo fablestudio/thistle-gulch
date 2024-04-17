@@ -175,7 +175,9 @@ class API:
         )
         return context
 
-    async def override_character_action(self, persona_id: str, action: Action) -> asyncio.Future:
+    async def override_character_action(
+        self, persona_id: str, action: Action
+    ) -> asyncio.Future:
         """
         Interrupt the character's current action with the one provided. An action is constructed using one of the
         available skills and sent to the Runtime, which causes the character to immediately stop their current action
@@ -307,4 +309,3 @@ class API:
             future,
         )
         return future
-

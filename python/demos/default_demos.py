@@ -75,10 +75,14 @@ class DefaultSagaServerDemo(Demo):
             elif intro_step == 2:
                 future = await bridge.runtime.api.override_character_action(
                     "jack_kane",
-                    Action("wait", {
-                        "time": "3",
-                        "goal": "Wait a beat before starting..",
-                    }))
+                    Action(
+                        "wait",
+                        {
+                            "time": "3",
+                            "goal": "Wait a beat before starting..",
+                        },
+                    ),
+                )
                 await future
 
             elif intro_step == 3:
