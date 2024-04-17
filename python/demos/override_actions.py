@@ -1,6 +1,10 @@
+import asyncio.futures
+from typing import Optional
+
 import cattrs
 import fable_saga.actions
 from fable_saga import server as saga_server
+from fable_saga.actions import Action
 from langchain.prompts import PromptTemplate
 
 from thistle_gulch import logger, IncomingRoutes, Route
@@ -214,6 +218,10 @@ class OnActionComplete(Demo):
 
         sheriff_id = "wyatt_cooper"
 
+        location_list = ["sheriff_station_building", "the_saloon", "bank_building"]
+
+        future: asyncio.futures.Future
+
         async def on_ready(bridge) -> bool:
             await bridge.runtime.api.focus_character(sheriff_id)
             await bridge.runtime.api.follow_character(sheriff_id, 0.8)
@@ -223,44 +231,63 @@ class OnActionComplete(Demo):
             action = fable_saga.actions.Action(
                 skill="go_to",
                 parameters={
-                    "destination": "thistle_gulch.sheriff_station_building",
-                    "goal": "The sheriff's default action",
+                    "destination": "thistle_gulch." + location_list[0],
+                    "goal": "Start the sheriff's day at the sheriff's station building",
                 },
             )
+
             await bridge.runtime.api.override_character_action(sheriff_id, action)
             return True
+
         bridge.on_ready = on_ready
 
-        async def on_action_complete(_, persona_id: str, completed_action: str):
+        async def on_action_complete(
+            _, persona_id: str, completed_action: str
+        ) -> Optional[Action]:
 
             # Return None so all characters other than the sheriff use the generate-actions endpoint instead
             if persona_id != sheriff_id:
-                return
+                return None
 
             print(f"\n{persona_id}'s last action was: '{completed_action}'")
 
             # Pause the simulation while we wait for user input
             await bridge.runtime.api.pause()
+            # wait for the future to complete
+            nonlocal future
+            future = asyncio.get_event_loop().create_future()
 
-            print(f"Getting character context for {persona_id}")
-            context = await bridge.runtime.api.get_character_context(persona_id)
-
-            location_id = await choose_from_list(
-                f"Enter a new location id for {persona_id} to go",
-                [loc.name for loc in context.locations],
+            await bridge.runtime.api.modal(
+                "Next GOTO Location",
+                f"The sheriff just completed the action: '{completed_action}'."
+                + "\n"
+                + "Choose the next location for the sheriff to go to.",
+                location_list,
             )
 
+            action = await future
             # Resume the simulation
             await bridge.runtime.api.resume()
-
-            # Return a new action for the character to replace the one that just completed
-            return fable_saga.actions.Action(
-                skill="go_to",
-                parameters={
-                    "destination": location_id,
-                    "goal": "Visit the user-chosen location",
-                },
-            )
+            return action
 
         print("Registering custom on_action_complete callback.")
         bridge.on_action_complete = on_action_complete
+
+        async def on_event(_, name: str, data: dict):
+            nonlocal future
+            # Return a new action for the character to replace the one that just completed
+            if name == "modal-response":
+                choice_idx = data["choice"]
+                choice = location_list[choice_idx]
+
+                future.set_result(
+                    fable_saga.actions.Action(
+                        skill="go_to",
+                        parameters={
+                            "destination": "thistle_gulch." + choice,
+                            "goal": "Visit the user-chosen location",
+                        },
+                    )
+                )
+
+        bridge.on_event = on_event
