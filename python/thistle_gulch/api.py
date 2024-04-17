@@ -3,6 +3,9 @@ import typing
 from typing import List
 from datetime import datetime
 
+import cattrs
+from fable_saga.actions import Action
+
 from . import logger, converter
 from .data_models import PersonaContextObject, WorldContextObject
 
@@ -172,7 +175,7 @@ class API:
         )
         return context
 
-    async def override_character_action(self, persona_id: str, action: dict) -> None:
+    async def override_character_action(self, persona_id: str, action: Action) -> asyncio.Future:
         """
         Interrupt the character's current action with the one provided. An action is constructed using one of the
         available skills and sent to the Runtime, which causes the character to immediately stop their current action
@@ -184,15 +187,18 @@ class API:
         :param persona_id: Persona to modify
         :param action: The new action to execute
         """
+        future = asyncio.get_event_loop().create_future()
         logger.debug(f"Overriding action for {persona_id} with {action}")
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "override-character-action",
                 "persona_id": persona_id,
-                "action": action,
+                "action": cattrs.unstructure(action),
             },
+            future,
         )
+        return future
 
     async def focus_character(self, persona_id: str) -> None:
         """

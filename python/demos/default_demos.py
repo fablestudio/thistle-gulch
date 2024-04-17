@@ -1,5 +1,7 @@
 import datetime
 
+from fable_saga.actions import Action
+
 from . import Demo, RuntimeBridge
 
 
@@ -57,18 +59,45 @@ class DefaultSagaServerDemo(Demo):
             nonlocal intro_step, start_time, processing
             if processing:
                 return
+            intro_step += 1
+            processing = True
 
-            if intro_step == 0:
+            if intro_step == 1:
                 if current_time - start_time > datetime.timedelta(minutes=3):
-                    processing = True
                     future = await bridge.runtime.api.modal(
-                        "Demo Complete",
-                        "The default SAGA server demo is complete.",
-                        ["Close"],
+                        "Meet Blackjack Kane",
+                        "The Saloon Owner and leader of the local criminal gang.",
+                        ["Next"],
                         False,
                     )
                     await future
-                    intro_step += 1
-                    processing = False
+
+            elif intro_step == 2:
+                future = await bridge.runtime.api.override_character_action(
+                    "jack_kane",
+                    Action("wait", {
+                        "time": "3",
+                        "goal": "Wait a beat before starting..",
+                    }))
+                await future
+
+            elif intro_step == 3:
+                future = await bridge.runtime.api.modal(
+                    "The SAGA Server",
+                    "The SAGA server is generating actions and conversations for the agents in the simulation.",
+                    ["Next"],
+                    False,
+                )
+                await future
+
+            elif intro_step == 4:
+                future = await bridge.runtime.api.modal(
+                    "Explore the World",
+                    "See the WIKI for more information on the world and characters.",
+                    ["Done"],
+                    False,
+                )
+                await future
+            processing = False
 
         bridge.on_tick = on_tick
