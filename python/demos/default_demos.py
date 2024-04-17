@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 
 from fable_saga.actions import Action
@@ -37,11 +38,14 @@ class DefaultSagaServerDemo(Demo):
             # Then we move the camera to follow them.
             await bridge.runtime.api.follow_character("jack_kane", 0.8)
 
-            future = await bridge.runtime.api.modal(
+            # Create a future that can be awaited until the response is received.
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
                 "Welcome to the default SAGA server demo!",
                 "This is the default behavior of the bridge. The SAGA server is generating actions and conversations for the agents in the simulation.",
                 ["Continue"],
                 False,
+                future=future,
             )
             # Wait for the user to click the continue button.
             await future
@@ -64,16 +68,21 @@ class DefaultSagaServerDemo(Demo):
 
             if intro_step == 1:
                 if current_time - start_time > datetime.timedelta(minutes=3):
-                    future = await bridge.runtime.api.modal(
+                    # Create a future that can be awaited until the response is received.
+                    future = asyncio.get_event_loop().create_future()
+                    await bridge.runtime.api.modal(
                         "Meet Blackjack Kane",
                         "The Saloon Owner and leader of the local criminal gang.",
                         ["Next"],
                         False,
+                        future=future,
                     )
                     await future
 
             elif intro_step == 2:
-                future = await bridge.runtime.api.override_character_action(
+                # Create a future that can be awaited until the response is received.
+                future = asyncio.get_event_loop().create_future()
+                await bridge.runtime.api.override_character_action(
                     "jack_kane",
                     Action(
                         "wait",
@@ -82,24 +91,31 @@ class DefaultSagaServerDemo(Demo):
                             "goal": "Wait a beat before starting..",
                         },
                     ),
+                    future=future,
                 )
                 await future
 
             elif intro_step == 3:
-                future = await bridge.runtime.api.modal(
+                # Create a future that can be awaited until the response is received.
+                future = asyncio.get_event_loop().create_future()
+                await bridge.runtime.api.modal(
                     "The SAGA Server",
                     "The SAGA server is generating actions and conversations for the agents in the simulation.",
                     ["Next"],
                     False,
+                    future=future,
                 )
                 await future
 
             elif intro_step == 4:
-                future = await bridge.runtime.api.modal(
+                # Create a future that can be awaited until the response is received.
+                future = asyncio.get_event_loop().create_future()
+                await bridge.runtime.api.modal(
                     "Explore the World",
                     "See the WIKI for more information on the world and characters.",
                     ["Done"],
                     False,
+                    future=future,
                 )
                 await future
             processing = False

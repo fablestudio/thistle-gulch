@@ -234,6 +234,8 @@ class OnActionComplete(Demo):
                 },
             )
 
+            # Note: We don't use a future here, because we want to use the on_action_complete callback instead.
+            # If we used a future, then on_action_complete would not be called for this action.
             await bridge.runtime.api.override_character_action(sheriff_id, action)
             return True
 
@@ -249,12 +251,15 @@ class OnActionComplete(Demo):
 
             print(f"\n{persona_id}'s last action was: '{completed_action}'")
 
-            future = await bridge.runtime.api.modal(
+            # Create a future that can be awaited until the response is received.
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
                 "Next GOTO Location",
                 f"The sheriff just completed the action: '{completed_action}'."
                 + "\n"
                 + "Choose the next location for the sheriff to go to.",
                 location_list,
+                future=future,
             )
 
             modal_response = await future
