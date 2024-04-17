@@ -21,7 +21,7 @@ def main():
 
     # A list of available demos and the corresponding endpoint they override.
     options: List[Demo] = [
-        default_demos.DefaultSagaServerDemo(),
+        default_demos.DefaultTutorial(),
         override_actions.PrintActionsAndPickFirstDemo(),
         override_actions.SkipSagaAlwaysDoTheDefaultActionDemo(),
         override_actions.ReplaceContextWithYamlDumpDemo(),
