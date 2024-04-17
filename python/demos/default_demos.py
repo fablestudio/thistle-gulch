@@ -38,6 +38,12 @@ class DefaultSagaServerDemo(Demo):
             # Then we move the camera to follow them.
             await bridge.runtime.api.follow_character("jack_kane", 0.8)
 
+            # Disable all agents that may have been enabled by the runtime args.
+            # This way we can control the flow of the demo.
+            context = await bridge.runtime.api.get_world_context()
+            for persona in context.personas:
+                await bridge.runtime.api.enable_agent(persona.persona_guid, False)
+
             # Create a future that can be awaited until the response is received.
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(

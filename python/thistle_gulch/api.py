@@ -282,7 +282,12 @@ class API:
         )
 
     async def modal(
-        self, title: str, message: str, buttons: List[str], pause: bool = True, future: Optional[Future] = None
+        self,
+        title: str,
+        message: str,
+        buttons: List[str],
+        pause: bool = True,
+        future: Optional[Future] = None,
     ) -> None:
         """
         Display a modal dialog with a title and message and button options. Modals are useful for getting user input
