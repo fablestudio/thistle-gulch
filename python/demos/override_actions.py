@@ -220,8 +220,6 @@ class OnActionComplete(Demo):
 
         location_list = ["sheriff_station_building", "the_saloon", "bank_building"]
 
-        future: asyncio.futures.Future
-
         async def on_ready(bridge) -> bool:
             await bridge.runtime.api.focus_character(sheriff_id)
             await bridge.runtime.api.follow_character(sheriff_id, 0.8)
@@ -251,13 +249,7 @@ class OnActionComplete(Demo):
 
             print(f"\n{persona_id}'s last action was: '{completed_action}'")
 
-            # Pause the simulation while we wait for user input
-            await bridge.runtime.api.pause()
-            # wait for the future to complete
-            nonlocal future
-            future = asyncio.get_event_loop().create_future()
-
-            await bridge.runtime.api.modal(
+            future = await bridge.runtime.api.modal(
                 "Next GOTO Location",
                 f"The sheriff just completed the action: '{completed_action}'."
                 + "\n"
@@ -265,29 +257,20 @@ class OnActionComplete(Demo):
                 location_list,
             )
 
-            action = await future
-            # Resume the simulation
-            await bridge.runtime.api.resume()
+            modal_response = await future
+            choice_idx = modal_response["choice"]
+            choice = location_list[choice_idx]
+
+            action = Action(
+                    skill="go_to",
+                    parameters={
+                        "destination": "thistle_gulch." + choice,
+                        "goal": "Visit the user-chosen location",
+                    },
+                )
+
+            # Return the new action to the Runtime
             return action
 
         print("Registering custom on_action_complete callback.")
         bridge.on_action_complete = on_action_complete
-
-        async def on_event(_, name: str, data: dict):
-            nonlocal future
-            # Return a new action for the character to replace the one that just completed
-            if name == "modal-response":
-                choice_idx = data["choice"]
-                choice = location_list[choice_idx]
-
-                future.set_result(
-                    fable_saga.actions.Action(
-                        skill="go_to",
-                        parameters={
-                            "destination": "thistle_gulch." + choice,
-                            "goal": "Visit the user-chosen location",
-                        },
-                    )
-                )
-
-        bridge.on_event = on_event
