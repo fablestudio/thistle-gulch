@@ -1,3 +1,4 @@
+import asyncio
 import typing
 from typing import List
 from datetime import datetime
@@ -274,7 +275,7 @@ class API:
 
     async def modal(
         self, title: str, message: str, buttons: List[str], pause: bool = True
-    ) -> None:
+    ) -> asyncio.Future:
         """
         Display a modal dialog with a title and message. This is a blocking operation - the simulation will not continue
         until the user dismisses the dialog. Modals are useful for getting user input or displaying important information
@@ -286,6 +287,8 @@ class API:
         logger.debug(
             f"Displaying modal dialog with title: {title} and message: {message}"
         )
+        # Create a future that can be awaited until the response is received.
+        future = asyncio.get_event_loop().create_future()
         await self.runtime.send_message(
             "simulation-command",
             {
@@ -295,4 +298,7 @@ class API:
                 "buttons": buttons,
                 "pause": pause,
             },
+            future,
         )
+        return future
+
