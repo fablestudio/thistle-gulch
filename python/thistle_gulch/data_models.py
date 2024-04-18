@@ -109,8 +109,13 @@ class Location:
 
 @define(slots=True)
 class Memory:
-    time_ago: str
+    guid: str
+    timestamp: str
     summary: str
+    context_id: str
+    entity_ids: List[str]
+    position: List[float]
+    importance_weight: float
 
 
 @define(slots=True)

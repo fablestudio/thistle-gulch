@@ -1,8 +1,10 @@
+import uuid
 from datetime import datetime, timedelta
 
 from fable_saga.actions import Action
 
 from thistle_gulch.bridge import RuntimeBridge
+from thistle_gulch.data_models import Memory
 from . import Demo, choose_from_list, formatted_input_async
 
 CATEGORY = "Character Commands"
@@ -144,6 +146,88 @@ class UpdateCharacterPropertyDemo(Demo):
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
 
+            return True
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready
+
+
+class ChangeCharacterMemoriesDemo(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Change Character Memories",
+            summary="Clear a character's memories and replace them with new ones",
+            category=CATEGORY,
+            function=self.change_character_memories,
+        )
+
+    def change_character_memories(self, bridge: RuntimeBridge):
+        """
+        All of Wyatt Cooper's memories are erased and replaced with new ones. The world context is obtained to
+        demonstrate how to remove a single memory by id, all his memories are cleared, and then new memories are added
+        to replace the ones he had initially.
+
+        API calls:
+            get_world_context()
+            character_memory_remove()
+            character_memory_clear()
+            character_memory_add()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
+        """
+
+        async def on_ready(_) -> bool:
+            persona_id = "wyatt_cooper"
+            world_context = await bridge.runtime.api.get_world_context()
+
+            # Find the first existing memory and remove it
+            # This is only for demostration purposes, see below where we use api.character_memory_clear to remove all memories
+            old_memories = next(
+                m for m in world_context.memories if m.persona_guid == persona_id
+            )
+            old_memory = (
+                old_memories.memories[0]
+                if old_memories and len(old_memories.memories) > 0
+                else None
+            )
+            if old_memory is not None:
+                print(f"Removing memory from {persona_id}: {old_memory.guid}")
+                await bridge.runtime.api.character_memory_remove(
+                    persona_id, old_memory.guid
+                )
+
+            # Clear all memories - if there aren't any, an exception will be thrown
+            if len(old_memories.memories) > 1:
+                print(f"Clearing all memories for {persona_id}")
+                await bridge.runtime.api.character_memory_clear(persona_id)
+
+            # Add new memories to the character, effectively replacing their old memories with new ones
+            print(f"Adding memory to {persona_id}")
+            memory_0 = await bridge.runtime.api.character_memory_add(
+                persona_id=persona_id,
+                timestamp=str(bridge.runtime.start_date - timedelta(days=260)),
+                summary="Sheriff Morgan, Rose's father was murdered. I'm the new sheriff now. I secretly love her, but"
+                " I'm not sure she feels the same way, especially since she's been grieving and I haven't"
+                " found the killer yet. The case has gone cold and we'll probably never know who did it.",
+                entity_ids=[persona_id, "rose_morgan"],
+                importance_weight=10,
+            )
+            print(f"Memory added: {memory_0}")
+
+            print(f"Adding memory to {persona_id}")
+            memory_1 = await bridge.runtime.api.character_memory_add(
+                persona_id=persona_id,
+                timestamp=str(bridge.runtime.start_date - timedelta(hours=1)),
+                summary="The Body was found just outside of town. Someone left a note on my desk, but I don't know "
+                "who it was from.",
+                entity_ids=[persona_id, "dead_native"],
+                importance_weight=10,
+            )
+            print(f"Memory added: {memory_1}")
+
+            # Resume simulation
             return True
 
         print("Registering custom on_ready callback.")
