@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 from asyncio import Future
@@ -7,7 +8,7 @@ import cattrs
 from fable_saga.actions import Action
 
 from . import logger, converter
-from .data_models import PersonaContextObject, WorldContextObject
+from .data_models import PersonaContextObject, WorldContextObject, Memory
 
 if TYPE_CHECKING:
     from .runtime import Runtime
@@ -114,6 +115,89 @@ class API:
                 "persona_id": persona_id,
                 "enabled": enabled,
             },
+        )
+
+    async def character_memory_add(
+        self,
+        persona_id: str,
+        timestamp: str,
+        summary: str,
+        entity_ids: Optional[List[str]] = None,
+        position: Optional[List[float]] = None,
+        importance_weight: float = 0.5,
+    ) -> Memory:
+        """
+        Add a new memory to a character. A subset of these memories are included automatically in the conversation and
+        action generation prompts based on their importance_weight. Memories can be accessed from the WorldContextObject
+        via api.get_world_context().
+
+        :param persona_id: Persona to add the memory to.
+        :param timestamp: A datetime string representation of when the memory occurred.
+        :param summary: A text description of the memory.
+        :param entity_ids: The ids of the personas or objects involved in the memory
+        :param position: The XYZ coordinates where the memory occurred.
+        :param importance_weight: The importance of this memory to the character. Any weight greater than 1 has priority
+            inclusion in the conversation and action generation prompts.
+        """
+
+        if entity_ids is None:
+            entity_ids = [persona_id]
+        if position is None:
+            position = [0] * 3
+        if importance_weight is None:
+            importance_weight = 0.5
+
+        memory = Memory(
+            guid=str(uuid.uuid4()),
+            timestamp=timestamp,
+            summary=summary,
+            context_id=persona_id,
+            entity_ids=entity_ids,
+            position=position,
+            importance_weight=importance_weight,  # Any weight greater than 1 has priority inclusion in the conversation and action generation prompts
+        )
+
+        logger.debug(f"Adding memory to {persona_id}: {memory}")
+        await self.runtime.send_message(
+            "character-command",
+            {
+                "command": "character-memory-add",
+                "persona_id": persona_id,
+                "memory": memory,
+            },
+        )
+
+        return memory
+
+    async def character_memory_remove(self, persona_id: str, memory_id: str) -> None:
+        """
+        Remove a specific memory from a character by id. Memories can be accessed from the WorldContextObject
+        via api.get_world_context().
+
+        :param persona_id: Persona to modify
+        :param memory_id: The guid of the memory to remove
+        """
+        logger.debug(f"Removing memory from {persona_id}: {memory_id}")
+        await self.runtime.send_message(
+            "character-command",
+            {
+                "command": "character-memory-remove",
+                "persona_id": persona_id,
+                "memory_id": memory_id,
+            },
+        )
+
+    async def character_memory_clear(self, persona_id: str) -> None:
+        """
+        Clear all memories for a specific character. Useful for clearing pre-defined character memories in preparation
+        for replacing them with new ones.
+
+        :param persona_id: Persona to modify
+        """
+        logger.debug(f"Clearing all memories for {persona_id}")
+        await self.runtime.send_message(
+            "character-command",
+            {"command": "character-memory-clear", "persona_id": persona_id},
         )
 
     async def update_character_property(

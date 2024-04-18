@@ -32,6 +32,7 @@ def main():
         simulation_commands.SimulationTickDemo(),
         character_commands.EnableAgentDemo(),
         character_commands.UpdateCharacterPropertyDemo(),
+        character_commands.ChangeCharacterMemoriesDemo(),
         character_commands.OverrideCharacterAction(),
         character_commands.RobBankAndArrestCriminal(),
         character_commands.CustomConversation(),
