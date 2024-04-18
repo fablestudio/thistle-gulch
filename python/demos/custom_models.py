@@ -3,6 +3,7 @@ import os
 import fable_saga.actions
 import fable_saga.conversations
 import fable_saga.server as saga_server
+from fable_saga import StreamingDebugCallback
 
 from langchain_core.prompts import PromptTemplate
 from cattrs import unstructure
@@ -14,7 +15,7 @@ from thistle_gulch.bridge import (
     IncomingRoutes,
     TGActionsRequest,
 )
-from . import Demo, formatted_input, yes_no_validator, DebugCallback
+from . import Demo, formatted_input, yes_no_validator
 
 CATEGORY = "Custom Models"
 
@@ -61,7 +62,7 @@ class UseOllamaDemo(Demo):
             category=CATEGORY,
             function=self.use_ollama_model,
         )
-        self.callback = DebugCallback()
+        self.callback = StreamingDebugCallback()
 
     def use_ollama_model(self, bridge: RuntimeBridge):
         """WARNING: You must have the Ollama server running with the correct model to use this demo!
@@ -100,11 +101,6 @@ class UseOllamaDemo(Demo):
             default=default_model,
         )
 
-        ask_debug = formatted_input(
-            "\nEnable generation debug mode? (Y/n)",
-        )
-        gen_debug = not ask_debug.lower() == "n"
-
         print("\nWhich endpoints do you want to override?:")
         print("0. Both [Default]")
         print("1. Action Generation")
@@ -118,7 +114,7 @@ class UseOllamaDemo(Demo):
 
         ollama = Ollama(
             model=model,
-            callbacks=[DebugCallback()] if gen_debug else None,
+            callbacks=[StreamingDebugCallback()],
             format="json",
         )
 
@@ -189,7 +185,12 @@ class UseAnthropic(Demo):
             if install:
                 os.system("poetry install --extras anthropic")
                 print("Trying to import ...")
-                from langchain_anthropic import ChatAnthropic
+                try:
+                    from langchain_anthropic import ChatAnthropic
+                except ImportError:
+                    print("Failed to import langchain-anthropic.")
+                    print("Exiting.")
+                    exit(1)
             else:
                 print("Exiting.")
                 exit(1)
@@ -245,7 +246,9 @@ class UseAnthropic(Demo):
             default="y",
         ):
             llm = ChatAnthropic(
-                model_name=model_name, callbacks=[DebugCallback()], streaming=True
+                model_name=model_name,
+                callbacks=[StreamingDebugCallback()],
+                streaming=True,
             )
         else:
             llm = ChatAnthropic(model_name=model_name, streaming=True)
