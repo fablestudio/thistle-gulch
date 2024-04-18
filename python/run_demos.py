@@ -2,6 +2,8 @@ import logging
 import sys
 from typing import List
 
+import fable_saga
+
 import demos.custom_models as custom_models
 import thistle_gulch
 import thistle_gulch.bridge as tg_bridge
@@ -99,5 +101,7 @@ if __name__ == "__main__":
         format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
     )
     thistle_gulch.logger.setLevel(logging.INFO)
+    # This shows the generation of the response as it comes in.
+    fable_saga.streaming_debug_logger.setLevel(logging.DEBUG)
 
     main()
