@@ -52,9 +52,13 @@ class DefaultTutorial(Demo):
             # Create a future that can be awaited until the response is received.
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(
-                "Welcome to the default SAGA server demo!",
-                "This is the default behavior of the bridge. The SAGA server is generating actions and conversations for the agents in the simulation.",
-                ["Continue"],
+                "Welcome to the Default Tutorial!",
+                "This brief tutorial will guide you through how things work in the Thistle Gulch simulation. "
+                "It's a work in progress and only covers the basics for now, but it should give you a good idea "
+                "of how things work.\n\n"
+                "For more information, check out the WIKI or https://blog.fabledev.com, as well as the various "
+                "other demos which show how to extend and control the simulation via python code.",
+                ["Start Tutorial"],
                 False,
                 future=future,
             )
