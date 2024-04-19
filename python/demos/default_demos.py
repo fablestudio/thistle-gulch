@@ -90,7 +90,7 @@ class DefaultTutorial(Demo):
                     future = asyncio.get_event_loop().create_future()
                     await bridge.runtime.api.modal(
                         f"[{intro_step}] Meet Blackjack Kane",
-                        "The Saloon Owner and leader of the local criminal gang. To start with, he will force him to reflect on his current situation.",
+                        "The Saloon Owner and leader of the local criminal gang. To start with, we will force him to reflect on his current situation.",
                         ["Next"],
                         False,
                         future=future,
