@@ -55,19 +55,21 @@ class API:
             },
         )
 
-    async def set_speed(self, speed: str) -> None:
+    class SimulationSpeed(Enum):
+        REALTIME = "Realtime"
+        ONE_MINUTE_PER_SECOND = "OneMinutePerSecond"
+        FIVE_MINUTES_PER_SECOND = "FiveMinutesPerSecond"
+        TEN_MINUTES_PER_SECOND = "TenMinutesPerSecond"
+        TWENTY_MINUTES_PER_SECOND = "TwentyMinutesPerSecond"
+
+    async def set_speed(self, speed: SimulationSpeed) -> None:
         """
         Change the speed of the simulation. The default play speed of the simulation is one minute of sim time per
         second of real time, but sometimes this is too slow if we're waiting to see the effect of an action that takes
         hours or days of simulation time to complete. A set of predefined speed constants is provided to allow the
         simulation to run at up to 20 minutes of sim time per second of real time.
 
-        :param speed: A string representing one of the pre-defined speed constants:
-                'Realtime'
-                'OneMinutePerSecond'
-                'FiveMinutesPerSecond'
-                'TenMinutesPerSecond'
-                'TwentyMinutesPerSecond'
+        :param speed: The new simulation speed to activate
         """
         logger.debug(f"Setting simulation speed to {speed}")
         await self.runtime.send_message(
