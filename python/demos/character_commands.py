@@ -278,7 +278,9 @@ class FocusCharacter(Demo):
             persona_id = await choose_from_list("Enter persona id", personas)
 
             print(f"Focusing {persona_id} and opening the character details panel")
-            await bridge.runtime.api.focus_character(persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS)
+            await bridge.runtime.api.focus_character(
+                persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+            )
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
