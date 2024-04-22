@@ -9,7 +9,7 @@ import cattrs
 from fable_saga.actions import Action
 
 from . import logger, converter
-from .data_models import PersonaContextObject, WorldContextObject, Memory
+from .data_models import PersonaContextObject, WorldContextObject, Memory, Vector3
 
 if TYPE_CHECKING:
     from .runtime import Runtime
@@ -126,7 +126,7 @@ class API:
         timestamp: str,
         summary: str,
         entity_ids: Optional[List[str]] = None,
-        position: Optional[List[float]] = None,
+        position: Optional[Vector3] = None,
         importance_weight: float = 0.5,
     ) -> Memory:
         """
@@ -146,7 +146,7 @@ class API:
         if entity_ids is None:
             entity_ids = [persona_id]
         if position is None:
-            position = [0] * 3
+            position = Vector3(0, 0, 0)
         if importance_weight is None:
             importance_weight = 0.5
 
