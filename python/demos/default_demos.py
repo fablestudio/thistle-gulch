@@ -3,6 +3,7 @@ import datetime
 
 from fable_saga.actions import Action
 
+from thistle_gulch.data_models import ReflectSkill, WaitSkill
 from . import Demo, RuntimeBridge, formatted_input
 
 
@@ -90,7 +91,7 @@ class DefaultTutorial(Demo):
                     future = asyncio.get_event_loop().create_future()
                     await bridge.runtime.api.modal(
                         f"[{intro_step}] Meet Blackjack Kane",
-                        "The Saloon Owner and leader of the local criminal gang. To start with, he will force him to reflect on his current situation.",
+                        "The Saloon Owner and leader of the local criminal gang. To start with, we will force him to reflect on his current situation.",
                         ["Next"],
                         False,
                         future=future,
@@ -102,14 +103,11 @@ class DefaultTutorial(Demo):
                 future = asyncio.get_event_loop().create_future()
                 await bridge.runtime.api.override_character_action(
                     "jack_kane",
-                    Action(
-                        "reflect",
-                        {
-                            "focus": "The current situation in Thistle Gulch.",
-                            "result": "Bring the audience up to speed on who blackjack is and the context of the story.",
-                            "goal": "Bring the audience up to speed on who blackjack is and the context of the story.",
-                        },
-                    ),
+                    ReflectSkill(
+                        focus="The current situation in Thistle Gulch.",
+                        result="Bring the audience up to speed on who blackjack is and the context of the story.",
+                        goal="Bring the audience up to speed on who blackjack is and the context of the story.",
+                    ).to_action(),
                     future=future,
                 )
                 await future
@@ -170,7 +168,9 @@ class DefaultTutorial(Demo):
                 future = asyncio.get_event_loop().create_future()
                 await bridge.runtime.api.override_character_action(
                     "jack_kane",
-                    Action("wait", {"duration": 1}),
+                    WaitSkill(
+                        duration=1, goal="Trigger the next action generation"
+                    ).to_action(),
                     future=future,
                 )
                 await future

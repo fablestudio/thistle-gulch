@@ -9,6 +9,7 @@ from langchain.prompts import PromptTemplate
 
 from thistle_gulch import logger, IncomingRoutes, Route
 from thistle_gulch.bridge import TGActionsEndpoint, RuntimeBridge, TGActionsRequest
+from thistle_gulch.data_models import GoToSkill
 from . import Demo, choose_from_list
 
 CATEGORY = "Action Generation"
@@ -226,17 +227,14 @@ class OnActionComplete(Demo):
 
             # Set the sheriff's next action to go to the sheriff's station building to start.
             # Once the sheriff arrives at the building, the on_action_complete callback will be triggered.
-            action = fable_saga.actions.Action(
-                skill="go_to",
-                parameters={
-                    "destination": "thistle_gulch." + location_list[0],
-                    "goal": "Start the sheriff's day at the sheriff's station building",
-                },
-            )
+            go_to_action = GoToSkill(
+                destination="thistle_gulch." + location_list[0],
+                goal="Start the sheriff's day at the sheriff's station building",
+            ).to_action()
 
             # Note: We don't use a future here, because we want to use the on_action_complete callback instead.
             # If we used a future, then on_action_complete would not be called for this action.
-            await bridge.runtime.api.override_character_action(sheriff_id, action)
+            await bridge.runtime.api.override_character_action(sheriff_id, go_to_action)
             return True
 
         bridge.on_ready = on_ready
@@ -266,16 +264,13 @@ class OnActionComplete(Demo):
             choice_idx = modal_response["choice"]
             choice = location_list[choice_idx]
 
-            action = Action(
-                skill="go_to",
-                parameters={
-                    "destination": "thistle_gulch." + choice,
-                    "goal": "Visit the user-chosen location",
-                },
-            )
+            go_to_action = GoToSkill(
+                destination="thistle_gulch." + choice,
+                goal="Visit the user-chosen location",
+            ).to_action()
 
             # Return the new action to the Runtime
-            return action
+            return go_to_action
 
         print("Registering custom on_action_complete callback.")
         bridge.on_action_complete = on_action_complete

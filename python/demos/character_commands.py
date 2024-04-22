@@ -4,7 +4,12 @@ from datetime import datetime, timedelta
 from fable_saga.actions import Action
 
 from thistle_gulch.bridge import RuntimeBridge
-from thistle_gulch.data_models import Memory
+from thistle_gulch.data_models import (
+    Memory,
+    ConverseWithSkill,
+    GoToSkill,
+    InteractSkill,
+)
 from . import Demo, choose_from_list, formatted_input_async
 
 CATEGORY = "Character Commands"
@@ -141,7 +146,9 @@ class UpdateCharacterPropertyDemo(Demo):
                 await bridge.runtime.api.enable_agent(persona_id, True)
 
             print(f"Focusing {persona_id}")
-            await bridge.runtime.api.focus_character(persona_id)
+            await bridge.runtime.api.focus_character(
+                persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+            )
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
@@ -277,8 +284,10 @@ class FocusCharacter(Demo):
             )
             persona_id = await choose_from_list("Enter persona id", personas)
 
-            print(f"Focusing {persona_id}")
-            await bridge.runtime.api.focus_character(persona_id)
+            print(f"Focusing {persona_id} and opening the character details panel")
+            await bridge.runtime.api.focus_character(
+                persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+            )
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
@@ -341,16 +350,12 @@ class OverrideCharacterAction(Demo):
                 [loc.name for loc in context.world_context.locations],
             )
 
-            action = Action(
-                "go_to",
-                {
-                    "destination": location_id,
-                    "goal": "Visit the first available location",
-                },
-            )
+            go_to_action = GoToSkill(
+                destination=location_id, goal="Visit the first available location"
+            ).to_action()
 
-            print(f"Overriding action for {persona_id} with {action}")
-            await bridge.runtime.api.override_character_action(persona_id, action)
+            print(f"Overriding action for {persona_id} with {go_to_action}")
+            await bridge.runtime.api.override_character_action(persona_id, go_to_action)
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
@@ -418,23 +423,22 @@ class RobBankAndArrestCriminal(Demo):
 
             # context.interactables is a list of all world objects/characters with interactions available
             interactable_bank = next(
-                i for i in context.interactables if i.item_guid == "bank"
+                i for i in context.interactables if i.guid == "bank"
             )
             rob_bank_interaction_name = next(
                 name for name in interactable_bank.interactions if "Rob" in name
             )
 
-            action = Action(
-                "interact",
-                {
-                    "item_guid": interactable_bank.item_guid,
-                    "interaction": rob_bank_interaction_name,
-                    "goal": "Steal gold from the bank",
-                },
-            )
+            interact_action = InteractSkill(
+                guid=interactable_bank.guid,
+                interaction=rob_bank_interaction_name,
+                goal="Steal gold from the bank",
+            ).to_action()
 
-            print(f"Force {robber_id} to rob the bank using action:\n{action}")
-            await bridge.runtime.api.override_character_action(robber_id, action)
+            print(f"Force {robber_id} to rob the bank using action:\n{interact_action}")
+            await bridge.runtime.api.override_character_action(
+                robber_id, interact_action
+            )
 
             print(f"Following {robber_id} with the camera")
             await bridge.runtime.api.follow_character(robber_id, 0.8)
@@ -454,23 +458,24 @@ class RobBankAndArrestCriminal(Demo):
 
             # context.interactables is a list of all world objects/characters with interactions available
             interactable_robber = next(
-                i for i in context.interactables if i.item_guid == robber_id
+                i for i in context.interactables if i.guid == robber_id
             )
             arrest_interaction_name = next(
                 name for name in interactable_robber.interactions if "Arrest" in name
             )
 
-            action = Action(
-                "interact",
-                {
-                    "item_guid": interactable_robber.item_guid,
-                    "interaction": arrest_interaction_name,
-                    "goal": "Arrest the bank robber",
-                },
-            )
+            interact_action = InteractSkill(
+                guid=interactable_robber.guid,
+                interaction=arrest_interaction_name,
+                goal="Arrest the bank robber",
+            ).to_action()
 
-            print(f"Force {sheriff_id} to arrest {robber_id} using action:\n{action}")
-            await bridge.runtime.api.override_character_action(sheriff_id, action)
+            print(
+                f"Force {sheriff_id} to arrest {robber_id} using action:\n{interact_action}"
+            )
+            await bridge.runtime.api.override_character_action(
+                sheriff_id, interact_action
+            )
 
         print("Registering custom on_ready and on_tick callbacks.")
         bridge.on_ready = on_ready
@@ -532,16 +537,13 @@ class CustomConversation(Demo):
                 },
             ]
 
-            action = Action(
-                "converse_with",
-                {
-                    "persona_guid": speaker_2_id,  # The conversation companion - in this example speaker_1 is the initiator and speaker_2 is the companion
-                    "conversation": conversation,  # If no conversation is provided, one will be generated instead
-                    "topic": "the murder last night",
-                    "context": "",  # Only required if no conversation is provided
-                    "goal": "Discuss the recent murder",
-                },
-            )
+            converse_with_action = ConverseWithSkill(
+                persona_guid=speaker_2_id,  # The conversation companion - in this example speaker_1 is the initiator and speaker_2 is the companion
+                conversation=conversation,  # If no conversation is provided, one will be generated instead
+                topic="the murder last night",
+                context="",  # Only required if no conversation is provided
+                goal="Discuss the recent murder",
+            ).to_action()
 
             print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
             for turn in conversation:
@@ -549,7 +551,9 @@ class CustomConversation(Demo):
                 dialogue = turn.get("dialogue")
                 print(f"\t{speaker}: {dialogue}")
 
-            await bridge.runtime.api.override_character_action(speaker_1_id, action)
+            await bridge.runtime.api.override_character_action(
+                speaker_1_id, converse_with_action
+            )
 
             print(f"Following {speaker_1_id} with the camera")
             await bridge.runtime.api.follow_character(speaker_1_id, 0.8)
