@@ -1,5 +1,7 @@
+import asyncio
 import uuid
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fable_saga.actions import Action
 
@@ -9,6 +11,9 @@ from thistle_gulch.data_models import (
     ConverseWithSkill,
     GoToSkill,
     InteractSkill,
+    WorldContextObject,
+    Vector3,
+    WaitSkill,
 )
 from . import Demo, choose_from_list, formatted_input_async
 
@@ -562,3 +567,102 @@ class CustomConversation(Demo):
 
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
+
+
+class PlaceCharacter(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Place Character",
+            summary="Place a character at a specific location in the scene",
+            category=CATEGORY,
+            function=self.place_character_demo,
+        )
+
+    def place_character_demo(self, bridge: RuntimeBridge):
+        """
+        Instantly warps Jack Kane to the chosen location
+
+        API calls:
+            get_world_context()
+            enable_agent()
+            modal()
+            place_character()
+            follow_character()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
+        """
+
+        persona_id = "jack_kane"
+        world_context: WorldContextObject
+        location_options = []
+        tick_count = -1
+
+        async def on_ready(_) -> bool:
+
+            nonlocal world_context, location_options
+
+            # Disable all agents that may have been enabled by the runtime args
+            world_context = await bridge.runtime.api.get_world_context()
+            for persona in world_context.personas:
+                await bridge.runtime.api.enable_agent(persona.persona_guid, False)
+
+            # Force the placed character to stop navigating and idle forever
+            await bridge.runtime.api.override_character_action(
+                persona_id,
+                WaitSkill(
+                    duration=0,
+                    goal=f"Force {persona_id} to idle forever",
+                ).to_action(),
+            )
+
+            # Store a list of location names for use with the modal
+            location_options = [location.name for location in world_context.locations]
+
+            # Start the simulation
+            return True
+
+        async def on_tick(_, current_time: datetime):
+
+            nonlocal tick_count
+
+            # Choose a new location every 5 ticks
+            tick_count += 1
+            if tick_count % 5 != 0:
+                return
+
+            # Allow player to choose new location in Runtime
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                f"Choose a location",
+                f"Place {persona_id} at the following location:",
+                location_options,
+                True,
+                future=future,
+            )
+            modal_response = await future
+
+            # Retrieve the chosen location
+            choice_idx = modal_response["choice"]
+            location_name = location_options[choice_idx]
+            location = next(
+                loc for loc in world_context.locations if loc.name == location_name
+            )
+
+            print(
+                f"Placing {persona_id} at '{location_name}' with position {location.center_floor_position}"
+            )
+            await bridge.runtime.api.place_character(
+                persona_id, location.center_floor_position, Vector3(0, 90, 0)
+            )
+
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            return True
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready
+        print("Registering custom on_tick callback.")
+        bridge.on_tick = on_tick

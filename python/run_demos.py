@@ -39,6 +39,7 @@ def main():
         character_commands.RobBankAndArrestCriminal(),
         character_commands.CustomConversation(),
         character_commands.FocusCharacter(),
+        character_commands.PlaceCharacter(),
         camera_commands.FollowCharacter(),
         camera_commands.PlaceCamera(),
     ]
