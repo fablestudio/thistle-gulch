@@ -229,7 +229,7 @@ class OnActionComplete(Demo):
             # Once the sheriff arrives at the building, the on_action_complete callback will be triggered.
             go_to_action = GoToSkill(
                 destination="thistle_gulch." + location_list[0],
-                goal="Start the sheriff's day at the sheriff's station building"
+                goal="Start the sheriff's day at the sheriff's station building",
             ).to_action()
 
             # Note: We don't use a future here, because we want to use the on_action_complete callback instead.

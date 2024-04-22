@@ -146,7 +146,9 @@ class UpdateCharacterPropertyDemo(Demo):
                 await bridge.runtime.api.enable_agent(persona_id, True)
 
             print(f"Focusing {persona_id}")
-            await bridge.runtime.api.focus_character(persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS)
+            await bridge.runtime.api.focus_character(
+                persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+            )
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
@@ -349,8 +351,7 @@ class OverrideCharacterAction(Demo):
             )
 
             go_to_action = GoToSkill(
-                destination=location_id,
-                goal="Visit the first available location"
+                destination=location_id, goal="Visit the first available location"
             ).to_action()
 
             print(f"Overriding action for {persona_id} with {go_to_action}")
@@ -431,11 +432,13 @@ class RobBankAndArrestCriminal(Demo):
             interact_action = InteractSkill(
                 guid=interactable_bank.guid,
                 interaction=rob_bank_interaction_name,
-                goal="Steal gold from the bank"
+                goal="Steal gold from the bank",
             ).to_action()
 
             print(f"Force {robber_id} to rob the bank using action:\n{interact_action}")
-            await bridge.runtime.api.override_character_action(robber_id, interact_action)
+            await bridge.runtime.api.override_character_action(
+                robber_id, interact_action
+            )
 
             print(f"Following {robber_id} with the camera")
             await bridge.runtime.api.follow_character(robber_id, 0.8)
@@ -467,8 +470,12 @@ class RobBankAndArrestCriminal(Demo):
                 goal="Arrest the bank robber",
             ).to_action()
 
-            print(f"Force {sheriff_id} to arrest {robber_id} using action:\n{interact_action}")
-            await bridge.runtime.api.override_character_action(sheriff_id, interact_action)
+            print(
+                f"Force {sheriff_id} to arrest {robber_id} using action:\n{interact_action}"
+            )
+            await bridge.runtime.api.override_character_action(
+                sheriff_id, interact_action
+            )
 
         print("Registering custom on_ready and on_tick callbacks.")
         bridge.on_ready = on_ready
@@ -535,7 +542,7 @@ class CustomConversation(Demo):
                 conversation=conversation,  # If no conversation is provided, one will be generated instead
                 topic="the murder last night",
                 context="",  # Only required if no conversation is provided
-                goal="Discuss the recent murder"
+                goal="Discuss the recent murder",
             ).to_action()
 
             print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
@@ -544,7 +551,9 @@ class CustomConversation(Demo):
                 dialogue = turn.get("dialogue")
                 print(f"\t{speaker}: {dialogue}")
 
-            await bridge.runtime.api.override_character_action(speaker_1_id, converse_with_action)
+            await bridge.runtime.api.override_character_action(
+                speaker_1_id, converse_with_action
+            )
 
             print(f"Following {speaker_1_id} with the camera")
             await bridge.runtime.api.follow_character(speaker_1_id, 0.8)

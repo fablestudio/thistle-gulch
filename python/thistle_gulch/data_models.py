@@ -166,6 +166,7 @@ class GoToSkill:
     """
     Go to a location in the world
     """
+
     # The guid of the persona, item, or location to go to
     destination: str
     # Goal of the go to
@@ -183,6 +184,7 @@ class ConverseWithSkill:
     """
     Walk to another character and talk to them
     """
+
     # The guid of the persona to converse with
     persona_guid: str
     # Optional pre-defined conversation to use. If no conversation is provided, one will be generated instead
@@ -212,6 +214,7 @@ class ReflectSkill:
     """
     Think about things in order to synthesize new ideas and specific plans
     """
+
     # The topic of the reflection
     focus: str
     # The result of the reflection, e.g. a new plan or understanding you will remember
@@ -231,6 +234,7 @@ class WaitSkill:
     """
     Wait for a period of time while observing the world
     """
+
     # Number of minutes to wait
     duration: int
     # Goal of the wait
@@ -247,6 +251,7 @@ class InteractSkill:
     """
     Interact with an object or person in the world. See PersonaContextObject.interactables for available interactions
     """
+
     # The guid of the persona or item to interact with
     guid: str
     # The name of the interaction to use
@@ -296,6 +301,7 @@ class ExchangeSkill:
     Creates new inventory items as needed on the fly.
     Use WorldContextObject.inventories to see a list of all available items
     """
+
     # The inventory item guid to give
     give_guid: str
     # Amount to give. Must be greater than 0
