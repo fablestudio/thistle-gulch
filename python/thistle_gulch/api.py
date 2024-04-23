@@ -100,7 +100,9 @@ class API:
         )
         self.runtime.start_date = date
 
-    async def enable_agent(self, persona_id: str, actions: bool, conversations: bool) -> None:
+    async def enable_agent(
+        self, persona_id: str, actions: bool, conversations: bool
+    ) -> None:
         """
         Enable or disable the Bridge agent for a specific character. Enabled agents generate their actions using the
         python Bridge by sending requests to generate action options. Disabled agents generate their actions in the
@@ -111,8 +113,12 @@ class API:
         :param actions: Enable or disable the agent's action generation
         :param conversations: Enable or disable the agent's conversation generation
         """
-        logger.debug(f"{('Enabling' if actions else 'Disabling')} actions: {persona_id}")
-        logger.debug(f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_id}")
+        logger.debug(
+            f"{('Enabling' if actions else 'Disabling')} actions: {persona_id}"
+        )
+        logger.debug(
+            f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_id}"
+        )
         await self.runtime.send_message(
             "character-command",
             {
