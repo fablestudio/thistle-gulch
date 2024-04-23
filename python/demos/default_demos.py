@@ -1,10 +1,8 @@
 import asyncio
 import datetime
 
-from fable_saga.actions import Action
-
-from thistle_gulch.data_models import ReflectSkill, WaitSkill
-from . import Demo, RuntimeBridge, formatted_input
+from thistle_gulch.skills import ReflectSkill, WaitSkill
+from . import Demo, RuntimeBridge, formatted_input, disable_all_agents
 
 
 class DefaultTutorial(Demo):
@@ -46,9 +44,7 @@ class DefaultTutorial(Demo):
 
             # Disable all agents that may have been enabled by the runtime args.
             # This way we can control the flow of the demo.
-            context = await bridge.runtime.api.get_world_context()
-            for persona in context.personas:
-                await bridge.runtime.api.enable_agent(persona.persona_guid, False)
+            await disable_all_agents(bridge)
 
             # Create a future that can be awaited until the response is received.
             future = asyncio.get_event_loop().create_future()
@@ -101,6 +97,10 @@ class DefaultTutorial(Demo):
             elif intro_step == 2:
                 # Create a future that can be awaited until the response is received.
                 future = asyncio.get_event_loop().create_future()
+
+                # Enable SAGA conversations for Jack so the reflect skill will work as expected
+                await bridge.runtime.api.enable_agent("jack_kane", False, True)
+
                 await bridge.runtime.api.override_character_action(
                     "jack_kane",
                     ReflectSkill(
@@ -162,7 +162,7 @@ class DefaultTutorial(Demo):
                 await future
 
                 # Activate the SAGA agent for Blackjack Kane so when the wait action is done, it will generate a list of actions.
-                await bridge.runtime.api.enable_agent("jack_kane", True)
+                await bridge.runtime.api.enable_agent("jack_kane", True, True)
 
                 # TODO: Basically this is a hack to Cancel the current action which will trigger generating the list.
                 future = asyncio.get_event_loop().create_future()
@@ -194,7 +194,7 @@ class DefaultTutorial(Demo):
                 modal_response = await future
                 choice_idx = modal_response["choice"]
                 if choice_idx != 0:
-                    await bridge.runtime.api.enable_agent("jack_kane", False)
+                    await bridge.runtime.api.enable_agent("jack_kane", False, False)
                     await bridge.runtime.api.modal(
                         "SAGA Agent Disabled",
                         "The SAGA agent has been disabled for Blackjack Kane. You can enable it again at any time.",

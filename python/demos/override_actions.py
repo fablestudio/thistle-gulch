@@ -9,8 +9,8 @@ from langchain.prompts import PromptTemplate
 
 from thistle_gulch import logger, IncomingRoutes, Route
 from thistle_gulch.bridge import TGActionsEndpoint, RuntimeBridge, TGActionsRequest
-from thistle_gulch.data_models import GoToSkill
-from . import Demo, choose_from_list
+from thistle_gulch.skills import GoToSkill
+from . import Demo, disable_all_agents
 
 CATEGORY = "Action Generation"
 
@@ -54,6 +54,17 @@ class PrintActionsAndPickFirstDemo(Demo):
                 PrintActionsAndPickFirst(fable_saga.actions.ActionsAgent()),
             )
         )
+
+        persona_id = "jack_kane"
+
+        # Enable one agent and disable all others
+        async def on_ready(_) -> bool:
+            await disable_all_agents(bridge)
+            await bridge.runtime.api.enable_agent(persona_id, True, True)
+
+            return True
+
+        bridge.on_ready = on_ready
 
 
 class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
@@ -104,6 +115,15 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
                 SkipSagaAlwaysDoTheDefaultAction(fable_saga.actions.ActionsAgent()),
             )
         )
+
+        # Enable one agent and disable all others
+        async def on_ready(_) -> bool:
+            await disable_all_agents(bridge)
+            await bridge.runtime.api.enable_agent("jack_kane", True, True)
+
+            return True
+
+        bridge.on_ready = on_ready
 
 
 class ReplaceContextWithYamlDumpDemo(Demo):
@@ -190,6 +210,15 @@ and the chosen skill options.""".replace(
             )
         )
 
+        # Enable Kane's agent and disable all others
+        async def on_ready(_) -> bool:
+            await disable_all_agents(bridge)
+            await bridge.runtime.api.enable_agent("jack_kane", True, True)
+
+            return True
+
+        bridge.on_ready = on_ready
+
 
 class OnActionComplete(Demo):
     def __init__(self):
@@ -214,6 +243,7 @@ class OnActionComplete(Demo):
 
         See the API and Demo source code on Github for more information:
             https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/skills.py
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/override_actions.py
         """
 
@@ -221,7 +251,10 @@ class OnActionComplete(Demo):
 
         location_list = ["sheriff_station_building", "the_saloon", "bank_building"]
 
-        async def on_ready(bridge) -> bool:
+        async def on_ready(_) -> bool:
+
+            await disable_all_agents(bridge)
+
             await bridge.runtime.api.focus_character(sheriff_id)
             await bridge.runtime.api.follow_character(sheriff_id, 0.8)
 

@@ -1,21 +1,24 @@
 import asyncio
-import uuid
 from datetime import datetime, timedelta
-from typing import Optional
-
-from fable_saga.actions import Action
 
 from thistle_gulch.bridge import RuntimeBridge
 from thistle_gulch.data_models import (
-    Memory,
-    ConverseWithSkill,
-    GoToSkill,
-    InteractSkill,
     WorldContextObject,
     Vector3,
-    WaitSkill,
 )
-from . import Demo, choose_from_list, formatted_input_async
+from thistle_gulch.skills import (
+    ConverseWithSkill,
+    InteractSkill,
+    WaitSkill,
+    TakeToSkill,
+)
+from . import (
+    Demo,
+    choose_from_list,
+    formatted_input_async,
+    disable_all_agents,
+    formatted_input,
+)
 
 CATEGORY = "Character Commands"
 
@@ -25,7 +28,7 @@ class EnableAgentDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Enable Agent",
-            summary="Enable or disable an agent",
+            summary="Enables action and conversation generation for the chosen character",
             category=CATEGORY,
             function=self.enable_agent_demo,
         )
@@ -33,9 +36,10 @@ class EnableAgentDemo(Demo):
     def enable_agent_demo(self, bridge: RuntimeBridge):
         """
         On simulation start, the chosen character's bridge agent is enabled or disabled. Enabled agents use the
-        Bridge to generate their actions and will contribute to the overall cost of running the simulation [when using
-        a paid LLM service like OpenAI.] Disabled agents choose their actions directly in the simulation Runtime using
-        a simpler utility AI based on scored affordances (like the SIMs) instead of sending requests to the Bridge.
+        Bridge to generate their actions and conversations and will contribute to the overall cost of running the
+        simulation [when using a paid LLM service like OpenAI.] Disabled agents choose their actions directly in the
+        simulation Runtime using a simpler utility AI based on scored affordances (like the SIMs) instead of sending
+        requests to the Bridge. There is no fallback if conversation generation is disabled.
 
         API calls:
             enable_agent()
@@ -47,6 +51,9 @@ class EnableAgentDemo(Demo):
         """
 
         async def on_ready(_) -> bool:
+
+            await disable_all_agents(bridge)
+
             world_context = await bridge.runtime.api.get_world_context()
             personas = dict(
                 [
@@ -54,22 +61,12 @@ class EnableAgentDemo(Demo):
                     for persona in world_context.personas
                 ]
             )
-            persona_id = await choose_from_list("Enter persona id", personas)
-
-            # Validate that the user entered 0 or 1
-            def validate_enable_str(enable_str: str) -> bool:
-                if enable_str not in ["0", "1"]:
-                    raise ValueError(
-                        f"Invalid option {enable_str}. Please enter 0 or 1."
-                    )
-                return True if enable_str == "1" else False
-
-            enabled = await formatted_input_async(
-                "Enable(1) or Disable(0) the agent? ", validator=validate_enable_str
+            persona_id = await choose_from_list(
+                "Enter persona id to enable their agent", personas
             )
 
-            print(f"{('Enabling' if enabled else 'Disabling')} agent: {persona_id}")
-            await bridge.runtime.api.enable_agent(persona_id, enabled)
+            print(f"Enabling agent: {persona_id}")
+            await bridge.runtime.api.enable_agent(persona_id, True, True)
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
@@ -84,18 +81,17 @@ class UpdateCharacterPropertyDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Update Character Property",
-            summary="Change a property value for the given persona",
+            summary="Change one of Jack Kane's property values to a new value",
             category=CATEGORY,
             function=self.update_character_property,
         )
 
     def update_character_property(self, bridge: RuntimeBridge):
         """
-        On simulation start, the chosen character's property is updated to the value provided. The character's agent
-        may optionally be enabled which is useful for seeing the effect of the new value during action and conversation
-        generation. The character is also focused for ease of access to the character details UI to inspect the changes.
-        The currently available properties are energy, summary, description, and backstory, but this list will continue
-        to expand in the future.
+        On simulation start, Jack Kane's property is updated to the value provided. His agent may optionally be enabled
+        which is useful for seeing the effect of the new value during action and conversation generation. The character
+        is also focused for ease of access to the character details UI to inspect the changes. The currently available
+        properties are energy, summary, description, and backstory, but this list will continue to expand in the future.
 
         API calls:
             update_character_property()
@@ -108,47 +104,33 @@ class UpdateCharacterPropertyDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
+        persona_id = "jack_kane"
+
+        def validate_property_name(name: str) -> str:
+            if name not in [
+                "energy",
+                "summary",
+                "description",
+                "backstory",
+            ]:
+                raise ValueError(f"Invalid property name: {name}")
+            return name
+
+        property_name = formatted_input(
+            "Enter property name (energy, summary, description, backstory)",
+            validator=validate_property_name,
+        )
+
+        property_value = formatted_input(f"Enter new value for {property_name}")
+
         async def on_ready(_) -> bool:
-            world_context = await bridge.runtime.api.get_world_context()
-            personas = dict(
-                [
-                    (persona.persona_guid, persona.summary)
-                    for persona in world_context.personas
-                ]
-            )
-            persona_id = await choose_from_list("Enter persona id", personas)
-            print()
 
-            def validate_property_name(property_name: str) -> str:
-                if property_name not in [
-                    "energy",
-                    "summary",
-                    "description",
-                    "backstory",
-                ]:
-                    raise ValueError(f"Invalid property name: {property_name}")
-                return property_name
-
-            property_name = await formatted_input_async(
-                "Enter property name (energy, summary, description, backstory)",
-                validator=validate_property_name,
-            )
-
-            property_value = await formatted_input_async(
-                f"Enter new value for {property_name}"
-            )
+            await disable_all_agents(bridge)
 
             print(f"Updating {persona_id} {property_name} to '{property_value}'")
             await bridge.runtime.api.update_character_property(
                 persona_id, property_name, property_value
             )
-
-            enable_agent = await formatted_input_async(
-                "Do you want to enable this agent as well? (Y/n)", default="Y"
-            )
-            if enable_agent.lower() == "y":
-                print(f"Enabling Agent: {persona_id}'")
-                await bridge.runtime.api.enable_agent(persona_id, True)
 
             print(f"Focusing {persona_id}")
             await bridge.runtime.api.focus_character(
@@ -157,6 +139,22 @@ class UpdateCharacterPropertyDemo(Demo):
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            # Ask player to enable the agent
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                "Character Property Updated",
+                f"The '{property_name}' property has been updated. The new value can be found in the character details UI to the left.\n\n"
+                f"Do you want to enable {persona_id}'s SAGA agent to test the results of your change?",
+                ["Yes", "No"],
+                True,
+                future=future,
+            )
+            modal_response = await future
+            choice_idx = modal_response["choice"]
+            if choice_idx == 0:
+                print(f"Enabling {persona_id}'s agent")
+                await bridge.runtime.api.enable_agent(persona_id, True, True)
 
             return True
 
@@ -168,16 +166,16 @@ class ChangeCharacterMemoriesDemo(Demo):
     def __init__(self):
         super().__init__(
             name="Change Character Memories",
-            summary="Clear a character's memories and replace them with new ones",
+            summary="Clear Wyatt Cooper's memories and replace them with new ones",
             category=CATEGORY,
             function=self.change_character_memories,
         )
 
     def change_character_memories(self, bridge: RuntimeBridge):
         """
-        All of Wyatt Cooper's memories are erased and replaced with new ones. The world context is obtained to
-        demonstrate how to remove a single memory by id, all his memories are cleared, and then new memories are added
-        to replace the ones he had initially.
+        All of Wyatt Cooper's memories are erased and replaced with new ones, then his agent is enabled to use these new
+        memories. The world context is obtained to demonstrate how to remove a single memory by id, all his memories are
+        cleared, and then new memories are added to replace the ones he had initially.
 
         API calls:
             get_world_context()
@@ -190,24 +188,27 @@ class ChangeCharacterMemoriesDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
+        persona_id = "wyatt_cooper"
+
         async def on_ready(_) -> bool:
-            persona_id = "wyatt_cooper"
-            world_context = await bridge.runtime.api.get_world_context()
+
+            await disable_all_agents(bridge)
 
             # Find the first existing memory and remove it
             # This is only for demostration purposes, see below where we use api.character_memory_clear to remove all memories
+            world_context = await bridge.runtime.api.get_world_context()
             old_memories = next(
                 m for m in world_context.memories if m.persona_guid == persona_id
             )
-            old_memory = (
+            first_memory = (
                 old_memories.memories[0]
                 if old_memories and len(old_memories.memories) > 0
                 else None
             )
-            if old_memory is not None:
-                print(f"Removing memory from {persona_id}: {old_memory.guid}")
+            if first_memory is not None:
+                print(f"Removing memory from {persona_id}: {first_memory.guid}")
                 await bridge.runtime.api.character_memory_remove(
-                    persona_id, old_memory.guid
+                    persona_id, first_memory.guid
                 )
 
             # Clear all memories - if there aren't any, an exception will be thrown
@@ -239,6 +240,24 @@ class ChangeCharacterMemoriesDemo(Demo):
             )
             print(f"Memory added: {memory_1}")
 
+            print(f"Focusing {persona_id}")
+            await bridge.runtime.api.focus_character(
+                persona_id, bridge.runtime.api.FocusPanelTab.HISTORY
+            )
+
+            print(f"Following {persona_id} with the camera")
+            await bridge.runtime.api.follow_character(persona_id, 0.8)
+
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                f"Memories Updated",
+                f"{persona_id}'s memories were replaced with new ones. See the History panel to the left to inspect them.",
+                ["Ok"],
+                True,
+                future=future,
+            )
+            await future
+
             # Resume simulation
             return True
 
@@ -250,14 +269,14 @@ class FocusCharacter(Demo):
     def __init__(self):
         super().__init__(
             name="Focus Character",
-            summary="Focus the simulation on a specific character",
+            summary="Focus the simulation on Jack Kane",
             category=CATEGORY,
             function=self.focus_character_demo,
         )
 
     def focus_character_demo(self, bridge: RuntimeBridge):
         """
-        Focus a character, follow them, then remove focus after 10 simulation ticks.
+        Focus on Jack Kane, follow him, then remove focus after 10 simulation ticks.
         When a character is focused:
             * The character details UI appears in the top-left corner.
             * Their current navigation path is highlighted.
@@ -274,20 +293,13 @@ class FocusCharacter(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        persona_id: str
+        persona_id = "jack_kane"
         tick_count = 0
 
         # Focus on and follow the character at simulation start
         async def on_ready(_) -> bool:
-            nonlocal persona_id
-            world_context = await bridge.runtime.api.get_world_context()
-            personas = dict(
-                [
-                    (persona.persona_guid, persona.summary)
-                    for persona in world_context.personas
-                ]
-            )
-            persona_id = await choose_from_list("Enter persona id", personas)
+
+            await disable_all_agents(bridge)
 
             print(f"Focusing {persona_id} and opening the character details panel")
             await bridge.runtime.api.focus_character(
@@ -316,15 +328,15 @@ class OverrideCharacterAction(Demo):
     def __init__(self):
         super().__init__(
             name="Override Character Action",
-            summary="Manually trigger a custom action for a character",
+            summary="Force Jack Kane to hide the dead body in the Saloon storage room",
             category=CATEGORY,
             function=self.override_character_action_demo,
         )
 
     def override_character_action_demo(self, bridge: RuntimeBridge):
         """
-        On simulation start, the chosen character immediately starts navigating to the chosen location using the go_to skill.
-        The character context is utilized to discover all available locations before the character's action is triggered.
+        On simulation start, Jack Kane uses the 'take_to' skill to navigate to the dead body, pick it up, carry it
+        to the Saloon storage room, and place it on the ground.
 
         API calls:
             get_character_context()
@@ -336,31 +348,22 @@ class OverrideCharacterAction(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
+        persona_id = "jack_kane"
+
         async def on_ready(_) -> bool:
 
-            world_context = await bridge.runtime.api.get_world_context()
-            personas = dict(
-                [
-                    (persona.persona_guid, persona.summary)
-                    for persona in world_context.personas
-                ]
-            )
-            persona_id = await choose_from_list("Enter persona id", personas)
+            await disable_all_agents(bridge)
 
-            print(f"Getting character context for {persona_id}")
-            context = await bridge.runtime.api.get_character_context(persona_id)
-
-            location_id = await choose_from_list(
-                "Pick a location_id for this persona to go to",
-                [loc.name for loc in context.world_context.locations],
-            )
-
-            go_to_action = GoToSkill(
-                destination=location_id, goal="Visit the first available location"
+            take_to_action = TakeToSkill(
+                guid="dead_body",
+                destination="saloon_storage_room",
+                goal="Dispose of the evidence",
             ).to_action()
 
-            print(f"Overriding action for {persona_id} with {go_to_action}")
-            await bridge.runtime.api.override_character_action(persona_id, go_to_action)
+            print(f"Overriding action for {persona_id} with {take_to_action}")
+            await bridge.runtime.api.override_character_action(
+                persona_id, take_to_action
+            )
 
             print(f"Following {persona_id} with the camera")
             await bridge.runtime.api.follow_character(persona_id, 0.8)
@@ -375,18 +378,18 @@ class RobBankAndArrestCriminal(Demo):
     def __init__(self):
         super().__init__(
             name="Rob Bank and Arrest Criminal",
-            summary="Force a character to rob the bank and get arrested by the sheriff",
+            summary="Force Jack Kane to rob the bank and get arrested by Wyatt Cooper",
             category=CATEGORY,
             function=self.rob_bank_arrest_criminal_demo,
         )
 
     def rob_bank_arrest_criminal_demo(self, bridge: RuntimeBridge):
         """
-        On simulation start, the robber character navigates to the bank, steals the gold, and attempts to hide the gold
-        in an alleyway. After 60 minutes of elapsed simulation time (60 seconds realtime), wyatt_cooper arrests the robber
-        and escorts them to the jail cell. The robber's character context is used to find the interactable 'bank' object
-        which contains the 'Rob Bank' interaction. Likewise, wyatt_cooper's context is used to find the 'Arrest Person'
-        interaction on the robber. These interactions are then used to construct an action that uses the 'interact' skill.
+        On simulation start, the Jack Kane navigates to the bank, steals the gold, and attempts to hide the gold
+        in an alleyway. After 60 minutes of elapsed simulation time (60 seconds realtime), Wyatt Cooper arrests Kane
+        and escorts him to the jail cell. Kane's character context is used to find the interactable 'bank' object
+        which contains the 'Rob Bank' interaction. Likewise, Cooper's context is used to find the 'Arrest Person'
+        interaction on Kane. These interactions are then used to construct an action that uses the 'interact' skill.
 
         API calls:
             get_character_context()
@@ -399,25 +402,14 @@ class RobBankAndArrestCriminal(Demo):
         """
 
         sheriff_id = "wyatt_cooper"
-        robber_id: str
+        robber_id = "jack_kane"
         arrest_triggered = False
         arrest_time: datetime
 
         async def on_ready(_) -> bool:
             nonlocal robber_id, arrest_time
-            world_context = await bridge.runtime.api.get_world_context()
-            personas = dict(
-                [
-                    (persona.persona_guid, persona.summary)
-                    for persona in world_context.personas
-                ]
-            )
-            # Choose the persona to rob the bank, excluding the sheriff since he will arrest the robber.
-            robber_id = await choose_from_list(
-                "Enter persona id to rob the bank",
-                personas,
-                exclude=[sheriff_id],
-            )
+
+            await disable_all_agents(bridge)
 
             # Arrest the robber 60 minutes after the simulation starts
             # This time span helps ensure that the robbery happens before the arrest
@@ -491,16 +483,16 @@ class CustomConversation(Demo):
     def __init__(self):
         super().__init__(
             name="Custom Conversation",
-            summary="Provide custom dialogue for a set characters to perform",
+            summary="Provide custom dialogue for Jack Kane and Razor Donovan",
             category=CATEGORY,
             function=self.custom_conversation_demo,
         )
 
     def custom_conversation_demo(self, bridge: RuntimeBridge):
         """
-        Two characters carry out a custom pre-generated conversation. On simulation start, the camera begins following
-        the first character, both characters navigate towards each other, and then they exchange the given dialogue lines.
-        A custom action is used to trigger the conversation using the converse_with skill.
+        Jack Kane and Razor Donovan carry out a custom pre-generated conversation. On simulation start, the camera begins following
+        Kane, they navigate towards each other, and then they exchange the given dialogue lines.
+        A custom action is used to trigger the conversation using the 'converse_with' skill.
 
         API calls:
             override_character_action()
@@ -511,20 +503,12 @@ class CustomConversation(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
+        speaker_1_id = "jack_kane"
+        speaker_2_id = "razor_donovan"
+
         async def on_ready(_) -> bool:
-            world_context = await bridge.runtime.api.get_world_context()
-            personas = dict(
-                [
-                    (persona.persona_guid, persona.summary)
-                    for persona in world_context.personas
-                ]
-            )
-            speaker_1_id = await choose_from_list(
-                "Enter speaker 1 id", options=personas
-            )
-            speaker_2_id = await choose_from_list(
-                "Enter speaker 2 id", options=personas
-            )
+
+            await disable_all_agents(bridge)
 
             conversation = [
                 {
@@ -542,6 +526,13 @@ class CustomConversation(Demo):
                 },
             ]
 
+            print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
+            for turn in conversation:
+                speaker = turn.get("persona_id")
+                dialogue = turn.get("dialogue")
+                print(f"\t{speaker}: {dialogue}")
+
+            # Construct a custom converse_with action
             converse_with_action = ConverseWithSkill(
                 persona_guid=speaker_2_id,  # The conversation companion - in this example speaker_1 is the initiator and speaker_2 is the companion
                 conversation=conversation,  # If no conversation is provided, one will be generated instead
@@ -550,12 +541,7 @@ class CustomConversation(Demo):
                 goal="Discuss the recent murder",
             ).to_action()
 
-            print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
-            for turn in conversation:
-                speaker = turn.get("persona_id")
-                dialogue = turn.get("dialogue")
-                print(f"\t{speaker}: {dialogue}")
-
+            # Force the characters to converse immediately
             await bridge.runtime.api.override_character_action(
                 speaker_1_id, converse_with_action
             )
@@ -573,18 +559,17 @@ class PlaceCharacter(Demo):
     def __init__(self):
         super().__init__(
             name="Place Character",
-            summary="Place a character at a specific location in the scene",
+            summary="Move Jack Kane to a specific location in the scene",
             category=CATEGORY,
             function=self.place_character_demo,
         )
 
     def place_character_demo(self, bridge: RuntimeBridge):
         """
-        Instantly warps Jack Kane to the chosen location
+        Instantly warp Jack Kane to the chosen location and follow him with the camera.
 
         API calls:
             get_world_context()
-            enable_agent()
             modal()
             place_character()
             follow_character()
@@ -603,10 +588,7 @@ class PlaceCharacter(Demo):
 
             nonlocal world_context, location_options
 
-            # Disable all agents that may have been enabled by the runtime args
-            world_context = await bridge.runtime.api.get_world_context()
-            for persona in world_context.personas:
-                await bridge.runtime.api.enable_agent(persona.persona_guid, False)
+            await disable_all_agents(bridge)
 
             # Force the placed character to stop navigating and idle forever
             await bridge.runtime.api.override_character_action(
@@ -618,6 +600,7 @@ class PlaceCharacter(Demo):
             )
 
             # Store a list of location names for use with the modal
+            world_context = await bridge.runtime.api.get_world_context()
             location_options = [location.name for location in world_context.locations]
 
             # Start the simulation
