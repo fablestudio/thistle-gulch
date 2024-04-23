@@ -33,15 +33,15 @@ class SimObject:
         return SimObject(**params)
 
 
-# @define(slots=True)
-# class Location:
-#     guid: str
-#     name: str
-#     description: str
-#     parent_guid: str
-#     center: "Vector3"
-#     extents: "Vector3"
-#     center_floor_position: "Vector3"
+@define(slots=True)
+class Location:
+    guid: str
+    name: str
+    description: str
+    parent_guid: str
+    center: "Vector3"
+    extents: "Vector3"
+    center_floor_position: "Vector3"
 
 
 @define(slots=True)
@@ -102,19 +102,13 @@ class SequenceUpdate:
 
 
 @define(slots=True)
-class Location:
-    name: str
-    description: str
-
-
-@define(slots=True)
 class Memory:
     guid: str
     timestamp: str
     summary: str
     context_id: str
     entity_ids: List[str]
-    position: List[float]
+    position: Vector3
     importance_weight: float
 
 

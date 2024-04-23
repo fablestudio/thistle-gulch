@@ -2,6 +2,7 @@ from datetime import datetime
 from time import sleep
 
 from thistle_gulch.bridge import RuntimeBridge
+from thistle_gulch.data_models import Vector3
 from . import Demo, formatted_input_async, choose_from_list
 
 CATEGORY = "Camera Commands"
@@ -165,12 +166,8 @@ class PlaceCamera(Demo):
                 f"Placing camera at \n\tposition: {position_x, position_y, position_z}\n\trotation: {rotation_x, rotation_y, rotation_z}\n\tfov: {field_of_view}"
             )
             await bridge.runtime.api.place_camera(
-                position_x,
-                position_y,
-                position_z,
-                rotation_x,
-                rotation_y,
-                rotation_z,
+                Vector3(position_x, position_y, position_z),
+                Vector3(rotation_x, rotation_y, rotation_z),
                 field_of_view,
             )
 

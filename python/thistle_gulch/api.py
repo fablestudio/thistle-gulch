@@ -9,7 +9,7 @@ import cattrs
 from fable_saga.actions import Action
 
 from . import logger, converter
-from .data_models import PersonaContextObject, WorldContextObject, Memory
+from .data_models import PersonaContextObject, WorldContextObject, Memory, Vector3
 
 if TYPE_CHECKING:
     from .runtime import Runtime
@@ -126,7 +126,7 @@ class API:
         timestamp: str,
         summary: str,
         entity_ids: Optional[List[str]] = None,
-        position: Optional[List[float]] = None,
+        position: Optional[Vector3] = None,
         importance_weight: float = 0.5,
     ) -> Memory:
         """
@@ -146,7 +146,7 @@ class API:
         if entity_ids is None:
             entity_ids = [persona_id]
         if position is None:
-            position = [0] * 3
+            position = Vector3(0, 0, 0)
         if importance_weight is None:
             importance_weight = 0.5
 
@@ -340,41 +340,55 @@ class API:
 
     async def place_camera(
         self,
-        position_x: float,
-        position_y: float,
-        position_z: float,
-        rotation_x: float,
-        rotation_y: float,
-        rotation_z: float,
+        position: Vector3,
+        rotation: Vector3,
         field_of_view: float,
     ) -> None:
         """
         Place the camera with a specific position, rotation and field of view. This temporarily switches to the "God"
-        camera mode - Press ESC or click anywhere in the screen to restore the default camera mode. Useful for
+        camera mode - Press the camera icon to restore the default camera mode. Useful for
         programmatically moving the camera for cinematic purposes.
 
-        :param position_x: X position in meters
-        :param position_y: Y position in meters
-        :param position_z: Z position in meters
-        :param rotation_x: X rotation in degrees - euler angle between -360 and +360
-        :param rotation_y: Y rotation in degrees - euler angle between -360 and +360
-        :param rotation_z: Z rotation in degrees - euler angle between -360 and +360
+        :param position: Position XYZ in meters
+        :param rotation: Rotation XYZ in degrees - euler angle between -360 and +360
         :param field_of_view: Field of view in degrees - angle between 5 and 120
         """
         logger.debug(
-            f"Placing camera at \n\tposition: {position_x, position_y, position_z}\n\trotation: {rotation_x, rotation_y, rotation_z}\n\tfov: {field_of_view}"
+            f"Placing camera at \n\tposition: {position}\n\trotation: {rotation}\n\tfov: {field_of_view}"
         )
         await self.runtime.send_message(
             "camera-command",
             {
                 "command": "place-camera",
-                "position_x": position_x,
-                "position_y": position_y,
-                "position_z": position_z,
-                "rotation_x": rotation_x,
-                "rotation_y": rotation_y,
-                "rotation_z": rotation_z,
+                "position": position,
+                "rotation": rotation,
                 "field_of_view": field_of_view,
+            },
+        )
+
+    async def place_character(
+        self,
+        persona_id: str,
+        position: Vector3,
+        rotation: Vector3,
+    ) -> None:
+        """
+        Place a character with a specific position and rotation. TODO
+
+        :param persona_id: The id of the character to place
+        :param position: Position XYZ in meters
+        :param rotation: Rotation XYZ in degrees - euler angle between -360 and +360
+        """
+        logger.debug(
+            f"Placing character at \n\tposition: {position}\n\trotation: {rotation}"
+        )
+        await self.runtime.send_message(
+            "character-command",
+            {
+                "command": "place-character",
+                "persona_id": persona_id,
+                "position": position,
+                "rotation": rotation,
             },
         )
 
