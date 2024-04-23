@@ -635,7 +635,7 @@ class PlaceCharacter(Demo):
             # Allow player to choose new location in Runtime
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(
-                f"Choose a location",
+                f"Choose a Location",
                 f"Place {persona_id} at the following location:",
                 location_options,
                 True,
