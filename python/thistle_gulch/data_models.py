@@ -69,9 +69,15 @@ class SequenceStep:
 
 
 @define(slots=True)
+class ConversationTurn:
+    persona_guid: str
+    dialogue: str
+
+
+@define(slots=True)
 class Conversation:
-    time_ago: str
-    transcript: List[Dict[str, str]]
+    timestamp: str
+    transcript: List[ConversationTurn]
 
 
 @define(slots=True)
