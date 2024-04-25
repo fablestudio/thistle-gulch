@@ -2,7 +2,7 @@ from datetime import datetime
 from time import sleep
 
 from thistle_gulch.bridge import RuntimeBridge
-from . import Demo
+from . import Demo, disable_all_agents
 
 CATEGORY = "Simulation Commands"
 
@@ -35,6 +35,9 @@ class SetStartTimeDemo(Demo):
         date = datetime(1880, 1, 1, int(datestr))
 
         async def on_ready(_) -> bool:
+
+            await disable_all_agents(bridge)
+
             print(f"Current simulation start time is {bridge.runtime.start_date}")
             print(f"Setting simulation start time to {date}")
             await bridge.runtime.api.set_start_date(date)
@@ -67,6 +70,13 @@ class SimulationTickDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/simulation_commands.py
         """
+
+        async def on_ready(_) -> bool:
+            await disable_all_agents(bridge)
+            return True
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready
 
         seconds = int(input("Enter number of seconds to wait between ticks: "))
 

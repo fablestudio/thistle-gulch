@@ -15,7 +15,7 @@ from thistle_gulch.bridge import (
     IncomingRoutes,
     TGActionsRequest,
 )
-from . import Demo, formatted_input, yes_no_validator
+from . import Demo, formatted_input, yes_no_validator, disable_all_agents
 
 CATEGORY = "Custom Models"
 
@@ -138,6 +138,15 @@ class UseOllamaDemo(Demo):
         else:
             bridge.router.add_route(override_actions)
             bridge.router.add_route(override_conversations)
+
+        # Enable one agent and disable all others
+        async def on_ready(_) -> bool:
+            await disable_all_agents(bridge)
+            await bridge.runtime.api.enable_agent("jack_kane", True, True)
+
+            return True
+
+        bridge.on_ready = on_ready
 
 
 class UseAnthropic(Demo):
@@ -280,3 +289,12 @@ class UseAnthropic(Demo):
         bridge.router.add_route(
             Route(IncomingRoutes.generate_conversations.value, conversations_endpoint)
         )
+
+        # Enable one agent and disable all others
+        async def on_ready(_) -> bool:
+            await disable_all_agents(bridge)
+            await bridge.runtime.api.enable_agent("jack_kane", True, True)
+
+            return True
+
+        bridge.on_ready = on_ready

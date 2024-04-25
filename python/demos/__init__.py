@@ -97,6 +97,13 @@ def yes_no_validator(val: str) -> int:
     raise ValueError("Please enter 'y' or 'n'.")
 
 
+async def disable_all_agents(bridge: RuntimeBridge):
+    """Disable all agents' actions and conversations"""
+    world_context = await bridge.runtime.api.get_world_context()
+    for persona in world_context.personas:
+        await bridge.runtime.api.enable_agent(persona.persona_guid, False, False)
+
+
 class Demo:
     def __init__(
         self,
