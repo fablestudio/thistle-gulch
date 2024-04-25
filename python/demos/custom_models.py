@@ -258,9 +258,13 @@ class UseAnthropic(Demo):
                 model_name=model_name,
                 callbacks=[StreamingDebugCallback()],
                 streaming=True,
+                api_key=None,
+                timeout=None,
             )
         else:
-            llm = ChatAnthropic(model_name=model_name, streaming=True)
+            llm = ChatAnthropic(
+                model_name=model_name, streaming=True, api_key=None, timeout=None
+            )
 
         # Create the override actions and conversation endpoints.
         actions_agent = fable_saga.actions.ActionsAgent(llm)
