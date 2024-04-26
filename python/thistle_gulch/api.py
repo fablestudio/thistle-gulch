@@ -101,7 +101,7 @@ class API:
         self.runtime.start_date = date
 
     async def enable_agent(
-        self, persona_id: str, actions: bool, conversations: bool
+        self, persona_guid: str, actions: bool, conversations: bool
     ) -> None:
         """
         Enable or disable the Bridge agent for a specific character. Enabled agents generate their actions using the
@@ -109,21 +109,21 @@ class API:
         simulation Runtime using a simple scoring system similar to the one used by The Sims. The agent state does not
         affect conversation generation - all characters use the Bridge for this purpose.
 
-        :param persona_id: persona to modify
+        :param persona_guid: persona to modify
         :param actions: Enable or disable the agent's action generation
         :param conversations: Enable or disable the agent's conversation generation
         """
         logger.debug(
-            f"{('Enabling' if actions else 'Disabling')} actions: {persona_id}"
+            f"{('Enabling' if actions else 'Disabling')} actions: {persona_guid}"
         )
         logger.debug(
-            f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_id}"
+            f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_guid}"
         )
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "enable-agent",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "actions": actions,
                 "conversations": conversations,
             },
@@ -131,7 +131,7 @@ class API:
 
     async def character_memory_add(
         self,
-        persona_id: str,
+        persona_guid: str,
         timestamp: str,
         summary: str,
         entity_ids: Optional[List[str]] = None,
@@ -143,7 +143,7 @@ class API:
         action generation prompts based on their importance_weight. Memories can be accessed from the WorldContextObject
         via api.get_world_context().
 
-        :param persona_id: Persona to add the memory to.
+        :param persona_guid: Persona to add the memory to.
         :param timestamp: A datetime string representation of when the memory occurred.
         :param summary: A text description of the memory.
         :param entity_ids: The ids of the personas or objects involved in the memory
@@ -153,7 +153,7 @@ class API:
         """
 
         if entity_ids is None:
-            entity_ids = [persona_id]
+            entity_ids = [persona_guid]
         if position is None:
             position = Vector3(0, 0, 0)
         if importance_weight is None:
@@ -163,57 +163,57 @@ class API:
             guid=str(uuid.uuid4()),
             timestamp=timestamp,
             summary=summary,
-            context_id=persona_id,
+            context_id=persona_guid,
             entity_ids=entity_ids,
             position=position,
             importance_weight=importance_weight,  # Any weight greater than 1 has priority inclusion in the conversation and action generation prompts
         )
 
-        logger.debug(f"Adding memory to {persona_id}: {memory}")
+        logger.debug(f"Adding memory to {persona_guid}: {memory}")
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "character-memory-add",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "memory": memory,
             },
         )
 
         return memory
 
-    async def character_memory_remove(self, persona_id: str, memory_id: str) -> None:
+    async def character_memory_remove(self, persona_guid: str, memory_id: str) -> None:
         """
         Remove a specific memory from a character by id. Memories can be accessed from the WorldContextObject
         via api.get_world_context().
 
-        :param persona_id: Persona to modify
+        :param persona_guid: Persona to modify
         :param memory_id: The guid of the memory to remove
         """
-        logger.debug(f"Removing memory from {persona_id}: {memory_id}")
+        logger.debug(f"Removing memory from {persona_guid}: {memory_id}")
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "character-memory-remove",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "memory_id": memory_id,
             },
         )
 
-    async def character_memory_clear(self, persona_id: str) -> None:
+    async def character_memory_clear(self, persona_guid: str) -> None:
         """
         Clear all memories for a specific character. Useful for clearing pre-defined character memories in preparation
         for replacing them with new ones.
 
-        :param persona_id: Persona to modify
+        :param persona_guid: Persona to modify
         """
-        logger.debug(f"Clearing all memories for {persona_id}")
+        logger.debug(f"Clearing all memories for {persona_guid}")
         await self.runtime.send_message(
             "character-command",
-            {"command": "character-memory-clear", "persona_id": persona_id},
+            {"command": "character-memory-clear", "persona_guid": persona_guid},
         )
 
     async def update_character_property(
-        self, persona_id: str, property_name: str, value: str
+        self, persona_guid: str, property_name: str, value: str
     ) -> None:
         """
         Set a character property to a new value. Characters in Thistle Gulch come with a set of pre-defined properties
@@ -221,16 +221,16 @@ class API:
         simulation via the generation of actions and conversations. For instance, changing a character's backstory
         alters their motivations and can lead them to make very different decisions when interacting with other characters.
 
-        :param persona_id: Persona to modify
+        :param persona_guid: Persona to modify
         :param property_name: Name of the property to modify
         :param value: Value to assign to the property
         """
-        logger.debug(f"Updating {persona_id} {property_name} to '{value}'")
+        logger.debug(f"Updating {persona_guid} {property_name} to '{value}'")
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "update-character-property",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "property": property_name,
                 "value": value,
             },
@@ -253,18 +253,18 @@ class API:
         )
         return context
 
-    async def get_character_context(self, persona_id: str) -> PersonaContextObject:
+    async def get_character_context(self, persona_guid: str) -> PersonaContextObject:
         """
         Request contextual information about a specific character. This is useful for understanding the current state of
         a character when generating actions or conversations for instance. The character context also contains the world
         context for convenience.
 
-        :param persona_id: Persona to query
+        :param persona_guid: Persona to query
         """
-        logger.debug(f"Requesting context for {persona_id}")
+        logger.debug(f"Requesting context for {persona_guid}")
         response = await self.runtime.send_message(
             "character-command",
-            {"command": "request-character-context", "persona_id": persona_id},
+            {"command": "request-character-context", "persona_guid": persona_guid},
         )
         context = converter.structure(
             response.data.get("context_obj"), PersonaContextObject
@@ -272,7 +272,7 @@ class API:
         return context
 
     async def override_character_action(
-        self, persona_id: str, action: Action, future: Optional[Future] = None
+        self, persona_guid: str, action: Optional[Action], future: Optional[Future] = None
     ) -> None:
         """
         Interrupt the character's current action with the one provided. An action is constructed using one of the
@@ -282,18 +282,20 @@ class API:
         executing, other events in the simulation may still interrupt it for various reasons (e.g. energy goes to zero,
         character is arrested, etc.)
 
-        :param persona_id: Persona to modify
-        :param action: The new action to execute
+        :param persona_guid: Persona to modify
+        :param action: [Optional] The new action to execute. If None, interrupt the current action instead.
         :param future: [Optional] A future that can be awaited until the response is received. If not provided,
             the on_action_completed callback will be called when the action is completed instead.
         """
-        logger.debug(f"Overriding action for {persona_id} with {action}")
+        action_data = cattrs.unstructure(action) if action is not None else None
+
+        logger.debug(f"Overriding action for {persona_guid} with {action}")
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "override-character-action",
-                "persona_id": persona_id,
-                "action": cattrs.unstructure(action),
+                "persona_guid": persona_guid,
+                "action": action_data,
             },
             future,
         )
@@ -305,7 +307,7 @@ class API:
         HISTORY = "History"
 
     async def focus_character(
-        self, persona_id: str, open_tab: FocusPanelTab = FocusPanelTab.NONE
+        self, persona_guid: str, open_tab: FocusPanelTab = FocusPanelTab.NONE
     ) -> None:
         """
         Focusing a character shows the character UI and navigation path, and allows the player to take actions on their
@@ -314,35 +316,35 @@ class API:
         focus state. Focusing does not cause the camera to follow the character - use the follow_character command if
         this is desired.
 
-        :param persona_id: Persona to focus. If none provided, the currently focused character will be removed from focus.
+        :param persona_guid: Persona to focus. If none provided, the currently focused character will be removed from focus.
         :param open_tab: Optional focus panel tab to open. Simulates clicking one of the tab icons in the focus panel.
         """
-        logger.debug(f"Focusing {persona_id}")
+        logger.debug(f"Focusing {persona_guid}")
         await self.runtime.send_message(
             "character-command",
             {
                 "command": "focus-character",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "open_tab": open_tab,
             },
         )
 
-    async def follow_character(self, persona_id: str, zoom: float) -> None:
+    async def follow_character(self, persona_guid: str, zoom: float) -> None:
         """
         Follow a specific character with the camera. When triggered, the camera pivot instantly moves to the given
         character and follows them as they navigate around the world. Calling follow_character with a null character id
         will cause the camera to stop following. A followed character's name label and chat bubble (and those of any
         conversation partners) will render on top of everything else.
 
-        :param persona_id: Persona to follow. If none provided, stop following the current character if any.
+        :param persona_guid: Persona to follow. If none provided, stop following the current character if any.
         :param zoom: The camera zoom amount between 0.0 (furthest) and 1.0 (closest)
         """
-        logger.debug(f"Following {persona_id} with the camera")
+        logger.debug(f"Following {persona_guid} with the camera")
         await self.runtime.send_message(
             "camera-command",
             {
                 "command": "follow-character",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "zoom": zoom,
             },
         )
@@ -377,14 +379,14 @@ class API:
 
     async def place_character(
         self,
-        persona_id: str,
+        persona_guid: str,
         position: Vector3,
         rotation: Vector3,
     ) -> None:
         """
         Place a character with a specific position and rotation. TODO
 
-        :param persona_id: The id of the character to place
+        :param persona_guid: The id of the character to place
         :param position: Position XYZ in meters
         :param rotation: Rotation XYZ in degrees - euler angle between -360 and +360
         """
@@ -395,7 +397,7 @@ class API:
             "character-command",
             {
                 "command": "place-character",
-                "persona_id": persona_id,
+                "persona_guid": persona_guid,
                 "position": position,
                 "rotation": rotation,
             },
