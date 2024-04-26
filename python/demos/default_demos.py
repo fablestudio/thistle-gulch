@@ -165,16 +165,16 @@ class DefaultTutorial(Demo):
                 # Activate the SAGA agent for Blackjack Kane so when the wait action is done, it will generate a list of actions.
                 await bridge.runtime.api.enable_agent("jack_kane", True, True)
 
-                # TODO: Basically this is a hack to Cancel the current action which will trigger generating the list.
+                # An empty action override cancels the current action which will trigger generating the list.
                 future = asyncio.get_event_loop().create_future()
                 await bridge.runtime.api.override_character_action(
                     "jack_kane",
-                    WaitSkill(
-                        duration=1, goal="Trigger the next action generation"
-                    ).to_action(),
+                    None,  # Cancel the current action
                     future=future,
                 )
                 await future
+
+
                 # We have to increment so that the on_action_complete step is triggered while we pause the tick handling.
                 intro_step += 1
                 return  # Keep pause_tick_handling until the wait action is done.
