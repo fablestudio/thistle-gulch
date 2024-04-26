@@ -309,19 +309,51 @@ class FocusCharacter(Demo):
             print(f"Following {persona_guid} with the camera")
             await bridge.runtime.api.follow_character(persona_guid, 0.8)
 
+            # Show the user a description of the focus command
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                f"Focused on {persona_guid}",
+                f"When a character is focused:\n"
+                f"\t* The character details UI appears in the top-left corner.\n"
+                f"\t* Their current navigation path is highlighted.\n"
+                f"\t* The player can take actions on behalf of the character by selecting other objects in the Runtime and choosing an option from their context menu.\n"
+                f"\t* Their name tag and chat bubble is always visible along with any other conversation partners.\n\n"
+                f"After 10 seconds, the character will automatically be un-focused.\n"
+                f"To un-focus a character manually, press the Escape key or right-click the mouse.\n",
+                ["OK"],
+                True,
+                future=future,
+            )
+            # Wait for the user to press OK
+            await future
+
             return True
+
+        print("Registering custom on_ready callback.")
+        bridge.on_ready = on_ready
 
         # Stop focusing the character after 10 simulation ticks
         async def on_tick(_, now: datetime):
             nonlocal tick_count, persona_guid
             tick_count += 1
             if tick_count == 10:
-                print(f"Remove focus from {persona_guid}")
+                print(f"Removing focus from {persona_guid}")
                 await bridge.runtime.api.focus_character("")
 
-        print("Registering custom on_ready callback.")
-        bridge.on_ready = on_ready
+        print("Registering custom on_tick callback.")
         bridge.on_tick = on_tick
+
+        async def on_character_focused(_: RuntimeBridge, persona_guid_: str):
+            print(f"{persona_guid_} was focused")
+
+        print("Registering custom on_character_focused callback.")
+        bridge.on_character_focused = on_character_focused
+
+        async def on_character_unfocused(_: RuntimeBridge, persona_guid_: str):
+            print(f"{persona_guid_} was unfocused")
+
+        print("Registering custom on_character_unfocused callback.")
+        bridge.on_character_unfocused = on_character_unfocused
 
 
 class OverrideCharacterAction(Demo):

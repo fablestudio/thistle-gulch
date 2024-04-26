@@ -174,7 +174,6 @@ class DefaultTutorial(Demo):
                 )
                 await future
 
-
                 # We have to increment so that the on_action_complete step is triggered while we pause the tick handling.
                 intro_step += 1
                 return  # Keep pause_tick_handling until the wait action is done.

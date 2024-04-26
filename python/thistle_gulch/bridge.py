@@ -213,10 +213,10 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
         ):
             persona_guid = event_data.get("persona_guid", "")
             # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
-            logger.debug(f"[On Action Complete] Calling on_character_focused callback..")
-            await self.bridge.on_character_focused(
-                self.bridge, persona_guid
+            logger.debug(
+                f"[On Character Focused] Calling on_character_focused callback.."
             )
+            await self.bridge.on_character_focused(self.bridge, persona_guid)
 
         # on_character_unfocused callback
         elif (
@@ -226,10 +226,23 @@ class OnSimulationEventEndpoint(BaseEndpoint[GenericMessage, GenericMessage]):
         ):
             persona_guid = event_data.get("persona_guid", "")
             # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
-            logger.debug(f"[On Action Complete] Calling on_character_focused callback..")
-            await self.bridge.on_character_unfocused(
-                self.bridge, persona_guid
+            logger.debug(
+                f"[On Character Unfocused] Calling on_character_unfocused callback.."
             )
+            await self.bridge.on_character_unfocused(self.bridge, persona_guid)
+
+        # on_sim_object_selected callback
+        elif (
+            self.bridge.on_sim_object_selected is not None
+            and event_name == "on-sim-object-selected"
+            and event_data
+        ):
+            guid = event_data.get("guid", "")
+            # pass the bridge instance to the on_tick callback so that it can send messages to the runtime.
+            logger.debug(
+                f"[On Sim Object Selected] Calling on_sim_object_selected callback.."
+            )
+            await self.bridge.on_sim_object_selected(self.bridge, guid)
 
         # Call the on_event callback if it exists.
         if self.bridge.on_event is not None:
@@ -292,6 +305,9 @@ class RuntimeBridge:
             Callable[[RuntimeBridge, str], Awaitable[None]]
         ] = None
         self.on_character_unfocused: Optional[
+            Callable[[RuntimeBridge, str], Awaitable[None]]
+        ] = None
+        self.on_sim_object_selected: Optional[
             Callable[[RuntimeBridge, str], Awaitable[None]]
         ] = None
 

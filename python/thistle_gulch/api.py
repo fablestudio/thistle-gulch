@@ -272,7 +272,10 @@ class API:
         return context
 
     async def override_character_action(
-        self, persona_guid: str, action: Optional[Action], future: Optional[Future] = None
+        self,
+        persona_guid: str,
+        action: Optional[Action],
+        future: Optional[Future] = None,
     ) -> None:
         """
         Interrupt the character's current action with the one provided. An action is constructed using one of the

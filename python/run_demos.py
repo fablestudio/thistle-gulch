@@ -33,6 +33,7 @@ def main():
         custom_models.UseAnthropic(),
         simulation_commands.SetStartTimeDemo(),
         simulation_commands.SimulationTickDemo(),
+        simulation_commands.SelectSimObject(),
         character_commands.EnableAgentDemo(),
         character_commands.UpdateCharacterPropertyDemo(),
         character_commands.ChangeCharacterMemoriesDemo(),
