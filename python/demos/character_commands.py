@@ -61,15 +61,15 @@ class EnableAgentDemo(Demo):
                     for persona in world_context.personas
                 ]
             )
-            persona_id = await choose_from_list(
+            persona_guid = await choose_from_list(
                 "Enter persona id to enable their agent", personas
             )
 
-            print(f"Enabling agent: {persona_id}")
-            await bridge.runtime.api.enable_agent(persona_id, True, True)
+            print(f"Enabling agent: {persona_guid}")
+            await bridge.runtime.api.enable_agent(persona_guid, True, True)
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, 0.8)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, 0.8)
 
             return True
 
@@ -104,7 +104,7 @@ class UpdateCharacterPropertyDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        persona_id = "jack_kane"
+        persona_guid = "jack_kane"
 
         def validate_property_name(name: str) -> str:
             if name not in [
@@ -127,25 +127,25 @@ class UpdateCharacterPropertyDemo(Demo):
 
             await disable_all_agents(bridge)
 
-            print(f"Updating {persona_id} {property_name} to '{property_value}'")
+            print(f"Updating {persona_guid} {property_name} to '{property_value}'")
             await bridge.runtime.api.update_character_property(
-                persona_id, property_name, property_value
+                persona_guid, property_name, property_value
             )
 
-            print(f"Focusing {persona_id}")
+            print(f"Focusing {persona_guid}")
             await bridge.runtime.api.focus_character(
-                persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+                persona_guid, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
             )
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, 0.8)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, 0.8)
 
             # Ask player to enable the agent
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(
                 "Character Property Updated",
                 f"The '{property_name}' property has been updated. The new value can be found in the character details UI to the left.\n\n"
-                f"Do you want to enable {persona_id}'s SAGA agent to test the results of your change?",
+                f"Do you want to enable {persona_guid}'s SAGA agent to test the results of your change?",
                 ["Yes", "No"],
                 True,
                 future=future,
@@ -153,8 +153,8 @@ class UpdateCharacterPropertyDemo(Demo):
             modal_response = await future
             choice_idx = modal_response["choice"]
             if choice_idx == 0:
-                print(f"Enabling {persona_id}'s agent")
-                await bridge.runtime.api.enable_agent(persona_id, True, True)
+                print(f"Enabling {persona_guid}'s agent")
+                await bridge.runtime.api.enable_agent(persona_guid, True, True)
 
             return True
 
@@ -188,7 +188,7 @@ class ChangeCharacterMemoriesDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        persona_id = "wyatt_cooper"
+        persona_guid = "wyatt_cooper"
 
         async def on_ready(_) -> bool:
 
@@ -198,7 +198,7 @@ class ChangeCharacterMemoriesDemo(Demo):
             # This is only for demostration purposes, see below where we use api.character_memory_clear to remove all memories
             world_context = await bridge.runtime.api.get_world_context()
             old_memories = next(
-                m for m in world_context.memories if m.persona_guid == persona_id
+                m for m in world_context.memories if m.persona_guid == persona_guid
             )
             first_memory = (
                 old_memories.memories[0]
@@ -206,52 +206,52 @@ class ChangeCharacterMemoriesDemo(Demo):
                 else None
             )
             if first_memory is not None:
-                print(f"Removing memory from {persona_id}: {first_memory.guid}")
+                print(f"Removing memory from {persona_guid}: {first_memory.guid}")
                 await bridge.runtime.api.character_memory_remove(
-                    persona_id, first_memory.guid
+                    persona_guid, first_memory.guid
                 )
 
             # Clear all memories - if there aren't any, an exception will be thrown
             if len(old_memories.memories) > 1:
-                print(f"Clearing all memories for {persona_id}")
-                await bridge.runtime.api.character_memory_clear(persona_id)
+                print(f"Clearing all memories for {persona_guid}")
+                await bridge.runtime.api.character_memory_clear(persona_guid)
 
             # Add new memories to the character, effectively replacing their old memories with new ones
-            print(f"Adding memory to {persona_id}")
+            print(f"Adding memory to {persona_guid}")
             memory_0 = await bridge.runtime.api.character_memory_add(
-                persona_id=persona_id,
+                persona_guid=persona_guid,
                 timestamp=str(bridge.runtime.start_date - timedelta(days=260)),
                 summary="Sheriff Morgan, Rose's father was murdered. I'm the new sheriff now. I secretly love her, but"
                 " I'm not sure she feels the same way, especially since she's been grieving and I haven't"
                 " found the killer yet. The case has gone cold and we'll probably never know who did it.",
-                entity_ids=[persona_id, "rose_morgan"],
+                entity_ids=[persona_guid, "rose_morgan"],
                 importance_weight=10,
             )
             print(f"Memory added: {memory_0}")
 
-            print(f"Adding memory to {persona_id}")
+            print(f"Adding memory to {persona_guid}")
             memory_1 = await bridge.runtime.api.character_memory_add(
-                persona_id=persona_id,
+                persona_guid=persona_guid,
                 timestamp=str(bridge.runtime.start_date - timedelta(hours=1)),
                 summary="The Body was found just outside of town. Someone left a note on my desk, but I don't know "
                 "who it was from.",
-                entity_ids=[persona_id, "dead_native"],
+                entity_ids=[persona_guid, "dead_native"],
                 importance_weight=10,
             )
             print(f"Memory added: {memory_1}")
 
-            print(f"Focusing {persona_id}")
+            print(f"Focusing {persona_guid}")
             await bridge.runtime.api.focus_character(
-                persona_id, bridge.runtime.api.FocusPanelTab.HISTORY
+                persona_guid, bridge.runtime.api.FocusPanelTab.HISTORY
             )
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, 0.8)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, 0.8)
 
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(
                 f"Memories Updated",
-                f"{persona_id}'s memories were replaced with new ones. See the History panel to the left to inspect them.",
+                f"{persona_guid}'s memories were replaced with new ones. See the History panel to the left to inspect them.",
                 ["Ok"],
                 True,
                 future=future,
@@ -293,7 +293,7 @@ class FocusCharacter(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        persona_id = "jack_kane"
+        persona_guid = "jack_kane"
         tick_count = 0
 
         # Focus on and follow the character at simulation start
@@ -301,27 +301,59 @@ class FocusCharacter(Demo):
 
             await disable_all_agents(bridge)
 
-            print(f"Focusing {persona_id} and opening the character details panel")
+            print(f"Focusing {persona_guid} and opening the character details panel")
             await bridge.runtime.api.focus_character(
-                persona_id, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+                persona_guid, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
             )
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, 0.8)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, 0.8)
+
+            # Show the user a description of the focus command
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                f"Focused on {persona_guid}",
+                f"When a character is focused:\n"
+                f"\t* The character details UI appears in the top-left corner.\n"
+                f"\t* Their current navigation path is highlighted.\n"
+                f"\t* The player can take actions on behalf of the character by selecting other objects in the Runtime and choosing an option from their context menu.\n"
+                f"\t* Their name tag and chat bubble is always visible along with any other conversation partners.\n\n"
+                f"After 10 seconds, the character will automatically be un-focused.\n"
+                f"To un-focus a character manually, press the Escape key or right-click the mouse.\n",
+                ["OK"],
+                True,
+                future=future,
+            )
+            # Wait for the user to press OK
+            await future
 
             return True
 
-        # Stop focusing the character after 10 simulation ticks
-        async def on_tick(_, now: datetime):
-            nonlocal tick_count, persona_id
-            tick_count += 1
-            if tick_count == 10:
-                print(f"Remove focus from {persona_id}")
-                await bridge.runtime.api.focus_character("")
-
         print("Registering custom on_ready callback.")
         bridge.on_ready = on_ready
+
+        # Stop focusing the character after 10 simulation ticks
+        async def on_tick(_, now: datetime):
+            nonlocal tick_count, persona_guid
+            tick_count += 1
+            if tick_count == 10:
+                print(f"Removing focus from {persona_guid}")
+                await bridge.runtime.api.focus_character("")
+
+        print("Registering custom on_tick callback.")
         bridge.on_tick = on_tick
+
+        async def on_character_focused(_: RuntimeBridge, persona_guid_: str):
+            print(f"{persona_guid_} was focused")
+
+        print("Registering custom on_character_focused callback.")
+        bridge.on_character_focused = on_character_focused
+
+        async def on_character_unfocused(_: RuntimeBridge, persona_guid_: str):
+            print(f"{persona_guid_} was unfocused")
+
+        print("Registering custom on_character_unfocused callback.")
+        bridge.on_character_unfocused = on_character_unfocused
 
 
 class OverrideCharacterAction(Demo):
@@ -348,7 +380,7 @@ class OverrideCharacterAction(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        persona_id = "jack_kane"
+        persona_guid = "jack_kane"
 
         async def on_ready(_) -> bool:
 
@@ -360,13 +392,13 @@ class OverrideCharacterAction(Demo):
                 goal="Dispose of the evidence",
             ).to_action()
 
-            print(f"Overriding action for {persona_id} with {take_to_action}")
+            print(f"Overriding action for {persona_guid} with {take_to_action}")
             await bridge.runtime.api.override_character_action(
-                persona_id, take_to_action
+                persona_guid, take_to_action
             )
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, 0.8)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, 0.8)
 
             return True
 
@@ -512,23 +544,23 @@ class CustomConversation(Demo):
 
             conversation = [
                 {
-                    "persona_id": speaker_1_id,
+                    "persona_guid": speaker_1_id,
                     "dialogue": "Did you hear about the murder last night?",
                 },
-                {"persona_id": speaker_2_id, "dialogue": "What?! Who was killed?"},
+                {"persona_guid": speaker_2_id, "dialogue": "What?! Who was killed?"},
                 {
-                    "persona_id": speaker_1_id,
+                    "persona_guid": speaker_1_id,
                     "dialogue": "I don't know, but this isn't a good look for the town. We're developing a reputation.",
                 },
                 {
-                    "persona_id": speaker_2_id,
+                    "persona_guid": speaker_2_id,
                     "dialogue": "I'm gonna stock up on ammunition. This place is getting dangerous.'",
                 },
             ]
 
             print(f"Starting conversation between {speaker_1_id} and {speaker_2_id}:")
             for turn in conversation:
-                speaker = turn.get("persona_id")
+                speaker = turn.get("persona_guid")
                 dialogue = turn.get("dialogue")
                 print(f"\t{speaker}: {dialogue}")
 
@@ -579,7 +611,7 @@ class PlaceCharacter(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        persona_id = "jack_kane"
+        persona_guid = "jack_kane"
         world_context: WorldContextObject
         location_options = []
         tick_count = -1
@@ -592,10 +624,10 @@ class PlaceCharacter(Demo):
 
             # Force the placed character to stop navigating and idle forever
             await bridge.runtime.api.override_character_action(
-                persona_id,
+                persona_guid,
                 WaitSkill(
                     duration=0,
-                    goal=f"Force {persona_id} to idle forever",
+                    goal=f"Force {persona_guid} to idle forever",
                 ).to_action(),
             )
 
@@ -619,7 +651,7 @@ class PlaceCharacter(Demo):
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(
                 f"Choose a Location",
-                f"Place {persona_id} at the following location:",
+                f"Place {persona_guid} at the following location:",
                 location_options,
                 True,
                 future=future,
@@ -634,14 +666,14 @@ class PlaceCharacter(Demo):
             )
 
             print(
-                f"Placing {persona_id} at '{location_name}' with position {location.center_floor_position}"
+                f"Placing {persona_guid} at '{location_name}' with position {location.center_floor_position}"
             )
             await bridge.runtime.api.place_character(
-                persona_id, location.center_floor_position, Vector3(0, 90, 0)
+                persona_guid, location.center_floor_position, Vector3(0, 90, 0)
             )
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, 0.8)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, 0.8)
 
             return True
 

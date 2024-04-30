@@ -55,12 +55,12 @@ class PrintActionsAndPickFirstDemo(Demo):
             )
         )
 
-        persona_id = "jack_kane"
+        persona_guid = "jack_kane"
 
         # Enable one agent and disable all others
         async def on_ready(_) -> bool:
             await disable_all_agents(bridge)
-            await bridge.runtime.api.enable_agent(persona_id, True, True)
+            await bridge.runtime.api.enable_agent(persona_guid, True, True)
 
             return True
 
@@ -273,14 +273,14 @@ class OnActionComplete(Demo):
         bridge.on_ready = on_ready
 
         async def on_action_complete(
-            _, persona_id: str, completed_action: str
+            _, persona_guid: str, completed_action: str
         ) -> Optional[Action]:
 
             # Return None so all characters other than the sheriff use the generate-actions endpoint instead
-            if persona_id != sheriff_id:
+            if persona_guid != sheriff_id:
                 return None
 
-            print(f"\n{persona_id}'s last action was: '{completed_action}'")
+            print(f"\n{persona_guid}'s last action was: '{completed_action}'")
 
             # Create a future that can be awaited until the response is received.
             future = asyncio.get_event_loop().create_future()

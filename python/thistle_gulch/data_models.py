@@ -5,34 +5,38 @@ from fable_saga.actions import Skill
 
 
 @define(slots=True)
+class Vector3:
+    x: float
+    y: float
+    z: float
+
+    @staticmethod
+    def distance(v1, v2):
+        return ((v1.x - v2.x) ** 2 + (v1.y - v2.y) ** 2 + (v1.z - v2.z) ** 2) ** 0.5
+
+
+@define(slots=True)
 class Persona:
     persona_guid: str
     name: str
     summary: str
-    description: str = ""
-    backstory: str = ""
-    energy_level: str = ""
-    position: List[float] = [0] * 3
-    location_id: str = ""
-    destination_id: str = ""
-    actions_enabled: bool = False
-    conversations_enabled: bool = False
+    description: str
+    backstory: str
+    energy_level: str
+    position: Vector3
+    location_id: str
+    destination_id: str
+    actions_enabled: bool
+    conversations_enabled: bool
 
 
 @define(slots=True)
 class SimObject:
     guid: str
-    display_name: str
+    name: str
     description: str
-
-    @staticmethod
-    def from_dict(obj):
-        params = {
-            "guid": obj["id"],
-            "display_name": obj["displayName"],
-            "description": obj["description"],
-        }
-        return SimObject(**params)
+    position: Vector3
+    location_id: str
 
 
 @define(slots=True)
@@ -41,31 +45,9 @@ class Location:
     name: str
     description: str
     parent_guid: str
-    center: "Vector3"
-    extents: "Vector3"
-    center_floor_position: "Vector3"
-
-
-@define(slots=True)
-class StatusUpdate:
-    timestamp: datetime.datetime
-    guid: str
-    sequence: str
-    sequence_step: str
-    position: "Vector3"
-    location_id: str
-    destination_id: str
-
-
-@define(slots=True)
-class SequenceStep:
-    timestamp: datetime.datetime
-    guid: str
-    sequence: str
-    starting_step: str
-    completed_step: str
-    completed_step_duration: float
-    interrupted: bool
+    center: Vector3
+    extents: Vector3
+    center_floor_position: Vector3
 
 
 @define(slots=True)
@@ -78,17 +60,6 @@ class ConversationTurn:
 class Conversation:
     timestamp: str
     transcript: List[ConversationTurn]
-
-
-@define(slots=True)
-class Vector3:
-    x: float
-    y: float
-    z: float
-
-    @staticmethod
-    def distance(v1, v2):
-        return ((v1.x - v2.x) ** 2 + (v1.y - v2.y) ** 2 + (v1.z - v2.z) ** 2) ** 0.5
 
 
 @define(slots=True)
@@ -150,6 +121,7 @@ class WorldContextObject:
     conversations: List[Conversation]
     locations: List[Location]
     memories: List[PersonaMemories]
+    sim_objects: List[SimObject]
 
 
 @define(slots=True)

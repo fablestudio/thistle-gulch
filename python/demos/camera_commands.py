@@ -39,7 +39,7 @@ class FollowCharacter(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/camera_commands.py
         """
 
-        persona_id = "jack_kane"
+        persona_guid = "jack_kane"
 
         def validate_zoom(zoom_str: str) -> float:
             zoom_val = float(zoom_str)
@@ -57,8 +57,8 @@ class FollowCharacter(Demo):
 
             await disable_all_agents(bridge)
 
-            print(f"Following {persona_id} with the camera")
-            await bridge.runtime.api.follow_character(persona_id, zoom)
+            print(f"Following {persona_guid} with the camera")
+            await bridge.runtime.api.follow_character(persona_guid, zoom)
 
             return True
 
@@ -66,10 +66,10 @@ class FollowCharacter(Demo):
 
         # Stop following the character after 10 simulation ticks
         async def on_tick(_, now: datetime):
-            nonlocal tick_count, persona_id
+            nonlocal tick_count, persona_guid
             tick_count += 1
             if tick_count == 10:
-                print(f"Stop following {persona_id}")
+                print(f"Stop following {persona_guid}")
                 await bridge.runtime.api.follow_character("", 0)
 
         print("Registering custom on_ready callback.")

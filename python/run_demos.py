@@ -24,6 +24,7 @@ def main():
     # A list of available demos and the corresponding endpoint they override.
     options: List[Demo] = [
         default_demos.DefaultTutorial(),
+        default_demos.MeetTheCharactersDemo(),
         override_actions.PrintActionsAndPickFirstDemo(),
         override_actions.SkipSagaAlwaysDoTheDefaultActionDemo(),
         override_actions.ReplaceContextWithYamlDumpDemo(),
@@ -32,6 +33,7 @@ def main():
         custom_models.UseAnthropic(),
         simulation_commands.SetStartTimeDemo(),
         simulation_commands.SimulationTickDemo(),
+        simulation_commands.SelectSimObject(),
         character_commands.EnableAgentDemo(),
         character_commands.UpdateCharacterPropertyDemo(),
         character_commands.ChangeCharacterMemoriesDemo(),

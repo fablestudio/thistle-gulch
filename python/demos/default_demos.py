@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 
+from thistle_gulch.data_models import WorldContextObject
 from thistle_gulch.skills import ReflectSkill, WaitSkill
 from . import Demo, RuntimeBridge, formatted_input, disable_all_agents
 
@@ -164,16 +165,15 @@ class DefaultTutorial(Demo):
                 # Activate the SAGA agent for Blackjack Kane so when the wait action is done, it will generate a list of actions.
                 await bridge.runtime.api.enable_agent("jack_kane", True, True)
 
-                # TODO: Basically this is a hack to Cancel the current action which will trigger generating the list.
+                # An empty action override cancels the current action which will trigger generating the list.
                 future = asyncio.get_event_loop().create_future()
                 await bridge.runtime.api.override_character_action(
                     "jack_kane",
-                    WaitSkill(
-                        duration=1, goal="Trigger the next action generation"
-                    ).to_action(),
+                    None,  # Cancel the current action
                     future=future,
                 )
                 await future
+
                 # We have to increment so that the on_action_complete step is triggered while we pause the tick handling.
                 intro_step += 1
                 return  # Keep pause_tick_handling until the wait action is done.
@@ -207,11 +207,11 @@ class DefaultTutorial(Demo):
         bridge.on_tick = on_tick
 
         async def on_action_complete(
-            bridge: RuntimeBridge, persona_id: str, completed_action: str
+            bridge: RuntimeBridge, persona_guid: str, completed_action: str
         ):
             nonlocal intro_step
             nonlocal pause_tick_handling
-            if persona_id == "jack_kane" and intro_step == 6:
+            if persona_guid == "jack_kane" and intro_step == 6:
                 # The option the user selected should now be completed.
 
                 # Create a future that can be awaited until the response is received.
@@ -229,3 +229,127 @@ class DefaultTutorial(Demo):
                 pause_tick_handling = False
 
         bridge.on_action_complete = on_action_complete
+
+
+class MeetTheCharactersDemo(Demo):
+    def __init__(self):
+        super().__init__(
+            name="Meet the Characters",
+            summary="Visit each character and learn about them",
+            function=self.meet_the_characters,
+            category="Default",
+        )
+
+    def meet_the_characters(self, bridge: RuntimeBridge):
+        """
+        A modal dialog is presented to the player allowing them to choose a character to meet. When selected, the chosen
+        character is focused/followed so their backstory and description can be inspected. This process is repeated
+        until all characters have been visited.
+
+        API calls:
+            modal()
+            get_world_context()
+            focus_character()
+            follow_character()
+            resume()
+
+        See the API and Demo source code on Github for more information:
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/thistle_gulch/api.py
+            https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/default_demos.py
+        """
+
+        world_context: WorldContextObject
+        character_names: list
+
+        async def choose_character():
+            nonlocal world_context, character_names
+
+            # Show the user a list of character names
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                "Choose a Character to Meet",
+                "",
+                character_names,
+                False,
+                future=future,
+            )
+            # Wait for the user to choose a character
+            modal_response = await future
+
+            # Retrieve the chosen character persona
+            choice_idx = modal_response["choice"]
+            choice_name = character_names[choice_idx]
+            persona = next(p for p in world_context.personas if p.name == choice_name)
+
+            print(f"Showing character details for {persona.persona_guid}")
+
+            # First, we focus on a character to see their details.
+            await bridge.runtime.api.focus_character(
+                persona.persona_guid, bridge.runtime.api.FocusPanelTab.CHARACTER_DETAILS
+            )
+
+            # Then we move the camera to follow them.
+            await bridge.runtime.api.follow_character(persona.persona_guid, 0.8)
+
+            # Show the user a quick summary of the character
+            future = asyncio.get_event_loop().create_future()
+            await bridge.runtime.api.modal(
+                persona.name,
+                f"SUMMARY:\n{persona.summary}\n\n"
+                f"See the Character Details panel to the left to explore the character's description and backstory.\n\n"
+                f"When you're ready to move on to the next character, press the Escape key or right-click the mouse.",
+                ["OK"],
+                True,
+                future=future,
+            )
+            # Wait for the user to press OK
+            await future
+
+            # Remove this character from the list of remaining characters
+            if persona.name in character_names:
+                character_names.remove(persona.name)
+
+        async def on_ready(_: RuntimeBridge) -> bool:
+            nonlocal world_context, character_names
+
+            # Don't generate any actions or conversations yet
+            await disable_all_agents(bridge)
+
+            # Get all character names from the world context
+            world_context = await bridge.runtime.api.get_world_context()
+            character_names = [persona.name for persona in world_context.personas]
+
+            await choose_character()
+
+            # Don't start the simulation yet
+            return False
+
+        bridge.on_ready = on_ready
+
+        # When the previous character is unfocused, choose a new one
+        async def on_character_unfocused(_: RuntimeBridge, persona_guid: str):
+
+            print(f"Finished meeting {persona_guid}")
+
+            # If any character names remain, choose a new one
+            if character_names:
+                await choose_character()
+            # Otherwise end the demo
+            else:
+                future = asyncio.get_event_loop().create_future()
+                await bridge.runtime.api.modal(
+                    "Demo Complete",
+                    "Congratulations, you've met everyone!\n\nWould you like to start the simulation now?",
+                    ["Yes", "No"],
+                    False,
+                    future=future,
+                )
+                # Wait for the user to choose an option
+                modal_response = await future
+
+                # Start the simulation if needed
+                choice_idx = modal_response["choice"]
+                if choice_idx == 0:
+                    await bridge.runtime.api.resume()
+
+        bridge.on_character_unfocused = on_character_unfocused
