@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from datetime import datetime
 from typing import Callable, Optional, Awaitable, Dict, Any
 
@@ -11,6 +12,7 @@ from fable_saga.actions import ActionsAgent, Action
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
 
+import thistle_gulch
 from thistle_gulch.runtime import Runtime
 from . import (
     GenericMessage,
@@ -328,6 +330,13 @@ class RuntimeBridge:
         )
         sio.attach(self.app)
         self.sio = sio
+
+        if self.config.runtime_path is None:
+            default_exe_path = thistle_gulch.get_exe_dir()
+            if default_exe_path:
+                runtime_exec_path = f"{default_exe_path}/ThistleGulch.exe"
+                if os.path.exists(runtime_exec_path):
+                    self.config.runtime_path = runtime_exec_path
 
         # Validate the runtime path and create a runtime instance.
         if self.config.runtime_path is not None:
