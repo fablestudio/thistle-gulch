@@ -18,7 +18,7 @@ class Runtime:
         path: Optional[str] = None,
         args: Optional[List[str]] = None,
     ):
-        self.required_version = "1.49.0-beta"
+        self.required_version = "1.49.1-beta"
         self.sio = sio
         self.path = path
         self.args = args if args else []
