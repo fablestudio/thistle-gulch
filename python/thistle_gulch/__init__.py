@@ -86,7 +86,7 @@ def is_exe_build() -> bool:
     """
     Is the current python process launched from a built exe file?
     """
-    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
 
 def get_exe_dir() -> Optional[str]:

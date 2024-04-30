@@ -6,10 +6,10 @@ import tempfile
 class Git:
     @staticmethod
     def get_revision_hash(short=False):
-        cmd = ['git', 'rev-parse', 'HEAD']
+        cmd = ["git", "rev-parse", "HEAD"]
         if short:
-            cmd.insert(2, '--short')
-        return subprocess.check_output(cmd).decode('ASCII').strip()
+            cmd.insert(2, "--short")
+        return subprocess.check_output(cmd).decode("ASCII").strip()
 
 
 class PyInstaller:
