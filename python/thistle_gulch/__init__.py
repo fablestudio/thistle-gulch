@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 import traceback
 import uuid
@@ -61,6 +62,35 @@ def parse_runtime_path_and_args(
 
     runtime_args = split_args[runtime_arg_index:]
     return runtime_path_str, runtime_args
+
+
+# def is_exe_running(exe_name: str) -> bool:
+#     for process in psutil.process_iter():
+#         if process.name() == exe_name:
+#             return True
+#     return False
+#
+#
+# def kill_exe(exe_name: str):
+#     for process in psutil.process_iter():
+#         if process.name() == exe_name:
+#             process.kill()
+#
+#
+# def is_app_window_running(window_name: str) -> bool:
+#     result = subprocess.check_output(f'tasklist /fi "WINDOWTITLE eq {window_name}"').decode('cp866', 'ignore')
+#     return 'INFO: No tasks are running' not in result
+
+
+def is_exe_build() -> bool:
+    """
+    Is the current python process launched from a built exe file?
+    """
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
+
+def get_exe_dir() -> Optional[str]:
+    return os.path.dirname(sys.executable) if is_exe_build() else None
 
 
 @define(slots=True)
