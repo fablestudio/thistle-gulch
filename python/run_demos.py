@@ -97,14 +97,23 @@ def main():
 
 
 if __name__ == "__main__":
-    # Setup logging
-    logging.basicConfig(
-        level=logging.WARNING,
-        stream=sys.stdout,
-        format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
-    )
-    thistle_gulch.logger.setLevel(logging.INFO)
-    # This shows the generation of the response as it comes in.
-    fable_saga.streaming_debug_logger.setLevel(logging.DEBUG)
 
-    main()
+    try:
+        # Setup logging
+        logging.basicConfig(
+            level=logging.WARNING,
+            stream=sys.stdout,
+            format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
+        )
+        thistle_gulch.logger.setLevel(logging.INFO)
+        # This shows the generation of the response as it comes in.
+        fable_saga.streaming_debug_logger.setLevel(logging.DEBUG)
+
+        main()
+    except KeyboardInterrupt:
+        print("\n\nExiting...")
+    except Exception as e:
+        print(f"Error: {e}")
+        print(f"Exiting...")
+        input("Press Enter to exit.")
+        sys.exit(1)
