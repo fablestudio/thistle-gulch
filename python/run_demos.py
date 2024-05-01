@@ -83,9 +83,11 @@ def main():
         print(f"SUMMARY: {item.description}")
         # Allow for a much more detailed description of the demo to be printed.
         if item.function.__doc__:
-            print(f"DETAILS: {item.function.__doc__}\n"
-                  f"DISCORD: https://blog.fabledev.com/blog/discord-community-now-open\n"
-                  f"WIKI: https://github.com/fablestudio/thistle-gulch/wiki")
+            print(
+                f"DETAILS: {item.function.__doc__}\n"
+                f"DISCORD: https://blog.fabledev.com/blog/discord-community-now-open\n"
+                f"WIKI: https://github.com/fablestudio/thistle-gulch/wiki"
+            )
         print("=" * 80)
         continue_demo = input("Run this demo? [Y/n]: ")
         if continue_demo.lower() not in ["y", "yes", ""]:
