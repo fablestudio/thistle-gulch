@@ -125,9 +125,8 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         )
 
         runtime_version = msg.data.get("runtime_version", "")
-        if (
-            runtime_version != "local.build"
-            and not runtime_version.startswith(self.bridge.runtime.required_version)
+        if runtime_version != "local.build" and not runtime_version.startswith(
+            self.bridge.runtime.required_version
         ):
             raise Exception(
                 f"Incorrect Runtime version detected - "
