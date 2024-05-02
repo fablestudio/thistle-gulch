@@ -5,15 +5,11 @@ realistic 3D Western town.
 
 <img width="400px" src="docs/images/thistle-gulch-logo-and-background.jpg" alt="thistle gulch logo" title="Thistle Gulch Logo">
 
-⚠️ NOTE: To use this repo, you need access to the Thistle-Gulch Runtime as
-well. [Apply for Beta Access on our Website](https://blog.fabledev.com/blog/beta-application-for-thistle-gulch-now-open).
-
 ## About
 
 This project consists of two parts that work together:
-The [Thistle Gulch Simulation](https://fablestudio.itch.io/thistle-gulch) running in
-a 3D game engine we call a "Runtime" and a python bridge (referred to simply as the "Bridge" from here
-on out) that acts similar to a client for the Runtime. The Bridge also leverages our
+The [Thistle Gulch Runtime](https://fablestudio.itch.io/thistle-gulch) which is
+a 3D game engine (called the "Runtime") and this python project (called the "Bridge") that acts similar to a client for the Runtime. The Bridge also leverages our
 [open-source SAGA python library](https://github.com/fablestudio/fable-saga) to generate actions and conversations. The
 simulation is rendered in 3D using the Thistle Gulch Runtime app which can be downloaded from itch.io. The Bridge allows
 many aspects of the simulation to be customized or overridden by manipulating the metadata and/or prompts that are sent
@@ -27,41 +23,40 @@ under our standard Fable Studio EULA.
 
 0. Make sure you have python, openAI env var, and poetry installed at least. See Wiki
    for [Dependencies on Windows, Linux, or macOS](https://github.com/fablestudio/thistle-gulch/wiki/Dependencies).
-1. Sign up for the Thistle Gulch beta at https://blog.fabledev.com/blog/beta-application-for-thistle-gulch-now-open and
-   wait to receive your itch.io invite link.
-2. Download and install the Thistle Gulch Runtime from itch.io.
-3. Clone this repo and `git checkout <tag>` the [latest release tag](https://github.com/fablestudio/thistle-gulch/releases).
-4. Change the directory to the `python` sub-folder.
-5. Run `poetry install --extras openai` to create a virtual environment and install dependencies.
-6. Start a poetry shell with `poetry shell` to make sure you are using the correct python version and have the correct
-   environment variables set.
-7. Run `python run_demos.py --runtime "<PATH_TO_ITCHIO_DIR>/ThistleGulch.exe -agents wyatt_cooper"` . (Runtime flags are
-   described below.)
-8. Pick the default SagaServer (option 0) from the available demos (other available demos listed below.)
+1. Download and install the [Thistle Gulch Runtime](https://fablestudio.itch.io/thistle-gulch) from itch.io.
+2. Clone this repo and `git checkout <tag>` the [latest release tag](https://github.com/fablestudio/thistle-gulch/releases).
+3. Change the directory to the `python` sub-folder.
+4. Run `poetry install --extras openai` to create a virtual environment and install dependencies. For non-OpenAI models use the `--all-extras` flag instead.
+5. Enter the poetry virtual environment with `poetry shell` to make sure you are using the correct python version and have the correct environment variables set.
+6. Run `python run_demos.py --runtime "<PATH_TO_ITCHIO_DIR>/ThistleGulch.exe"`. See the [Bridge Wiki](https://github.com/fablestudio/thistle-gulch/wiki/Bridge#runtime-flags) for a full list of runtime flags.
+7. Pick the default demo (option 0) from the available demos:
    ```
-   -= Available Demos =-
-   0: SagaServer
-   1: PrintActionsAndPickFirst
-   2: SkipSagaAlwaysDoTheDefaultAction
-   3: ReplaceContextWithYamlDump
-   4: UseLlama2Model
+    -= Available Demos =-
+
+    -= Default =-
+   > 0: [Default] Thistle Gulch Tutorial - A step-by-step tutorial of the Thistle Gulch simulation using the default SAGA server behavior.
+   > 1: Meet the Characters - Visit each character and learn about them
+
+    -= Action Generation =-
+   > 2: Print Actions and Pick First - Print the action options to the console and then only pass back the first action option.
+   ...
    Pick a demo to run: 
    ```
 
 The Runtime application will launch a new window, and then you should quickly see a message similar to the following
-from the Bridge:
+in the Bridge console:
 
 ```
 ======== Running on http://localhost:8080 ========
 (Press CTRL+C to quit)
-
-Runtime [Connected]: l0NKrutjyO4ANhseAAAB
-[Simulation Ready] received..
-Resuming simulation
+<INFO> 2024-05-01 12:38:59,182 - thistle_gulch - thistle_gulch\bridge.py:360
+    [Socketio] Connected: 308JdS3MShzUiYDSAAAB
+<INFO> 2024-05-01 12:39:03,908 - thistle_gulch - thistle_gulch\__init__.py:159
+    [Message] request: GenericMessage(type='simulation-ready', data={'start_date': '2000-01-01T08:00:00', 'runtime_version': '1.49.2-beta'}, reference='b7122be6954f4cbd926da09449bc5ada', error=None)
 ```
 
 The small circle icon in the upper-right corner of the Runtime will be white as long as the bridge is connected, and you should
-quickly see the simulation pause and open a modal with options for wyatt_cooper once the first request is processed by the LLM. 
+see a modal with options for wyatt_cooper once the first request is processed by the LLM. 
 You can choose which option you want him to do. Note that the options are sorted by their score, so the "best" option should be at the top. 
 See the [Runtime Wiki](https://github.com/fablestudio/thistle-gulch/wiki/Runtime) for more details on using the Runtime.
 
