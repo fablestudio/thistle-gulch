@@ -2,9 +2,6 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Optional, List, Any, Dict
 
-from langchain_core.outputs import LLMResult
-from langchain_core.callbacks import AsyncCallbackHandler
-
 from thistle_gulch.bridge import RuntimeBridge
 
 

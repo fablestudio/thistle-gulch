@@ -54,11 +54,12 @@ class DefaultTutorial(Demo):
                 "This brief tutorial will guide you through how things work in the Thistle Gulch simulation. "
                 "It's a work in progress and only covers the basics for now, but it should give you a good idea "
                 "of how things work.\n\n"
-                "For more information, check out the "
-                '<link="https://www.youtube.com/playlist?list=PLmNhDGGwWOpo4NmTk4Yp1lIPL_NqTND__"><u>Youtube Playlist</u></link>, '
-                '<link="https://github.com/fablestudio/thistle-gulch/wiki"><u>GitHub WIKI Documentation</u></link> or '
-                '<link="https://blog.fabledev.com"><u>https://blog.fabledev.com</u></link>, as well as the various '
-                "other demos which show how to extend and control the simulation via python code.",
+                "For more information, visit the following links:\n"
+                '<link="https://blog.fabledev.com/blog/discord-community-now-open"><u>Discord Server</u></link>\n'
+                '<link="https://www.youtube.com/playlist?list=PLmNhDGGwWOpo4NmTk4Yp1lIPL_NqTND__"><u>Youtube Playlist</u></link>\n'
+                '<link="https://github.com/fablestudio/thistle-gulch/wiki"><u>GitHub WIKI Documentation</u></link>\n'
+                '<link="https://blog.fabledev.com"><u>Fable Blog</u></link>\n\n'
+                "We provide many other demos which demonstrate how extend and control the simulation via python code.",
                 ["Start Tutorial"],
                 False,
                 future=future,
