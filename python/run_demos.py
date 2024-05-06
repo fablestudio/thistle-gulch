@@ -1,5 +1,6 @@
 import logging
 import sys
+import traceback
 from typing import List
 
 import fable_saga
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nExiting...")
     except Exception as e:
-        print(f"Error: {e}")
+        traceback.print_exc()
         print(f"Exiting...")
         input("Press Enter to exit.")
         sys.exit(1)

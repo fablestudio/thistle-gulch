@@ -4,10 +4,14 @@ import os
 from datetime import datetime
 from typing import Callable, Optional, Awaitable, Dict, Any
 
-import fable_saga.server as saga_server
 import socketio
+import yaml
+import cattrs
 from aiohttp import web
 from attr import define
+
+import fable_saga.server as saga_server
+from fable_saga import StreamingDebugCallback
 from fable_saga.actions import ActionsAgent, Action
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
@@ -41,8 +45,11 @@ class TGActionsRequest(saga_server.ActionsRequest):
 class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
     """Server for SAGA."""
 
-    def __init__(self, agent: saga_server.ActionsAgent):
+    def __init__(
+        self, agent: saga_server.ActionsAgent, model_override: Optional[str] = None
+    ):
         self.agent = agent
+        self.model_override = model_override
 
     async def handle_request(
         self, req: TGActionsRequest
@@ -52,8 +59,12 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
             assert isinstance(
                 req, TGActionsRequest
             ), f"Invalid request type: {type(req)}"
+
+            # Override the model or use the one included in the request
+            model = self.model_override if self.model_override else req.model
+
             actions = await self.agent.generate_actions(
-                req.context, req.skills, req.retries, req.verbose, req.model
+                req.context, req.skills, req.retries, req.verbose, model
             )
 
             response = saga_server.ActionsResponse(
@@ -76,13 +87,16 @@ class TGConversationRequest(saga_server.ConversationRequest):
     context_obj: Optional[PersonaContextObject] = None
 
 
-class TGConversationEndpoint(saga_server.ConversationEndpoint):
+class TGConversationEndpoint(BaseEndpoint[TGConversationRequest, saga_server.ConversationResponse]):
     """Server for SAGA."""
 
-    def __init__(self, agent: saga_server.ConversationAgent):
-        super().__init__(agent)
+    def __init__(
+        self, agent: saga_server.ConversationAgent, model_override: Optional[str] = None
+    ):
+        self.agent = agent
+        self.model_override = model_override
 
-    async def generate_conversation(
+    async def handle_request(
         self, req: TGConversationRequest
     ) -> saga_server.ConversationResponse:
         # Generate conversation
@@ -90,12 +104,16 @@ class TGConversationEndpoint(saga_server.ConversationEndpoint):
             assert isinstance(
                 req, TGConversationRequest
             ), f"Invalid request type: {type(req)}"
+
+            # Override the model or use the one included in the request
+            model = self.model_override if self.model_override else req.model
+
             conversation = await self.agent.generate_conversation(
                 req.persona_guids,
                 req.context,
                 req.retries,
                 req.verbose,
-                req.model,
+                model,
             )
 
             response = saga_server.ConversationResponse(
@@ -279,12 +297,14 @@ class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Error] No on_error callback registered..")
 
 
-@define
+@define(slots=True)
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
     cors: str = "*"
     runtime_path: Optional[str] = None
+    action_generation_model: Optional[str] = None
+    conversation_generation_model: Optional[str] = None
 
 
 class RuntimeBridge:
@@ -330,7 +350,8 @@ class RuntimeBridge:
         sio.attach(self.app)
         self.sio = sio
 
-        if self.config.runtime_path is None:
+        # No runtime was provided - if this project is running as an app find the included runtime build
+        if not self.config.runtime_path:
             default_exe_path = thistle_gulch.get_exe_dir()
             if default_exe_path:
                 runtime_exec_path = f"{default_exe_path}/ThistleGulch.exe"
@@ -338,7 +359,7 @@ class RuntimeBridge:
                     self.config.runtime_path = runtime_exec_path
 
         # Validate the runtime path and create a runtime instance.
-        if self.config.runtime_path is not None:
+        if self.config.runtime_path:
             runtime_exec, runtime_args = parse_runtime_path_and_args(
                 self.config.runtime_path
             )
@@ -442,7 +463,7 @@ class RuntimeBridge:
 """
         )
 
-        if self.config.runtime_path is not None:
+        if self.config.runtime_path:
             self.runtime.start()
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
@@ -454,7 +475,7 @@ class RuntimeBridge:
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(ActionsAgent()),
+                    TGActionsEndpoint(ActionsAgent(), self.config.action_generation_model),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -463,7 +484,7 @@ class RuntimeBridge:
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    saga_server.ConversationEndpoint(ConversationAgent()),
+                    TGConversationEndpoint(ConversationAgent(), self.config.conversation_generation_model),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -479,8 +500,6 @@ class RuntimeBridge:
 
 
 def main(auto_run=True) -> RuntimeBridge:
-    dummy_config = BridgeConfig()
-
     # Parse command line arguments
     import argparse
 
@@ -491,21 +510,67 @@ def main(auto_run=True) -> RuntimeBridge:
         help="Path to the thistle gulch runtime and any additional arguments",
     )
     parser.add_argument(
-        "--host", type=str, default=dummy_config.host, help="Host to listen on"
+        "--host", type=str, help="Host to listen on"
     )
     parser.add_argument(
-        "--port", type=int, default=dummy_config.port, help="Port to listen on"
+        "--port", type=int, help="Port to listen on"
     )
     parser.add_argument(
-        "--cors", type=str, default=dummy_config.cors, help="CORS origin"
+        "--cors", type=str, help="CORS origin"
+    )
+    parser.add_argument(
+        "--action_generation_model", type=str, help="The LLM to use for actions"
+    )
+    parser.add_argument(
+        "--conversation_generation_model", type=str, help="The LLM to use for conversations"
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config.yaml",
+        help="Path to a config file",
     )
     args = parser.parse_args()
 
+    bridge_config = BridgeConfig()
+
+    # Load the config file from disk
+    if args.config:
+        config_path = args.config.replace("\\", "/")
+        # If it's a file name, look in the project or exe root, otherwise use the given path directly
+        if "/" not in config_path:
+            config_file_name = config_path
+            root_path: Optional[str] = (
+                thistle_gulch.get_exe_dir()
+                if thistle_gulch.is_exe_build()
+                else os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+            )
+            config_path = f"{root_path}/{config_file_name}"
+
+        # Convert from yaml to BridgeConfig
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                for config_data in yaml.load(f, Loader=yaml.FullLoader):
+                    bridge_config = cattrs.structure(config_data, BridgeConfig)
+        else:
+            logger.error(f"Failed to find config file at '{config_path}'")
+
+    # Command-line arguments override the config values on disk
+    if args.host:
+        bridge_config.host = args.host
+    if args.port:
+        bridge_config.port = args.port
+    if args.cors:
+        bridge_config.cors = args.cors
+    if args.runtime:
+        bridge_config.runtime_path = args.runtime
+    if args.action_generation_model:
+        bridge_config.action_generation_model = args.action_generation_model
+    if args.conversation_generation_model:
+        bridge_config.conversation_generation_model = args.conversation_generation_model
+
     # Run the bridge server.
-    real_config = BridgeConfig(
-        host=args.host, port=args.port, cors=args.cors, runtime_path=args.runtime
-    )
-    bridge = RuntimeBridge(real_config)
+    bridge = RuntimeBridge(bridge_config)
     if auto_run:
         bridge.run()
     return bridge
