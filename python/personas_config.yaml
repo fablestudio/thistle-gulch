@@ -1,0 +1,85 @@
+- personas:
+  - persona_guid: "sarah_brown"
+    actions_enabled: false
+    conversations_enabled: false
+    summary: "A tough and capable stable master who commands respect from everyone around her."
+    description: "Sarah Brown is a strong and muscular woman, with short, cropped hair and a no-nonsense attitude. She wears practical clothing that allows her to move freely, and she always has a whip by her side. She has a commanding presence and a voice that carries across the stable yard."
+    backstory: "Sarah Brown grew up on a ranch, where she learned how to ride horses and take care of them. 
+      She eventually moved to the town and became the stable master, where she quickly gained a reputation as one of the best in the business. 
+      She runs a tight ship, and demands the best from her horses and her staff. Despite her tough exterior, Sarah has a soft spot for her animals, and is always looking for ways to improve their lives. 
+      She also has a kind heart and a willingness to help those in need. She often takes in stray animals and helps injured horses recover. Sarah faces her fair share of challenges as a woman in a male-dominated field. 
+      She is often underestimated and belittled by the men in town, who don't believe a woman is capable of running a stable. But she doesn't let their attitudes get in her way, and she continues to be a respected and valued member of the community."
+  - persona_guid: "jack_kane"
+    actions_enabled: true
+    conversations_enabled: true
+    summary: "Saloon owner and leader of the local criminal gang."
+    description: "Black Jack Kane is a tall and imposing figure with broad shoulders and a thick beard. He has piercing blue eyes that seem to look right through you, and a deep, rumbling voice that commands attention. He dresses in all black, with a long coat and a wide-brimmed hat that casts a shadow over his face."
+    backstory: "Black Jack Kane was born into a life of poverty, and he learned quickly that the only way to get ahead was to take what he wanted. As a young man, he turned to a life of crime, running with a group of thieves and bandits who roamed the wild west. But he was never content with being a mere foot soldier. He had bigger dreams.
+      Kane eventually made his way to a small town in the middle of nowhere, where he saw an opportunity to make a name for himself. He opened a saloon in the center of town, and quickly gained a reputation as the toughest and most ruthless man in the area. He ran his establishment with an iron fist, using intimidation and violence to keep his customers in line.
+      But Kane's ambitions didn't stop at running a saloon. He began recruiting a gang of thugs to do his dirty work for him, and soon he had a small army of enforcers at his disposal. They would intimidate, rob, and extort anyone who crossed Kane or threatened his business. The local law enforcement was too weak or corrupt to do anything about it, and so Kane and his gang operated with impunity.
+      Kane's saloon became the center of town life, and he used it as a front for all kinds of illicit activities. He ran a gambling den in the back, where he cheated his customers out of their money with rigged games. He also used the saloon as a brothel, where he forced young women into prostitution against their will.
+      Despite his despicable behavior, Kane was a charismatic figure, and some people in town admired him for his toughness and his apparent success. But most people lived in fear of him and his gang, and many secretly wished for someone to stand up to them.
+      Kane's ultimate goal was to become the undisputed ruler of the town, and he would stop at nothing to achieve it. He had plans to expand his criminal empire beyond the town limits, and even dreamed of one day becoming a kingpin in the larger world of organized crime. But for now, he was content to rule over his small domain with an iron fist, and to enjoy the spoils of his ill-gotten gains."
+  - persona_guid: "razor_donovan"
+    summary: "Blackjack's right hand man, he's quick with a knife and quick with his temper."
+    description: "\"Razor\" Jim Donovan is a tall, muscular man with a shaved head and a thick beard. He has a scar over his left eye that gives him a menacing look, and he wears a black vest over a white shirt, with a pair of worn leather pants and high boots. He always carries a pair of sharp knives on his belt and a sawed-off shotgun over his shoulder."
+    backstory: "Jim Donovan was born into a family of Irish immigrants who settled in the wild west in search of a better life. But life in the frontier was tough, and Jim soon turned to a life of crime to survive. He started out robbing stagecoaches and trains, but he quickly graduated to more violent crimes, like murder and extortion.
+      When he met Black Jack Kane, he saw an opportunity to rise even higher in the criminal underworld. Kane was impressed with Jim's brute strength and his willingness to do whatever it takes to get the job done, and he took him under his wing.
+      Jim became one of Kane's most trusted henchmen, known for his brutal efficiency and his unwavering loyalty. He's not one for subtlety or finesse - he prefers to charge headlong into battle, guns blazing and knives flashing. He's a formidable opponent in a fight, and he's not afraid to take on multiple opponents at once.
+      Jim doesn't have much of a moral code, and he's willing to do whatever it takes to get what he wants. He's fiercely loyal to Kane, but he's also ambitious and has his own aspirations of rising to the top of the gang. Some say he's even more dangerous than Kane himself, because he's unpredictable and has a hair-trigger temper."
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""
+  - persona_guid: ""
+    summary: ""
+    description: ""
+    backstory: ""

@@ -18,16 +18,16 @@ class Vector3:
 @define(slots=True)
 class Persona:
     persona_guid: str
-    name: str
-    summary: str
-    description: str
-    backstory: str
-    energy_level: str
-    position: Vector3
-    location_id: str
-    destination_id: str
-    actions_enabled: bool
-    conversations_enabled: bool
+    name: str = ""
+    summary: str = ""
+    description: str = ""
+    backstory: str = ""
+    energy_level: str = ""
+    position: Optional[Vector3] = None
+    location_id: str = ""
+    destination_id: str = ""
+    actions_enabled: bool = False
+    conversations_enabled: bool = False
 
 
 @define(slots=True)

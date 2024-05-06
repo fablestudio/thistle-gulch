@@ -1,6 +1,0 @@
-- host: "localhost"
-  port: 8080
-  cors: "*"
-  runtime_path: ""
-  action_generation_model: "gpt-3.5-turbo-0125"
-  conversation_generation_model: "gpt-4-turbo-2024-04-09"

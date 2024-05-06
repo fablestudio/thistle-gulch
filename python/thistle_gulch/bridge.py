@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Callable, Optional, Awaitable, Dict, Any
+from typing import Callable, Optional, Awaitable, Dict, Any, List
 
 import socketio
 import yaml
@@ -28,7 +28,7 @@ from . import (
     MessageSystem,
     IncomingRoutes,
 )
-from .data_models import PersonaContextObject
+from .data_models import PersonaContextObject, Persona
 
 # Set the saga_server converter to allow extra keys in for now.
 saga_server.converter.forbid_extra_keys = False
@@ -298,13 +298,23 @@ class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
 
 
 @define(slots=True)
+class PersonasConfig:
+    personas: List[Persona] = []
+
+
+@define(slots=True)
+class LlmConfig:
+    action_generation_model: Optional[str] = None
+    conversation_generation_model: Optional[str] = None
+
+
+@define(slots=True)
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
     cors: str = "*"
     runtime_path: Optional[str] = None
-    action_generation_model: Optional[str] = None
-    conversation_generation_model: Optional[str] = None
+    llm: LlmConfig = LlmConfig()
 
 
 class RuntimeBridge:
@@ -468,6 +478,20 @@ class RuntimeBridge:
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
 
+        actions_llm = None
+        if self.config.llm.action_generation_model:
+            try:
+                from langchain_anthropic import ChatAnthropic
+            except ImportError:
+                raise Exception("You must install thistle-gulch using `--with anthropic` to use this model")
+            actions_llm = ChatAnthropic(
+                model_name=self.config.llm.action_generation_model,
+                callbacks=[StreamingDebugCallback()],
+                streaming=True,
+                api_key=None,
+                timeout=None,
+            )
+
         # Set the routes for SAGA stuff if not already defined using the defaults.
         # This allows custom routes to be added before the server is started and
         # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
@@ -475,7 +499,7 @@ class RuntimeBridge:
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(ActionsAgent(), self.config.action_generation_model),
+                    TGActionsEndpoint(ActionsAgent(), self.config.llm.action_generation_model),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -484,7 +508,7 @@ class RuntimeBridge:
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    TGConversationEndpoint(ConversationAgent(), self.config.conversation_generation_model),
+                    TGConversationEndpoint(ConversationAgent(), self.config.llm.conversation_generation_model),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -525,35 +549,63 @@ def main(auto_run=True) -> RuntimeBridge:
         "--conversation_generation_model", type=str, help="The LLM to use for conversations"
     )
     parser.add_argument(
-        "--config",
+        "--bridge_config",
         type=str,
-        default="config.yaml",
+        default="bridge_config.yaml",
         help="Path to a config file",
+    )
+    parser.add_argument(
+        "--personas_config",
+        type=str,
+        default="personas_config.yaml",
+        help="Path to a personas config file",
     )
     args = parser.parse_args()
 
+    def get_abs_path(file_name: str) -> str:
+        """ Append the file name to the project or exe root """
+        root_path: Optional[str] = (
+            thistle_gulch.get_exe_dir()
+            if thistle_gulch.is_exe_build()
+            else os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+        )
+        return f"{root_path}/{file_name}"
+
+    def load_yaml(file_path: str) -> Optional[Any]:
+        """ Load yaml data from the given absolute path """
+        if not os.path.exists(file_path):
+            logger.error(f"Failed to find config file at '{file_path}'")
+            return None
+
+        with open(file_path, "r") as f:
+            for config_data in yaml.load(f, Loader=yaml.FullLoader):
+                return config_data
+
+        return None
+
+    # Load the bridge config file from disk
     bridge_config = BridgeConfig()
+    if args.bridge_config:
+        bridge_config_path = args.bridge_config.replace("\\", "/")
+        # If it's a file name, get the absolute path
+        if "/" not in bridge_config_path:
+            bridge_config_path = get_abs_path(bridge_config_path)
+        # Load and structure the yaml
+        bridge_config_yaml = load_yaml(bridge_config_path)
+        if bridge_config_yaml:
+            bridge_config = cattrs.structure(bridge_config_yaml, BridgeConfig)
 
-    # Load the config file from disk
-    if args.config:
-        config_path = args.config.replace("\\", "/")
-        # If it's a file name, look in the project or exe root, otherwise use the given path directly
-        if "/" not in config_path:
-            config_file_name = config_path
-            root_path: Optional[str] = (
-                thistle_gulch.get_exe_dir()
-                if thistle_gulch.is_exe_build()
-                else os.path.dirname(os.path.dirname(thistle_gulch.__file__))
-            )
-            config_path = f"{root_path}/{config_file_name}"
-
-        # Convert from yaml to BridgeConfig
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                for config_data in yaml.load(f, Loader=yaml.FullLoader):
-                    bridge_config = cattrs.structure(config_data, BridgeConfig)
-        else:
-            logger.error(f"Failed to find config file at '{config_path}'")
+    # Load the personas config file from disk
+    personas_config = PersonasConfig()
+    if args.personas_config:
+        personas_config_path = args.personas_config.replace("\\", "/")
+        # If it's a file name, get the absolute path
+        if "/" not in personas_config_path:
+            personas_config_path = get_abs_path(personas_config_path)
+        # Load and structure the yaml
+        personas_config_yaml = load_yaml(personas_config_path)
+        if personas_config_yaml:
+            personas_config = cattrs.structure(personas_config_yaml, PersonasConfig)
 
     # Command-line arguments override the config values on disk
     if args.host:
@@ -565,9 +617,9 @@ def main(auto_run=True) -> RuntimeBridge:
     if args.runtime:
         bridge_config.runtime_path = args.runtime
     if args.action_generation_model:
-        bridge_config.action_generation_model = args.action_generation_model
+        bridge_config.llm.action_generation_model = args.action_generation_model
     if args.conversation_generation_model:
-        bridge_config.conversation_generation_model = args.conversation_generation_model
+        bridge_config.llm.conversation_generation_model = args.conversation_generation_model
 
     # Run the bridge server.
     bridge = RuntimeBridge(bridge_config)
