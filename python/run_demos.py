@@ -98,7 +98,13 @@ def main():
         item.function(bridge)
         print(f"Running Demo...")
 
-        bridge.run()
+        try:
+            bridge.run()
+        except Exception as e:
+            # Close the runtime if exception occurs.
+            if bridge.runtime:
+                bridge.runtime.terminate()
+            raise e
 
 
 if __name__ == "__main__":
