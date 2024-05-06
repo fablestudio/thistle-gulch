@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 from typing import Callable, Optional, Awaitable, Dict, Any
 
+from langchain_core.language_models.llms import BaseLLM
+import fable_saga
 import fable_saga.server as saga_server
 import socketio
 from aiohttp import web
@@ -279,6 +281,28 @@ class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Error] No on_error callback registered..")
 
 
+def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
+
+    """Load a model dynamically based on the configuration."""
+    if model_cfg.get("import") is None or model_cfg.get("class") is None:
+        raise Exception("Model configuration must include 'import' and 'class' fields.")
+
+    # Import the module and get the class.
+    module = __import__(model_cfg["import"], fromlist=[model_cfg["class"]])
+    model_class = getattr(module, model_cfg["class"])
+
+    # Create an instance of the class with the provided parameters.
+    llm: BaseLLM = model_class(**model_cfg.get("params", {}))
+
+    # Add the fable_saga callbacks to the model.
+    if llm.callbacks is None:
+        llm.callbacks = [
+            fable_saga.StreamingDebugCallback(),
+            fable_saga.SagaCallbackHandler(),
+        ]
+    return llm
+
+
 @define
 class BridgeConfig:
     host: str = "localhost"
@@ -447,23 +471,53 @@ class RuntimeBridge:
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
 
+        # TODO: Load configuration from a file.
+        cfg = {
+            "llm": {
+                "import": "langchain_openai",
+                "class": "ChatOpenAI",
+                "params": {
+                    "streaming": True,
+                    "model_name": "gpt-3.5-turbo",
+                    "temperature": 0.9,
+                    "model_kwargs": {
+                      "response_format": {"type": "json_object"},
+                    },
+                },
+            },
+        }
+
+        # TODO: Load configuration from a file.
+        cfg = {
+            "llm": {
+                "import": "langchain_community.llms",
+                "class": "Ollama",
+                "params": {
+                    "model": "llama3",
+                    "format": "json",
+                },
+            },
+        }
+
         # Set the routes for SAGA stuff if not already defined using the defaults.
         # This allows custom routes to be added before the server is started and
         # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
         if IncomingRoutes.generate_actions.value not in self.router.routes:
+            llm = dynamic_model_loader(cfg["llm"])
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(ActionsAgent()),
+                    TGActionsEndpoint(ActionsAgent(llm=llm)),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
             )
         if IncomingRoutes.generate_conversations.value not in self.router.routes:
+            llm = dynamic_model_loader(cfg["llm"])
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    saga_server.ConversationEndpoint(ConversationAgent()),
+                    saga_server.ConversationEndpoint(ConversationAgent(llm=llm)),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
