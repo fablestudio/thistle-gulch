@@ -126,9 +126,7 @@ class UpdateCharacterPropertyDemo(Demo):
 
             await disable_all_agents(bridge, world_context)
 
-            property_values = {
-                property_name: property_value
-            }
+            property_values = {property_name: property_value}
             print(f"Updating {persona_guid} properties to {property_values}")
             await bridge.runtime.api.update_character_properties(
                 persona_guid, property_values
