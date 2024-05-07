@@ -1,85 +1,109 @@
 - personas:
-  - persona_guid: "sarah_brown"
-    actions_enabled: false
-    conversations_enabled: false
-    summary: "A tough and capable stable master who commands respect from everyone around her."
-    description: "Sarah Brown is a strong and muscular woman, with short, cropped hair and a no-nonsense attitude. She wears practical clothing that allows her to move freely, and she always has a whip by her side. She has a commanding presence and a voice that carries across the stable yard."
-    backstory: "Sarah Brown grew up on a ranch, where she learned how to ride horses and take care of them. 
-      She eventually moved to the town and became the stable master, where she quickly gained a reputation as one of the best in the business. 
-      She runs a tight ship, and demands the best from her horses and her staff. Despite her tough exterior, Sarah has a soft spot for her animals, and is always looking for ways to improve their lives. 
-      She also has a kind heart and a willingness to help those in need. She often takes in stray animals and helps injured horses recover. Sarah faces her fair share of challenges as a woman in a male-dominated field. 
-      She is often underestimated and belittled by the men in town, who don't believe a woman is capable of running a stable. But she doesn't let their attitudes get in her way, and she continues to be a respected and valued member of the community."
-  - persona_guid: "jack_kane"
-    actions_enabled: true
-    conversations_enabled: true
+  - persona_guid: jack_kane
     summary: "Saloon owner and leader of the local criminal gang."
     description: "Black Jack Kane is a tall and imposing figure with broad shoulders and a thick beard. He has piercing blue eyes that seem to look right through you, and a deep, rumbling voice that commands attention. He dresses in all black, with a long coat and a wide-brimmed hat that casts a shadow over his face."
-    backstory: "Black Jack Kane was born into a life of poverty, and he learned quickly that the only way to get ahead was to take what he wanted. As a young man, he turned to a life of crime, running with a group of thieves and bandits who roamed the wild west. But he was never content with being a mere foot soldier. He had bigger dreams.
-      Kane eventually made his way to a small town in the middle of nowhere, where he saw an opportunity to make a name for himself. He opened a saloon in the center of town, and quickly gained a reputation as the toughest and most ruthless man in the area. He ran his establishment with an iron fist, using intimidation and violence to keep his customers in line.
-      But Kane's ambitions didn't stop at running a saloon. He began recruiting a gang of thugs to do his dirty work for him, and soon he had a small army of enforcers at his disposal. They would intimidate, rob, and extort anyone who crossed Kane or threatened his business. The local law enforcement was too weak or corrupt to do anything about it, and so Kane and his gang operated with impunity.
-      Kane's saloon became the center of town life, and he used it as a front for all kinds of illicit activities. He ran a gambling den in the back, where he cheated his customers out of their money with rigged games. He also used the saloon as a brothel, where he forced young women into prostitution against their will.
-      Despite his despicable behavior, Kane was a charismatic figure, and some people in town admired him for his toughness and his apparent success. But most people lived in fear of him and his gang, and many secretly wished for someone to stand up to them.
-      Kane's ultimate goal was to become the undisputed ruler of the town, and he would stop at nothing to achieve it. He had plans to expand his criminal empire beyond the town limits, and even dreamed of one day becoming a kingpin in the larger world of organized crime. But for now, he was content to rule over his small domain with an iron fist, and to enjoy the spoils of his ill-gotten gains."
-  - persona_guid: "razor_donovan"
+    backstory: "Black Jack Kane was born into a life of poverty, and he learned quickly that the only way to get ahead was to take what he wanted. As a young man, he turned to a life of crime, running with a group of thieves and bandits who roamed the wild west. But he was never content with being a mere foot soldier. He had bigger dreams.\r\n\r\nKane eventually made his way to a small town in the middle of nowhere, where he saw an opportunity to make a name for himself. He opened a saloon in the center of town, and quickly gained a reputation as the toughest and most ruthless man in the area. He ran his establishment with an iron fist, using intimidation and violence to keep his customers in line.\r\n\r\nBut Kane's ambitions didn't stop at running a saloon. He began recruiting a gang of thugs to do his dirty work for him, and soon he had a small army of enforcers at his disposal. They would intimidate, rob, and extort anyone who crossed Kane or threatened his business. The local law enforcement was too weak or corrupt to do anything about it, and so Kane and his gang operated with impunity.\r\n\r\nKane's saloon became the center of town life, and he used it as a front for all kinds of illicit activities. He ran a gambling den in the back, where he cheated his customers out of their money with rigged games. He also used the saloon as a brothel, where he forced young women into prostitution against their will.\r\n\r\nDespite his despicable behavior, Kane was a charismatic figure, and some people in town admired him for his toughness and his apparent success. But most people lived in fear of him and his gang, and many secretly wished for someone to stand up to them.\r\n\r\nKane's ultimate goal was to become the undisputed ruler of the town, and he would stop at nothing to achieve it. He had plans to expand his criminal empire beyond the town limits, and even dreamed of one day becoming a kingpin in the larger world of organized crime. But for now, he was content to rule over his small domain with an iron fist, and to enjoy the spoils of his ill-gotten gains."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: wyatt_cooper
+    summary: "A young sheriff who is determined to bring law and order to a lawless town."
+    description: "Wyatt Cooper is a young and handsome man, with a chiseled jaw and piercing green eyes. He stands tall and carries himself with an air of confidence that belies his youth. He wears a sheriff''s badge on his chest, and his gun is always at his side."
+    backstory: "Wyatt Cooper was born and raised in the west, and he learned from a young age the importance of justice and fairness. His father was a rancher until a raid by anonymous soldiers raided their home and burned the ranch, forcing his family to move back east in poverty. \r\n\r\nWyatt stayed in hopes of finding those responsible and became the deputy of Thistle Gulch, working under Sheriff \"Top\" Morgan, (Rose's father) who was a respected and beloved lawman. Wyatt followed in his footsteps, until Sheriff Morgan was killed in a shootout with bandits last year. Wyatt was appointed to take his place with the help of  Mayor Victoria Grant who has become his mentor as of late.\r\n\r\nWyatt quickly learned that being a sheriff in a lawless town was no easy task. The town was overrun with bandits, thieves, and outlaws, and the corrupt politicians in charge turned a blind eye to their crimes. Wyatt knew he had his work cut out for him.\r\n\r\nHe fell in love with Rose Morgan the first time he met her, but doesn\u2019t feel worthy until he brings her father\u2019s killers to justice.\r"
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: sarah_brown
+    summary: "A tough and capable stable master who commands respect from everyone around her."
+    description: "Sarah Brown is a strong and muscular woman, with short, cropped hair and a no-nonsense attitude. She wears practical clothing that allows her to move freely, and she always has a whip by her side. She has a commanding presence and a voice that carries across the stable yard."
+    backstory: "Sarah Brown grew up on a ranch, where she learned how to ride horses and take care of them. She eventually moved to the town and became the stable master, where she quickly gained a reputation as one of the best in the business. She runs a tight ship, and demands the best from her horses and her staff.\r\n\r\nDespite her tough exterior, Sarah has a soft spot for her animals, and is always looking for ways to improve their lives. She also has a kind heart and a willingness to help those in need. She often takes in stray animals and helps injured horses recover.\r\n\r\nSarah faces her fair share of challenges as a woman in a male-dominated field. She is often underestimated and belittled by the men in town, who don't believe a woman is capable of running a stable. But she doesn't let their attitudes get in her way, and she continues to be a respected and valued member of the community."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: jane_miller
+    summary: "A skilled and no-nonsense gunsmith who is also the town''s only repair woman."
+    description: "Jane Miller is a rugged and tough woman, with short, messy hair and calloused hands. She wears practical clothing that allows her to move freely, and she always has a tool belt strapped around her waist. She has a no-nonsense attitude and a sharp tongue, and she doesn''t suffer fools gladly."
+    backstory: "Jane Miller grew up in the west, and she learned from a young age how to handle a gun and fix things that were broken. She spent years honing her skills, and eventually became the town's go-to gunsmith and repair woman. She takes pride in her work, and is always looking for ways to improve her craft.\r\n\r\nDespite her gruff exterior, Jane has a kind heart and a soft spot for those in need. She often donates her time and skills to help those who can't afford to pay for her services. She is also a staunch defender of the town and its people, and will not hesitate to use her skills to protect them from danger.\r\n\r\nJane faces her fair share of challenges as a woman in a male-dominated field. She is often underestimated and belittled by the men in town, who don't believe a woman is capable of doing the work she does. But she doesn't let their attitudes get in her way, and she continues to be a respected and valued member of the community."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: sally_mccarty
+    summary: "Blackjack's right hand woman, beautiful but deadly and fiercly loyal to Kane."
+    description: "\"Sly\" Sally McCarty is a tall, lean woman with sharp features and a mischievous glint in her eye. She has long, curly red hair that she keeps tied back in a ponytail, and she wears a black leather vest over a white blouse, with a pair of tight-fitting pants and knee-high boots. She always carries a pistol at her side and a wicked-looking knife on her belt."
+    backstory: "Sally McCarty was born in a small town on the outskirts of Black Jack Kane's territory. She grew up surrounded by poverty and violence, and she learned to fend for herself from an early age. As a teenager, she fell in with a gang of outlaws who roamed the countryside, and she quickly proved herself to be one of their most skilled and ruthless members.\r\n\r\nWhen Kane came to town and established himself as the local crime boss, Sally saw an opportunity to rise even higher in the criminal underworld. She joined his gang and quickly became one of his most trusted lieutenants, known for her cunning and her ability to get the job done no matter what.\r\n\r\nSally is a master of disguise and infiltration, and she often uses her feminine wiles to get close to her targets before striking. She's also a crack shot with a pistol and a deadly knife fighter, and she's not afraid to get her hands dirty when the situation calls for it.\r\n\r\nSally is fiercely loyal to Kane, and she'll do anything to protect him and his interests. But she also has her own agenda, and she's always looking for ways to advance her own power and influence within the gang. Some say she may even be gunning for Kane's top spot, but for now, she's content to bide her time and wait for the right opportunity to present itself."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: cyrus_jackson
+    summary: "A skilled and silent gold miner with a heart of gold, known for his unwavering determination and willingness to help others."
+    description: "Cyrus Johnson is a rugged and determined gold miner who's never afraid to take on a challenge. He's been working in the gold fields for ten years and has gained a reputation as one of the best. Cyrus is a man of few words who prefers to let his actions do the talking. He's seen his fair share of danger and has come out on top every time. Despite being a loner, Cyrus has a heart of gold and will do anything to help those in need."
+    backstory: "Cyrus Jackson was born in the rough and tumble town of Thristle Gultch during the heart of the great gold rush era in the Wild West. Raised in a modest cabin on the outskirts of town, Cyrus witnessed firsthand the hardships that came with the pursuit of gold. His family, like many others, sought their fortune in the treacherous gold fields, but luck had not favored them. At a young age, Cyrus lost his parents to a mining accident, leaving him orphaned and alone. Determined to survive, he found work as a laborer in the nearby mines, enduring grueling conditions and the constant threat of danger. It was during this time that he honed his mining skills, learning the art of prospecting and developing a keen eye for detecting valuable veins of gold. His contributions to Thristle Gultch, including securing the town's exclusive rail stop access to the nearby gold deposits, have made him a respected figure in the community. With each swing of his pickaxe, Cyrus inches closer to his dream of transforming the town into a prosperous and stable place for future generations."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: jacob_williams
+    summary: "A rugged gold prospector with a soft spot for stray dogs, hoping to strike it rich and retire to a solitary life surrounded by his beloved canines."
+    description: "Jacob \"Goldfinger\" Williams had been mining for gold in the small frontier town of Redwood for over a decade, but had little to show for his efforts except for a few small nuggets. He lived alone in a small cabin on the outskirts of town and spent most of his time prospecting in the nearby hills. Despite his rough exterior, Jacob had a kind heart and a soft spot for stray dogs, which he frequently rescued and brought back to his cabin. His dream was to strike it rich one day and retire to a life of solitude, surrounded only by his beloved dogs and the riches he had uncovered."
+    backstory: "Jacob Williams, a weathered gold miner, endured the hardships of the great gold rush era in the small frontier town of Thristle Gultch. For over a decade, Jacob tirelessly searched for gold in the nearby hills but had little to show for his efforts, save for a few meager nuggets. He lived a solitary life in a small cabin on the outskirts of town, finding solace in the companionship of the stray dogs he frequently rescued and brought back to his humble abode. Despite his rough exterior, Jacob possessed a kind heart and an unwavering love for animals. The hardships of the gold rush had only deepened his empathy, as he witnessed the struggles faced by both humans and animals in the pursuit of fortune. With each rescued dog, Jacob found a sense of purpose and companionship in an otherwise lonely existence. Dreaming of striking it rich one day, Jacob longed for a life of solitude, surrounded by his loyal canine companions and the riches he hoped to uncover. His days were spent tirelessly prospecting, enduring physical toil and the ever-present danger of accidents and setbacks. Through it all, Jacob remained steadfast in his belief that perseverance would eventually lead to the golden payoff he sought. In the heart of Thristle Gultch Jacob was a familiar figure, weathered by his experiences and his unyielding pursuit of wealth. While others may have given up or succumbed to the hardships, Jacob's determination and kind heart fueled his unwavering dedication to his dreams, even as he yearned for the simple pleasures of a solitary life with his beloved dogs."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: ezekiel_clayton
+    summary: "A skilled and solitary prospector, characterized by his rugged appearance and knack for finding gold, while keeping his true nature a mystery to the townsfolk."
+    description: "Ezekiel Johnson, also known as Zeke, has spent most of his life in the frontier as a gold miner. He is a rugged, wiry man standing with weathered, sun-tanned skin and piercing blue eyes that seem to glimmer like the gold he seeks. Zeke wears a wide-brimmed hat to shield himself from the intense heat and dust of the mines, and his clothing is practical to survive the harsh conditions he encounters daily. He's known for being a skilled prospector, able to locate gold where others have failed, but his surly demeanor and a tendency to keep to himself make him an enigma to those in his small town."
+    backstory: "Ezekiel Clayton, commonly known as Zeke, is a rugged and wiry figure who spends the majority of his life as a gold miner in the unforgiving frontier of Thristle Gultch. Standing with weathered, sun-tanned skin and piercing blue eyes that seem to glimmer like the precious metal he seeks, Zeke is a sight to behold. He adorns himself with a wide-brimmed hat to shield against the scorching heat and dust of the mines, wearing practical clothing that ensures survival in the harsh conditions he encounters daily. Zeke has gained a reputation as a skilled prospector, possessing an uncanny ability to discover gold where others have failed. However, his surly demeanor and tendency to keep to himself create an air of mystery around him, making him an enigma to the residents of Thristle Gultch. While he is respected for his expertise, his solitary nature makes it difficult for others to truly understand him. Zeke's journey through the gold rush era is a testament to his resilience and self-reliance. He endures the common hardships of the era, facing treacherous conditions, backbreaking labor, and the constant uncertainty that comes with the pursuit of gold. Yet, beneath his hardened exterior, there may be hidden depths and untold stories, as Zeke navigates the world of Thristle Gultch, a place where the glimmering dreams of riches clash with the harsh realities of the Wild West."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: jasper_jones
+    summary: "A humble and hardworking miner nicknamed \"Lucky\", who struck gold on his first day and remains modest while offering support to his fellow miners."
+    description: "Jasper is a hardworking gold miner who has spent most of his life in the small frontier town of Deadwood, carving out a living from the unforgiving earth. He earned the nickname \"Lucky\" after striking gold on his first day out on the job, something that rarely happens in this tough line of work. Despite his success, Jasper remains humble, always willing to lend a hand to his fellow miners who aren't as fortunate. He's a man of few words and prefers to let his actions speak for him."
+    backstory: "Jasper Jones, known by the moniker \"Lucky\", is a diligent and dedicated gold miner who dedicated most of his life to the arduous pursuit of wealth in the small frontier town of Thristle Gultch. \r\nFrom the unforgiving earth, Jasper tirelessly labores to carve out a living in the midst of the great gold rush era. His reputation as Lucky stemmed from a remarkable stroke of fortune on his very first day in the job, a feat that was a rarity in such a demanding and unpredictable line of work. Despite his early success, Jasper remained remarkably humble and grounded. Instead of reveling in his own luck, he extended a helping hand to his fellow miners who hadn't experienced the same fortune. With a quiet demeanor and a preference for actions over words, Jasper let his deeds speak volumes about his character. He embodied the spirit of camaraderie and community, always ready to lend a hand and support those who struggled in the pursuit of their own dreams. Jasper's journey through the mines of Thristle Gultch is one marked by perseverance and a commitment to his craft. His actions inspire and uplift those around him, as he remains a beacon of hope in the challenging and often merciless world of gold mining."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: jedediah_brewster
+    summary: "A tough and tenacious miner, with a kind heart and a dream of striking it rich while always ready to assist those in need."
+    description: "Jedediah Brown is a rough and rugged man, with a thick, bushy beard and weather-beaten hands that tell stories of a life spent digging in the dirt. He's a born and bred gold miner, having grown up in the hills and valleys of the frontier where his family made their living panning for gold. He's known for his tenacity and stubbornness, never giving up on a vein even when all others have abandoned it. But don't mistake his toughness for a lack of heart - Jed is a kind man at his core, always willing to lend a helping hand to those in need. His dream is to strike it rich and leave the dusty mining town behind, but for now, he's content to keep digging and hoping for the best."
+    backstory: "Jedediah Brewster, a true son of the gold rush era, spent his formative years in the rugged hills and valleys of Thristle Gultch. Born into a family of gold miners, Jed learned the trade from his parents and experienced the hardships and triumphs that came with a life spent digging in the dirt. With a thick, bushy beard and weather-beaten hands, Jed's appearance bore the marks of his labor, telling tales of his unwavering commitment to the pursuit of gold. Known for his tenacity and stubbornness, Jedediah never gave up on a vein, even when others had long abandoned hope. He possessed an unyielding determination to uncover hidden treasures beneath the earth's surface. However, beneath his tough exterior, Jed had a heart of gold. He was always willing to extend a helping hand to those in need, offering support and guidance to fellow miners or lending aid to the struggling members of Thristle Gultch. Jedediah's dream was to strike it rich and escape the dusty mining town that had been his lifelong home. The desire for a better life and the promise of prosperity fueled his relentless pursuit of gold. Though he yearned for a future beyond the mines, for now, Jed remained content, continuing to dig and hope for the best, never losing sight of the possibility that the next shovel-full could be the one to fulfill his dreams."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: rose_morgan
+    summary: "A fiery and independent saloon singer who captures Wyatt's heart."
+    description: "Rose Morgan is a strikingly beautiful woman, with long red hair and bright green eyes. She has a curvaceous figure and a sultry voice that can make any man''s heart skip a beat. She wears tight-fitting dresses that show off her figure, and her hair is always styled in loose waves."
+    backstory: "Rose Morgan grew up the only child of Sheriff \"Top\" Morgan until his death last year. Her mother died in childbirth.  When Wyatt Cooper came to town and worked for her father, she was immediately drawn to him, and the feeling was mutual. She had a rough year after her father was murdered by bandits, but she and Wyatt have become very close. She's not sure how to tell him about her feelings yet.\r\n\r\nShe always had a passion for music. She taught herself to play guitar and sing, and soon found work as a saloon singer. She quickly gained a reputation for her talent, and soon became one of the most popular performers in town. But Rose was more than just a pretty face and a talented singer. She had a fiery spirit and a strong will, and she didn't take kindly to anyone trying to tell her what to do."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: victoria_grant
+    summary: "The town Mayor as well as a savvy and successful businesswoman who owns the town's only hotel. Plays a mentor role to Wyatt Cooper."
+    description: "Victoria Grant is a striking woman, with sharp features and piercing blue eyes. She has long, flowing hair that she keeps pinned up in a bun, and she dresses in elegant gowns and expensive jewelry. She exudes an air of confidence and sophistication that commands respect from those around her."
+    backstory: "Victoria Grant was born into a wealthy family, but she didn't let that stop her from making a name for herself. She moved to the west and opened the Grand Hotel, which quickly became the most luxurious and sought-after establishment in town. She runs her business with an iron fist, and is known for her shrewd business sense and unwavering determination.\r\n\r\nBut Victoria is more than just a successful businesswoman. She has been the Mayor since the town's inception when she financed the bank and the railroad station. She is now a mentor to the townsfolk, especially Wyatt Cooper, the current sheriff. She was close with the previous sheriff, Rose's father, until he was gunned down by bandits last year and makes it her duty to look after Rose and Wyatt."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: horatio_bones
+    summary: "An eccentric and bumbling undertaker who doubles as the town''s doctor."
+    description: "Dr. Horatio Bones is a tall and lanky man, with a bald head and a wild mustache that seems to have a life of its own. He dresses in a black suit and a top hat, and carries a cane that he likes to twirl around. He has a habit of speaking in long, rambling sentences and using big words that nobody else understands."
+    backstory: "Dr. Horatio Bones was once a respected scientist and doctor in the big city, but he grew tired of the politics and the stuffy atmosphere. He moved to the west to start a new life, and quickly found work as an undertaker and doctor in a small town. He may be a bit of a bumbler, but he takes his work seriously and is always looking for new ways to help his patients.\r\n\r\nDespite his quirks, Dr. Bones is well-respected in the town, and many people come to him for help with their ailments. He has a particular interest in the science of the human body, and is always experimenting with new treatments and remedies, much to the chagrin of the town's more traditional doctors.\r\n\r\nDr. Bones also has a bit of a playful side, and enjoys pulling pranks and getting himself into trouble. He has a habit of accidentally knocking over coffins at funerals, or getting his coat caught on a fence and falling flat on his face. But his good nature and kind heart make him a beloved figure in the town, and nobody can stay mad at him for long."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: tobias_stoddard
+    summary: "A bumbling and often inebriated bank teller who provides comic relief to the town."
+    description: "Tobias Stoddard is a short and rotund man with a bulbous nose and a thick beard. He is often seen stumbling around the town, a bottle of whiskey in his hand and a silly grin on his face. He wears a dusty suit and tie, which he often spills his drinks on."
+    backstory: "Tobias Stoddard was once a well-respected bank teller, but he gradually developed a drinking problem that has spiraled out of control. He is often seen stumbling around the town, making a fool of himself and causing all sorts of chaos. Despite his antics, he is still employed at the bank, as he is the only one who knows how to handle the books.\r\n\r\nDespite his flaws, Tobias is a beloved figure in the town. His antics provide much-needed comic relief, and he is always willing to lend a helping hand to those in need, even if it means going out of his way. He may not be the most reliable person in town, but he has a heart of gold, and is always looking for ways to make people laugh.\r\n\r\nTobias' drinking problem has caused him many problems over the years, and he is often the butt of jokes and ridicule. But he doesn't let it get him down, and he continues to be a beloved and valued member of the community."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: razor_donovan
     summary: "Blackjack's right hand man, he's quick with a knife and quick with his temper."
     description: "\"Razor\" Jim Donovan is a tall, muscular man with a shaved head and a thick beard. He has a scar over his left eye that gives him a menacing look, and he wears a black vest over a white shirt, with a pair of worn leather pants and high boots. He always carries a pair of sharp knives on his belt and a sawed-off shotgun over his shoulder."
-    backstory: "Jim Donovan was born into a family of Irish immigrants who settled in the wild west in search of a better life. But life in the frontier was tough, and Jim soon turned to a life of crime to survive. He started out robbing stagecoaches and trains, but he quickly graduated to more violent crimes, like murder and extortion.
-      When he met Black Jack Kane, he saw an opportunity to rise even higher in the criminal underworld. Kane was impressed with Jim's brute strength and his willingness to do whatever it takes to get the job done, and he took him under his wing.
-      Jim became one of Kane's most trusted henchmen, known for his brutal efficiency and his unwavering loyalty. He's not one for subtlety or finesse - he prefers to charge headlong into battle, guns blazing and knives flashing. He's a formidable opponent in a fight, and he's not afraid to take on multiple opponents at once.
-      Jim doesn't have much of a moral code, and he's willing to do whatever it takes to get what he wants. He's fiercely loyal to Kane, but he's also ambitious and has his own aspirations of rising to the top of the gang. Some say he's even more dangerous than Kane himself, because he's unpredictable and has a hair-trigger temper."
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
-  - persona_guid: ""
-    summary: ""
-    description: ""
-    backstory: ""
+    backstory: "Jim Donovan was born into a family of Irish immigrants who settled in the wild west in search of a better life. But life in the frontier was tough, and Jim soon turned to a life of crime to survive. He started out robbing stagecoaches and trains, but he quickly graduated to more violent crimes, like murder and extortion.\r\n\r\nWhen he met Black Jack Kane, he saw an opportunity to rise even higher in the criminal underworld. Kane was impressed with Jim's brute strength and his willingness to do whatever it takes to get the job done, and he took him under his wing.\r\n\r\nJim became one of Kane's most trusted henchmen, known for his brutal efficiency and his unwavering loyalty. He's not one for subtlety or finesse - he prefers to charge headlong into battle, guns blazing and knives flashing. He's a formidable opponent in a fight, and he's not afraid to take on multiple opponents at once.\r\n\r\nJim doesn't have much of a moral code, and he's willing to do whatever it takes to get what he wants. He's fiercely loyal to Kane, but he's also ambitious and has his own aspirations of rising to the top of the gang. Some say he's even more dangerous than Kane himself, because he's unpredictable and has a hair-trigger temper."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: dan_deadshot
+    summary: "A charismatic and mysterious person."
+    description: "Dan Deadshot is a tall and fat figure, with a brown eyes."
+    backstory: "Dan's reputation spread like wildfire as he embarked on a spree of stagecoach robberies, train heists, and bank holdups. He became infamous for his calculated approach to crime, always meticulously planning his attacks to maximize the haul and minimize the risk.\r\n\r\nWhat set Deadshot Dan apart from other outlaws was his unparalleled marksmanship. He could shoot a bullet through the eye of a needle from a hundred paces, earning him his fearsome moniker. It was said that he never missed a target and that his gun was an extension of his very soul.\r\n\r\nDespite his criminal pursuits, Deadshot Dan was not without a moral compass. He had a code of honor and never harmed innocents or those who couldn't defend themselves. He was known to share his spoils with the poor and oppressed, earning him a reputation as a charismatic outlaw with a Robin Hood-like aura.\r\n\r\nAs the lawmen closed in on his gang, Deadshot Dan's fame reached its peak. Bounty hunters and sheriffs from far and wide sought to claim the hefty reward on his head, but time and time again, he eluded capture with his quick wits and unmatched gunfighting skills."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: henry_jenkins
+    summary: "A kind and generous man who owns the General Store."
+    description: "Henry Jenkins is a middle-aged man with a kind face and a gentle demeanor. He has a neatly trimmed beard and wears a simple brown suit with a bow tie. He''s a little on the heavy side and walks with a slight limp, but he always has a smile on his face and a kind word for his customers."
+    backstory: "Henry Jenkins was born and raised in the town where he now owns the general store. His father was a blacksmith and his mother was a schoolteacher, and they instilled in him a sense of hard work and honesty. After his father's death, Henry took over the family business, but he always dreamed of something more.\r\n\r\nWhen he inherited a small sum of money from a distant relative, he used it to buy the general store in the center of town. It was a risk, but Henry was determined to make a success of it. He worked hard to establish a reputation for fair prices and high-quality goods, and soon the store became the hub of the town's commerce.\r\n\r\nHenry is well-respected in the community, and he's known for his generosity and his willingness to help those in need. He often extends credit to his customers who are struggling to make ends meet, and he's been known to donate food and supplies to the local orphanage.\r\n\r\nDespite his kind nature, Henry is no pushover. He's fiercely protective of his business and his customers, and he's been known to stand up to bullies and troublemakers who try to cause problems in his store. He's also a shrewd businessman, and he's always looking for ways to expand his inventory and improve his profits.\r\n\r\nOverall, Henry Jenkins is a beloved figure in the town, and he's seen as a pillar of the community."
+    actions_enabled: false
+    conversations_enabled: false
+  - persona_guid: ezekiel_blackwood
+    summary: "A charismatic and mysterious preacher who has an air of darkness surrounding him."
+    description: "Reverend Ezekiel Blackwood is a tall and imposing figure, with a gaunt face and piercing blue eyes. He wears a long, black robe and a wide-brimmed hat that casts a shadow over his face. He has a deep, rumbling voice that commands attention, and his sermons are filled with fire and brimstone."
+    backstory: "Reverend Ezekiel Blackwood came to the town from parts unknown, and little is known about his past. He quickly gained a reputation as a powerful and charismatic preacher, and his sermons drew large crowds. But there was always something unsettling about him, a sense of darkness that lingered around him.\r\n\r\nDespite his reputation, many in the town were drawn to him, and he quickly gained a following. But as time went on, rumors began to circulate about his true nature. Some said he was a devil worshipper, while others whispered that he had made a deal with the devil himself.\r\n\r\nDespite the rumors, Reverend Blackwood continued to preach to his congregation, and his sermons grew ever more powerful and persuasive. But there was always a sense of foreboding around him, a feeling that something terrible was lurking just beneath the surface."
+    actions_enabled: false
+    conversations_enabled: false

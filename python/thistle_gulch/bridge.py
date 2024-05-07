@@ -4,6 +4,9 @@ import os
 from datetime import datetime
 from typing import Callable, Optional, Awaitable, Dict, Any, List
 
+from langchain_core.language_models.llms import BaseLLM
+import fable_saga
+import fable_saga.server as saga_server
 import socketio
 import yaml
 import cattrs
@@ -157,6 +160,63 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         await self.bridge.runtime.api.pause()
 
         world_context = await self.bridge.runtime.api.get_world_context()
+
+        file_path = (
+            os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+            + "/personas_config2.yaml"
+        )
+        with open(file_path, "w") as f:
+            yaml.dump(
+                world_context.personas,
+                f,
+                default_style="",
+                default_flow_style=False,
+                width=10000,
+                sort_keys=False,
+            )
+
+        if self.bridge.personas_config:
+            logger.debug(f"[Simulation Ready] Configuring personas..")
+            for persona in self.bridge.personas_config.personas:
+                if not persona.persona_guid:
+                    continue
+
+                # Verify that this persona_guid is valid
+                existing_persona = next(
+                    (
+                        p
+                        for p in world_context.personas
+                        if p.persona_guid == persona.persona_guid
+                    ),
+                    None,
+                )
+                if existing_persona is None:
+                    logger.error(
+                        f"[Simulation Ready] While configuring personas: persona_guid not found: '{persona.persona_guid}'"
+                    )
+                    continue
+
+                if persona.summary:
+                    await self.bridge.runtime.api.update_character_property(
+                        persona.persona_guid, "summary", persona.summary
+                    )
+
+                if persona.description:
+                    await self.bridge.runtime.api.update_character_property(
+                        persona.persona_guid, "description", persona.description
+                    )
+
+                if persona.backstory:
+                    await self.bridge.runtime.api.update_character_property(
+                        persona.persona_guid, "backstory", persona.backstory
+                    )
+
+                if persona.actions_enabled or persona.conversations_enabled:
+                    await self.bridge.runtime.api.enable_agent(
+                        persona.persona_guid,
+                        persona.actions_enabled,
+                        persona.conversations_enabled,
+                    )
 
         # Call the on_ready callback if it exists.
         if self.bridge.on_ready is not None:
@@ -313,6 +373,29 @@ class LlmConfig:
 
 
 @define(slots=True)
+def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
+
+    """Load a model dynamically based on the configuration."""
+    if model_cfg.get("import") is None or model_cfg.get("class") is None:
+        raise Exception("Model configuration must include 'import' and 'class' fields.")
+
+    # Import the module and get the class.
+    module = __import__(model_cfg["import"], fromlist=[model_cfg["class"]])
+    model_class = getattr(module, model_cfg["class"])
+
+    # Create an instance of the class with the provided parameters.
+    llm: BaseLLM = model_class(**model_cfg.get("params", {}))
+
+    # Add the fable_saga callbacks to the model.
+    if llm.callbacks is None:
+        llm.callbacks = [
+            fable_saga.StreamingDebugCallback(),
+            fable_saga.SagaCallbackHandler(),
+        ]
+    return llm
+
+
+@define
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
@@ -500,29 +583,53 @@ class RuntimeBridge:
                 api_key=None,
                 timeout=None,
             )
+        # TODO: Load configuration from a file.
+        cfg = {
+            "llm": {
+                "import": "langchain_openai",
+                "class": "ChatOpenAI",
+                "params": {
+                    "streaming": True,
+                    "model_name": "gpt-3.5-turbo",
+                    "temperature": 0.9,
+                    "model_kwargs": {
+                      "response_format": {"type": "json_object"},
+                    },
+                },
+            },
+        }
+
+        # TODO: Load configuration from a file.
+        cfg = {
+            "llm": {
+                "import": "langchain_community.llms",
+                "class": "Ollama",
+                "params": {
+                    "model": "llama3",
+                    "format": "json",
+                },
+            },
+        }
 
         # Set the routes for SAGA stuff if not already defined using the defaults.
         # This allows custom routes to be added before the server is started and
         # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
         if IncomingRoutes.generate_actions.value not in self.router.routes:
+            llm = dynamic_model_loader(cfg["llm"])
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(
-                        ActionsAgent(), self.config.llm.action_generation_model
-                    ),
+                    TGActionsEndpoint(ActionsAgent(llm=llm)),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
             )
         if IncomingRoutes.generate_conversations.value not in self.router.routes:
+            llm = dynamic_model_loader(cfg["llm"])
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    TGConversationEndpoint(
-                        ConversationAgent(),
-                        self.config.llm.conversation_generation_model,
-                    ),
+                    saga_server.ConversationEndpoint(ConversationAgent(llm=llm)),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -620,7 +727,7 @@ def main(auto_run=True) -> RuntimeBridge:
         bridge_config.runtime_path = args.runtime
 
     # Run the bridge server.
-    bridge = RuntimeBridge(bridge_config)
+    bridge = RuntimeBridge(bridge_config, personas_config)
     if auto_run:
         bridge.run()
     return bridge
