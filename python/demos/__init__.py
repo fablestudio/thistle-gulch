@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Optional, List, Any, Dict
 
 from thistle_gulch.bridge import RuntimeBridge
+from thistle_gulch.data_models import WorldContextObject
 
 
 async def choose_from_list(
@@ -94,9 +95,12 @@ def yes_no_validator(val: str) -> int:
     raise ValueError("Please enter 'y' or 'n'.")
 
 
-async def disable_all_agents(bridge: RuntimeBridge):
+async def disable_all_agents(
+    bridge: RuntimeBridge, world_context: Optional[WorldContextObject] = None
+):
     """Disable all agents' actions and conversations"""
-    world_context = await bridge.runtime.api.get_world_context()
+    if world_context is None:
+        world_context = await bridge.runtime.api.get_world_context()
     for persona in world_context.personas:
         await bridge.runtime.api.enable_agent(persona.persona_guid, False, False)
 

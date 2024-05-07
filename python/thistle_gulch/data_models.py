@@ -17,7 +17,7 @@ class Vector3:
 
 @define(slots=True)
 class Persona:
-    persona_guid: str
+    persona_guid: str = ""
     name: str = ""
     summary: str = ""
     description: str = ""
@@ -26,8 +26,8 @@ class Persona:
     position: Optional[Vector3] = None
     location_id: str = ""
     destination_id: str = ""
-    actions_enabled: bool = False
-    conversations_enabled: bool = False
+    actions_enabled: Optional[bool] = None
+    conversations_enabled: Optional[bool] = None
 
 
 @define(slots=True)

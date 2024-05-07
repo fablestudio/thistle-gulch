@@ -50,11 +50,10 @@ class EnableAgentDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/character_commands.py
         """
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
-            world_context = await bridge.runtime.api.get_world_context()
             personas = dict(
                 [
                     (persona.persona_guid, persona.summary)
@@ -123,9 +122,9 @@ class UpdateCharacterPropertyDemo(Demo):
 
         property_value = formatted_input(f"Enter new value for {property_name}")
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             print(f"Updating {persona_guid} {property_name} to '{property_value}'")
             await bridge.runtime.api.update_character_property(
@@ -190,13 +189,12 @@ class ChangeCharacterMemoriesDemo(Demo):
 
         persona_guid = "wyatt_cooper"
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             # Find the first existing memory and remove it
             # This is only for demostration purposes, see below where we use api.character_memory_clear to remove all memories
-            world_context = await bridge.runtime.api.get_world_context()
             old_memories = next(
                 m for m in world_context.memories if m.persona_guid == persona_guid
             )
@@ -297,9 +295,9 @@ class FocusCharacter(Demo):
         tick_count = 0
 
         # Focus on and follow the character at simulation start
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             print(f"Focusing {persona_guid} and opening the character details panel")
             await bridge.runtime.api.focus_character(
@@ -382,9 +380,9 @@ class OverrideCharacterAction(Demo):
 
         persona_guid = "jack_kane"
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             take_to_action = TakeToSkill(
                 guid="dead_body",
@@ -438,10 +436,10 @@ class RobBankAndArrestCriminal(Demo):
         arrest_triggered = False
         arrest_time: datetime
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
             nonlocal robber_id, arrest_time
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             # Arrest the robber 60 minutes after the simulation starts
             # This time span helps ensure that the robbery happens before the arrest
@@ -538,9 +536,9 @@ class CustomConversation(Demo):
         speaker_1_id = "jack_kane"
         speaker_2_id = "razor_donovan"
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             conversation = [
                 {
@@ -612,13 +610,13 @@ class PlaceCharacter(Demo):
         """
 
         persona_guid = "jack_kane"
-        world_context: WorldContextObject
-        location_options = []
-        tick_count = -1
+        world_context_: WorldContextObject
+        location_options_ = []
+        tick_count_ = -1
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            nonlocal world_context, location_options
+            nonlocal world_context_, location_options_
 
             await disable_all_agents(bridge)
 
@@ -632,19 +630,19 @@ class PlaceCharacter(Demo):
             )
 
             # Store a list of location names for use with the modal
-            world_context = await bridge.runtime.api.get_world_context()
-            location_options = [location.name for location in world_context.locations]
+            world_context_ = world_context
+            location_options_ = [location.name for location in world_context_.locations]
 
             # Start the simulation
             return True
 
         async def on_tick(_, current_time: datetime):
 
-            nonlocal tick_count
+            nonlocal tick_count_
 
             # Choose a new location every 5 ticks
-            tick_count += 1
-            if tick_count % 5 != 0:
+            tick_count_ += 1
+            if tick_count_ % 5 != 0:
                 return
 
             # Allow player to choose new location in Runtime
@@ -652,7 +650,7 @@ class PlaceCharacter(Demo):
             await bridge.runtime.api.modal(
                 f"Choose a Location",
                 f"Place {persona_guid} at the following location:",
-                location_options,
+                location_options_,
                 True,
                 future=future,
             )
@@ -660,9 +658,9 @@ class PlaceCharacter(Demo):
 
             # Retrieve the chosen location
             choice_idx = modal_response["choice"]
-            location_name = location_options[choice_idx]
+            location_name = location_options_[choice_idx]
             location = next(
-                loc for loc in world_context.locations if loc.name == location_name
+                loc for loc in world_context_.locations if loc.name == location_name
             )
 
             print(

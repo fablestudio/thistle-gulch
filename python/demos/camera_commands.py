@@ -3,7 +3,7 @@ from datetime import datetime
 from time import sleep
 
 from thistle_gulch.bridge import RuntimeBridge
-from thistle_gulch.data_models import Vector3
+from thistle_gulch.data_models import Vector3, WorldContextObject
 from . import (
     Demo,
     formatted_input_async,
@@ -53,13 +53,14 @@ class FollowCharacter(Demo):
         )
 
         # Follow the character at simulation start
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             print(f"Following {persona_guid} with the camera")
             await bridge.runtime.api.follow_character(persona_guid, zoom)
 
+            # Start the simulation
             return True
 
         tick_count = 0
@@ -159,9 +160,9 @@ class PlaceCamera(Demo):
         )
 
         # Place the camera at simulation start
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             print(
                 f"Placing camera at \n"
@@ -185,6 +186,7 @@ class PlaceCamera(Demo):
             )
             await future
 
+            # Start the simulation
             return True
 
         print("Registering custom on_ready callback.")

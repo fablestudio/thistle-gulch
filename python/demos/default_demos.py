@@ -34,7 +34,9 @@ class DefaultTutorial(Demo):
 
         start_time: datetime.datetime
 
-        async def on_ready(bridge: RuntimeBridge) -> bool:
+        async def on_ready(
+            bridge: RuntimeBridge, world_context: WorldContextObject
+        ) -> bool:
             nonlocal start_time
 
             # First, we focus on a character to see their details.
@@ -45,7 +47,7 @@ class DefaultTutorial(Demo):
 
             # Disable all agents that may have been enabled by the runtime args.
             # This way we can control the flow of the demo.
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             # Create a future that can be awaited until the response is received.
             future = asyncio.get_event_loop().create_future()
@@ -68,8 +70,7 @@ class DefaultTutorial(Demo):
             await future
 
             # Start the simulation (api.resume() is called automatically returning True).
-            context = await bridge.runtime.api.get_world_context()
-            start_time = datetime.datetime.fromisoformat(context.time)
+            start_time = datetime.datetime.fromisoformat(world_context.time)
             return True
 
         bridge.on_ready = on_ready
@@ -259,18 +260,18 @@ class MeetTheCharactersDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/default_demos.py
         """
 
-        world_context: WorldContextObject
-        character_names: list
+        world_context_: WorldContextObject
+        character_names_: list
 
         async def choose_character():
-            nonlocal world_context, character_names
+            nonlocal world_context_, character_names_
 
             # Show the user a list of character names
             future = asyncio.get_event_loop().create_future()
             await bridge.runtime.api.modal(
                 "Choose a Character to Meet",
                 "",
-                character_names,
+                character_names_,
                 False,
                 future=future,
             )
@@ -279,8 +280,8 @@ class MeetTheCharactersDemo(Demo):
 
             # Retrieve the chosen character persona
             choice_idx = modal_response["choice"]
-            choice_name = character_names[choice_idx]
-            persona = next(p for p in world_context.personas if p.name == choice_name)
+            choice_name = character_names_[choice_idx]
+            persona = next(p for p in world_context_.personas if p.name == choice_name)
 
             print(f"Showing character details for {persona.persona_guid}")
 
@@ -307,18 +308,18 @@ class MeetTheCharactersDemo(Demo):
             await future
 
             # Remove this character from the list of remaining characters
-            if persona.name in character_names:
-                character_names.remove(persona.name)
+            if persona.name in character_names_:
+                character_names_.remove(persona.name)
 
-        async def on_ready(_: RuntimeBridge) -> bool:
-            nonlocal world_context, character_names
+        async def on_ready(_: RuntimeBridge, world_context: WorldContextObject) -> bool:
+            nonlocal world_context_, character_names_
 
             # Don't generate any actions or conversations yet
             await disable_all_agents(bridge)
 
             # Get all character names from the world context
-            world_context = await bridge.runtime.api.get_world_context()
-            character_names = [persona.name for persona in world_context.personas]
+            world_context_ = world_context
+            character_names_ = [persona.name for persona in world_context_.personas]
 
             await choose_character()
 
@@ -333,7 +334,7 @@ class MeetTheCharactersDemo(Demo):
             print(f"Finished meeting {persona_guid}")
 
             # If any character names remain, choose a new one
-            if character_names:
+            if character_names_:
                 await choose_character()
             # Otherwise end the demo
             else:

@@ -28,7 +28,7 @@ from . import (
     MessageSystem,
     IncomingRoutes,
 )
-from .data_models import PersonaContextObject, Persona
+from .data_models import PersonaContextObject, Persona, WorldContextObject
 
 # Set the saga_server converter to allow extra keys in for now.
 saga_server.converter.forbid_extra_keys = False
@@ -87,7 +87,9 @@ class TGConversationRequest(saga_server.ConversationRequest):
     context_obj: Optional[PersonaContextObject] = None
 
 
-class TGConversationEndpoint(BaseEndpoint[TGConversationRequest, saga_server.ConversationResponse]):
+class TGConversationEndpoint(
+    BaseEndpoint[TGConversationRequest, saga_server.ConversationResponse]
+):
     """Server for SAGA."""
 
     def __init__(
@@ -154,11 +156,13 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         logger.debug(f"[Simulation Ready] Pausing simulation during initialization..")
         await self.bridge.runtime.api.pause()
 
+        world_context = await self.bridge.runtime.api.get_world_context()
+
         # Call the on_ready callback if it exists.
         if self.bridge.on_ready is not None:
             # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
             logger.debug(f"[Simulation Ready] Calling on_ready callback..")
-            resume = await self.bridge.on_ready(self.bridge)
+            resume = await self.bridge.on_ready(self.bridge, world_context)
         else:
             logger.debug(f"[Simulation Ready] No on_ready callback registered..")
             resume = True
@@ -319,10 +323,13 @@ class BridgeConfig:
 
 class RuntimeBridge:
 
-    def __init__(self, config: BridgeConfig):
+    def __init__(self, config: BridgeConfig, personas_config: PersonasConfig):
         self.config = config
+        self.personas_config = personas_config
         self.router = IncomingMessageRouter()
-        self.on_ready: Optional[Callable[[RuntimeBridge], Awaitable[bool]]] = None
+        self.on_ready: Optional[
+            Callable[[RuntimeBridge, WorldContextObject], Awaitable[bool]]
+        ] = None
         self.on_tick: Optional[Callable[[RuntimeBridge, datetime], Awaitable[None]]] = (
             None
         )
@@ -483,7 +490,9 @@ class RuntimeBridge:
             try:
                 from langchain_anthropic import ChatAnthropic
             except ImportError:
-                raise Exception("You must install thistle-gulch using `--with anthropic` to use this model")
+                raise Exception(
+                    "You must install thistle-gulch using `--with anthropic` to use this model"
+                )
             actions_llm = ChatAnthropic(
                 model_name=self.config.llm.action_generation_model,
                 callbacks=[StreamingDebugCallback()],
@@ -499,7 +508,9 @@ class RuntimeBridge:
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(ActionsAgent(), self.config.llm.action_generation_model),
+                    TGActionsEndpoint(
+                        ActionsAgent(), self.config.llm.action_generation_model
+                    ),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -508,7 +519,10 @@ class RuntimeBridge:
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    TGConversationEndpoint(ConversationAgent(), self.config.llm.conversation_generation_model),
+                    TGConversationEndpoint(
+                        ConversationAgent(),
+                        self.config.llm.conversation_generation_model,
+                    ),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -533,21 +547,9 @@ def main(auto_run=True) -> RuntimeBridge:
         type=str,
         help="Path to the thistle gulch runtime and any additional arguments",
     )
-    parser.add_argument(
-        "--host", type=str, help="Host to listen on"
-    )
-    parser.add_argument(
-        "--port", type=int, help="Port to listen on"
-    )
-    parser.add_argument(
-        "--cors", type=str, help="CORS origin"
-    )
-    parser.add_argument(
-        "--action_generation_model", type=str, help="The LLM to use for actions"
-    )
-    parser.add_argument(
-        "--conversation_generation_model", type=str, help="The LLM to use for conversations"
-    )
+    parser.add_argument("--host", type=str, help="Host to listen on")
+    parser.add_argument("--port", type=int, help="Port to listen on")
+    parser.add_argument("--cors", type=str, help="CORS origin")
     parser.add_argument(
         "--bridge_config",
         type=str,
@@ -563,7 +565,7 @@ def main(auto_run=True) -> RuntimeBridge:
     args = parser.parse_args()
 
     def get_abs_path(file_name: str) -> str:
-        """ Append the file name to the project or exe root """
+        """Append the file name to the project or exe root"""
         root_path: Optional[str] = (
             thistle_gulch.get_exe_dir()
             if thistle_gulch.is_exe_build()
@@ -572,7 +574,7 @@ def main(auto_run=True) -> RuntimeBridge:
         return f"{root_path}/{file_name}"
 
     def load_yaml(file_path: str) -> Optional[Any]:
-        """ Load yaml data from the given absolute path """
+        """Load yaml data from the given absolute path"""
         if not os.path.exists(file_path):
             logger.error(f"Failed to find config file at '{file_path}'")
             return None
@@ -616,10 +618,6 @@ def main(auto_run=True) -> RuntimeBridge:
         bridge_config.cors = args.cors
     if args.runtime:
         bridge_config.runtime_path = args.runtime
-    if args.action_generation_model:
-        bridge_config.llm.action_generation_model = args.action_generation_model
-    if args.conversation_generation_model:
-        bridge_config.llm.conversation_generation_model = args.conversation_generation_model
 
     # Run the bridge server.
     bridge = RuntimeBridge(bridge_config)

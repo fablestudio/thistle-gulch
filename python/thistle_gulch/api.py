@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from enum import Enum
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Dict, Any
 from datetime import datetime
 from asyncio import Future
 
@@ -101,32 +101,43 @@ class API:
         self.runtime.start_date = date
 
     async def enable_agent(
-        self, persona_guid: str, actions: bool, conversations: bool
+        self,
+        persona_guid: str,
+        actions: Optional[bool] = None,
+        conversations: Optional[bool] = None,
     ) -> None:
         """
-        Enable or disable the Bridge agent for a specific character. Enabled agents generate their actions using the
-        python Bridge by sending requests to generate action options. Disabled agents generate their actions in the
-        simulation Runtime using a simple scoring system similar to the one used by The Sims. The agent state does not
-        affect conversation generation - all characters use the Bridge for this purpose.
+        Enable or disable the Bridge for action and/or conversation generation. Generates actions using the
+        python Bridge by sending requests to generate action options. When bridge actions are disabled, actions are
+        generated in the simulation Runtime using a simple scoring system similar to the one used by The Sims.
+        Conversations are only generated via the bridge - if disabled
 
         :param persona_guid: persona to modify
         :param actions: Enable or disable the agent's action generation
         :param conversations: Enable or disable the agent's conversation generation
         """
-        logger.debug(
-            f"{('Enabling' if actions else 'Disabling')} actions: {persona_guid}"
-        )
-        logger.debug(
-            f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_guid}"
-        )
+
+        if actions is None and conversations is None:
+            logger.error(
+                f"Failed to enable agent for '{persona_guid}' - at least one of the 'actions' or 'conversations' arguments must be set"
+            )
+            return
+
+        data: Dict[str, Any] = {"command": "enable-agent", "persona_guid": persona_guid}
+        if actions is not None:
+            data["actions"] = actions
+            logger.debug(
+                f"{('Enabling' if actions else 'Disabling')} actions: {persona_guid}"
+            )
+        if conversations is not None:
+            data["conversations"] = conversations
+            logger.debug(
+                f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_guid}"
+            )
+
         await self.runtime.send_message(
             "character-command",
-            {
-                "command": "enable-agent",
-                "persona_guid": persona_guid,
-                "actions": actions,
-                "conversations": conversations,
-            },
+            data,
         )
 
     async def character_memory_add(
