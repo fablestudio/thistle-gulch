@@ -165,8 +165,6 @@ class API:
 
         if entity_ids is None:
             entity_ids = [persona_guid]
-        if position is None:
-            position = Vector3(0, 0, 0)
         if importance_weight is None:
             importance_weight = 0.5
 

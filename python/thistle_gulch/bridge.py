@@ -31,7 +31,12 @@ from . import (
     MessageSystem,
     IncomingRoutes,
 )
-from .data_models import PersonaContextObject, Persona, WorldContextObject
+from .data_models import (
+    PersonaContextObject,
+    Persona,
+    WorldContextObject,
+    PersonaConfig,
+)
 
 # Set the saga_server converter to allow extra keys in for now.
 saga_server.converter.forbid_extra_keys = False
@@ -86,6 +91,7 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
                 req, TGActionsRequest
             ), f"Invalid request type: {type(req)}"
 
+            # Disable request model overrides now that we're using a config
             # Override the model or use the one included in the request
             # model = self.model_override if self.model_override else req.model
 
@@ -133,8 +139,9 @@ class TGConversationEndpoint(
                 req, TGConversationRequest
             ), f"Invalid request type: {type(req)}"
 
+            # Disable request model overrides now that we're using a config
             # Override the model or use the one included in the request
-            #model = self.model_override if self.model_override else req.model
+            # model = self.model_override if self.model_override else req.model
 
             conversation = await self.agent.generate_conversation(
                 req.persona_guids,
@@ -184,7 +191,7 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
 
         world_context = await self.bridge.runtime.api.get_world_context()
 
-        # Uncomment to update personas config
+        # Uncomment to update personas config to latest from Runtime
         # file_path = (
         #     os.path.dirname(os.path.dirname(thistle_gulch.__file__))
         #     + "/personas_config.yaml"
@@ -199,10 +206,10 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         #         sort_keys=False,
         #     )
 
-        if self.bridge.personas_config:
+        if self.bridge.persona_configs:
             logger.debug(f"[Simulation Ready] Configuring personas..")
-            for persona in self.bridge.personas_config.personas:
-                if not persona.persona_guid:
+            for persona_cfg in self.bridge.persona_configs:
+                if not persona_cfg.persona_guid:
                     continue
 
                 # Verify that this persona_guid is valid
@@ -210,37 +217,49 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
                     (
                         p
                         for p in world_context.personas
-                        if p.persona_guid == persona.persona_guid
+                        if p.persona_guid == persona_cfg.persona_guid
                     ),
                     None,
                 )
                 if existing_persona is None:
                     logger.error(
-                        f"[Simulation Ready] While configuring personas: persona_guid not found: '{persona.persona_guid}'"
+                        f"[Simulation Ready] While configuring personas: persona_guid not found: '{persona_cfg.persona_guid}'"
                     )
                     continue
 
-                if persona.summary:
+                if persona_cfg.summary:
                     await self.bridge.runtime.api.update_character_property(
-                        persona.persona_guid, "summary", persona.summary
+                        persona_cfg.persona_guid, "summary", persona_cfg.summary
                     )
 
-                if persona.description:
+                if persona_cfg.description:
                     await self.bridge.runtime.api.update_character_property(
-                        persona.persona_guid, "description", persona.description
+                        persona_cfg.persona_guid, "description", persona_cfg.description
                     )
 
-                if persona.backstory:
+                if persona_cfg.backstory:
                     await self.bridge.runtime.api.update_character_property(
-                        persona.persona_guid, "backstory", persona.backstory
+                        persona_cfg.persona_guid, "backstory", persona_cfg.backstory
                     )
 
-                if persona.actions_enabled or persona.conversations_enabled:
+                if persona_cfg.actions_enabled or persona_cfg.conversations_enabled:
                     await self.bridge.runtime.api.enable_agent(
-                        persona.persona_guid,
-                        persona.actions_enabled,
-                        persona.conversations_enabled,
+                        persona_cfg.persona_guid,
+                        persona_cfg.actions_enabled,
+                        persona_cfg.conversations_enabled,
                     )
+
+                if persona_cfg.memories:
+                    await self.bridge.runtime.api.character_memory_clear(persona_cfg.persona_guid)
+                    for memory_cfg in persona_cfg.memories:
+                        memory = await self.bridge.runtime.api.character_memory_add(
+                            persona_guid=persona_cfg.persona_guid,
+                            timestamp=memory_cfg.timestamp,
+                            summary=memory_cfg.summary,
+                            entity_ids=memory_cfg.entity_ids,
+                            position=memory_cfg.position,
+                            importance_weight=memory_cfg.importance_weight,
+                        )
 
         # Call the on_ready callback if it exists.
         if self.bridge.on_ready is not None:
@@ -420,11 +439,6 @@ def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
 
 
 @define(slots=True)
-class PersonasConfig:
-    personas: List[Persona] = []
-
-
-@define(slots=True)
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
@@ -436,9 +450,9 @@ class BridgeConfig:
 
 class RuntimeBridge:
 
-    def __init__(self, config: BridgeConfig, personas_config: PersonasConfig):
+    def __init__(self, config: BridgeConfig, persona_configs: List[PersonaConfig]):
         self.config = config
-        self.personas_config = personas_config
+        self.persona_configs = persona_configs
         self.router = IncomingMessageRouter()
         self.on_ready: Optional[
             Callable[[RuntimeBridge, WorldContextObject], Awaitable[bool]]
@@ -675,7 +689,7 @@ def main(auto_run=True) -> RuntimeBridge:
             bridge_config = cattrs.structure(bridge_config_yaml, BridgeConfig)
 
     # Load the personas config file from disk
-    personas_config = PersonasConfig()
+    personas_config = []
     if args.personas_config:
         personas_config_path = args.personas_config.replace("\\", "/")
         # If it's a file name, get the absolute path
@@ -684,7 +698,7 @@ def main(auto_run=True) -> RuntimeBridge:
         # Load and structure the yaml
         personas_config_yaml = load_yaml(personas_config_path)
         if personas_config_yaml:
-            personas_config = cattrs.structure(personas_config_yaml, PersonasConfig)
+            personas_config = cattrs.structure(personas_config_yaml.get("personas"), List[PersonaConfig])
 
     # Command-line arguments override the config values on disk
     if args.host:
