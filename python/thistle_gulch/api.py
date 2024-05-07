@@ -221,27 +221,28 @@ class API:
             {"command": "character-memory-clear", "persona_guid": persona_guid},
         )
 
-    async def update_character_property(
-        self, persona_guid: str, property_name: str, value: str
+    async def update_character_properties(
+        self, persona_guid: str, property_values: Dict[str, Any]
     ) -> None:
         """
-        Set a character property to a new value. Characters in Thistle Gulch come with a set of pre-defined properties
-        such as energy, description, and backstory which ultimately define the behavior of the character in the
-        simulation via the generation of actions and conversations. For instance, changing a character's backstory
-        alters their motivations and can lead them to make very different decisions when interacting with other characters.
+        Set one or more character properties to a new value. Characters in Thistle Gulch come with a set of pre-defined
+        properties such as energy, description, and backstory which ultimately define the behavior of the character in
+        the simulation via the generation of actions and conversations. For instance, changing a character's backstory
+        alters their motivations and can lead them to make very different decisions when interacting with other
+        characters.
 
         :param persona_guid: Persona to modify
-        :param property_name: Name of the property to modify
-        :param value: Value to assign to the property
+        :param property_values: Map from property names to their new values
         """
-        logger.debug(f"Updating {persona_guid} {property_name} to '{value}'")
+
+        logger.debug(f"Updating {persona_guid} properties to {property_values}")
         await self.runtime.send_message(
             "character-command",
             {
-                "command": "update-character-property",
+                "command": "update-character-properties",
                 "persona_guid": persona_guid,
-                "property": property_name,
-                "value": value,
+                "properties": list(property_values.keys()),
+                "values": list(property_values.values()),
             },
         )
 

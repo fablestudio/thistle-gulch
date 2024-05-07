@@ -96,7 +96,10 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
             # model = self.model_override if self.model_override else req.model
 
             actions = await self.agent.generate_actions(
-                req.context, req.skills, req.retries, req.verbose,  # model
+                req.context,
+                req.skills,
+                req.retries,
+                req.verbose,  # model
             )
 
             response = saga_server.ActionsResponse(
@@ -206,13 +209,19 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         #         sort_keys=False,
         #     )
 
+        # Initialize any characters that are in the personas config
         if self.bridge.persona_configs:
             logger.debug(f"[Simulation Ready] Configuring personas..")
             for persona_cfg in self.bridge.persona_configs:
+
+                # A persona guid is required
                 if not persona_cfg.persona_guid:
+                    logger.error(
+                        f"Persona config does not specify the required 'persona_guid' parameter: {persona_cfg}"
+                    )
                     continue
 
-                # Verify that this persona_guid is valid
+                # Verify that this persona_guid exists in the world context
                 existing_persona = next(
                     (
                         p
@@ -227,21 +236,20 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
                     )
                     continue
 
+                # Override properties
+                property_values = {}
                 if persona_cfg.summary:
-                    await self.bridge.runtime.api.update_character_property(
-                        persona_cfg.persona_guid, "summary", persona_cfg.summary
-                    )
-
+                    property_values["summary"] = persona_cfg.summary
                 if persona_cfg.description:
-                    await self.bridge.runtime.api.update_character_property(
-                        persona_cfg.persona_guid, "description", persona_cfg.description
-                    )
-
+                    property_values["description"] = persona_cfg.description
                 if persona_cfg.backstory:
-                    await self.bridge.runtime.api.update_character_property(
-                        persona_cfg.persona_guid, "backstory", persona_cfg.backstory
+                    property_values["backstory"] = persona_cfg.backstory
+                if property_values:
+                    await self.bridge.runtime.api.update_character_properties(
+                        persona_cfg.persona_guid, property_values
                     )
 
+                # Override agent states
                 if persona_cfg.actions_enabled or persona_cfg.conversations_enabled:
                     await self.bridge.runtime.api.enable_agent(
                         persona_cfg.persona_guid,
@@ -249,8 +257,11 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
                         persona_cfg.conversations_enabled,
                     )
 
+                # Override memories
                 if persona_cfg.memories:
-                    await self.bridge.runtime.api.character_memory_clear(persona_cfg.persona_guid)
+                    await self.bridge.runtime.api.character_memory_clear(
+                        persona_cfg.persona_guid
+                    )
                     for memory_cfg in persona_cfg.memories:
                         memory = await self.bridge.runtime.api.character_memory_add(
                             persona_guid=persona_cfg.persona_guid,
@@ -417,7 +428,6 @@ class LlmConfig:
 
 @define(slots=True)
 def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
-
     """Load a model dynamically based on the configuration."""
     if model_cfg.get("import") is None or model_cfg.get("class") is None:
         raise Exception("Model configuration must include 'import' and 'class' fields.")
@@ -698,7 +708,9 @@ def main(auto_run=True) -> RuntimeBridge:
         # Load and structure the yaml
         personas_config_yaml = load_yaml(personas_config_path)
         if personas_config_yaml:
-            personas_config = cattrs.structure(personas_config_yaml.get("personas"), List[PersonaConfig])
+            personas_config = cattrs.structure(
+                personas_config_yaml.get("personas"), List[PersonaConfig]
+            )
 
     # Command-line arguments override the config values on disk
     if args.host:

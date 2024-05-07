@@ -93,7 +93,7 @@ class UpdateCharacterPropertyDemo(Demo):
         properties are energy, summary, description, and backstory, but this list will continue to expand in the future.
 
         API calls:
-            update_character_property()
+            update_character_properties()
             enable_agent()
             follow_character()
             focus_character()
@@ -126,9 +126,12 @@ class UpdateCharacterPropertyDemo(Demo):
 
             await disable_all_agents(bridge, world_context)
 
-            print(f"Updating {persona_guid} {property_name} to '{property_value}'")
-            await bridge.runtime.api.update_character_property(
-                persona_guid, property_name, property_value
+            property_values = {
+                property_name: property_value
+            }
+            print(f"Updating {persona_guid} properties to {property_values}")
+            await bridge.runtime.api.update_character_properties(
+                persona_guid, property_values
             )
 
             print(f"Focusing {persona_guid}")
