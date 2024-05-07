@@ -37,6 +37,29 @@ from .data_models import PersonaContextObject, Persona, WorldContextObject
 saga_server.converter.forbid_extra_keys = False
 
 
+def get_abs_path(file_name: str) -> str:
+    """Append the file name to the project or exe root"""
+    root_path: Optional[str] = (
+        thistle_gulch.get_exe_dir()
+        if thistle_gulch.is_exe_build()
+        else os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+    )
+    return f"{root_path}/{file_name}"
+
+
+def load_yaml(file_path: str) -> Optional[Any]:
+    """Load yaml data from the given absolute path"""
+    if not os.path.exists(file_path):
+        logger.error(f"Failed to find config file at '{file_path}'")
+        return None
+
+    with open(file_path, "r") as f:
+        for config_data in yaml.load(f, Loader=yaml.FullLoader):
+            return config_data
+
+    return None
+
+
 # Override the default saga_server request types to include a context_obj field when working with the runtime.
 @define(slots=True)
 class TGActionsRequest(saga_server.ActionsRequest):
@@ -64,10 +87,10 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
             ), f"Invalid request type: {type(req)}"
 
             # Override the model or use the one included in the request
-            model = self.model_override if self.model_override else req.model
+            # model = self.model_override if self.model_override else req.model
 
             actions = await self.agent.generate_actions(
-                req.context, req.skills, req.retries, req.verbose, model
+                req.context, req.skills, req.retries, req.verbose,  # model
             )
 
             response = saga_server.ActionsResponse(
@@ -111,14 +134,14 @@ class TGConversationEndpoint(
             ), f"Invalid request type: {type(req)}"
 
             # Override the model or use the one included in the request
-            model = self.model_override if self.model_override else req.model
+            #model = self.model_override if self.model_override else req.model
 
             conversation = await self.agent.generate_conversation(
                 req.persona_guids,
                 req.context,
                 req.retries,
                 req.verbose,
-                model,
+                # model,
             )
 
             response = saga_server.ConversationResponse(
@@ -161,19 +184,20 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
 
         world_context = await self.bridge.runtime.api.get_world_context()
 
-        file_path = (
-            os.path.dirname(os.path.dirname(thistle_gulch.__file__))
-            + "/personas_config2.yaml"
-        )
-        with open(file_path, "w") as f:
-            yaml.dump(
-                world_context.personas,
-                f,
-                default_style="",
-                default_flow_style=False,
-                width=10000,
-                sort_keys=False,
-            )
+        # Uncomment to update personas config
+        # file_path = (
+        #     os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+        #     + "/personas_config.yaml"
+        # )
+        # with open(file_path, "w") as f:
+        #     yaml.dump(
+        #         world_context.personas,
+        #         f,
+        #         default_style="",
+        #         default_flow_style=False,
+        #         width=10000,
+        #         sort_keys=False,
+        #     )
 
         if self.bridge.personas_config:
             logger.debug(f"[Simulation Ready] Configuring personas..")
@@ -395,13 +419,19 @@ def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
     return llm
 
 
-@define
+@define(slots=True)
+class PersonasConfig:
+    personas: List[Persona] = []
+
+
+@define(slots=True)
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
     cors: str = "*"
     runtime_path: Optional[str] = None
-    llm: LlmConfig = LlmConfig()
+    action_llm: dict = {}
+    conversation_llm: dict = {}
 
 
 class RuntimeBridge:
@@ -568,68 +598,29 @@ class RuntimeBridge:
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
 
-        actions_llm = None
-        if self.config.llm.action_generation_model:
-            try:
-                from langchain_anthropic import ChatAnthropic
-            except ImportError:
-                raise Exception(
-                    "You must install thistle-gulch using `--with anthropic` to use this model"
-                )
-            actions_llm = ChatAnthropic(
-                model_name=self.config.llm.action_generation_model,
-                callbacks=[StreamingDebugCallback()],
-                streaming=True,
-                api_key=None,
-                timeout=None,
-            )
-        # TODO: Load configuration from a file.
-        cfg = {
-            "llm": {
-                "import": "langchain_openai",
-                "class": "ChatOpenAI",
-                "params": {
-                    "streaming": True,
-                    "model_name": "gpt-3.5-turbo",
-                    "temperature": 0.9,
-                    "model_kwargs": {
-                      "response_format": {"type": "json_object"},
-                    },
-                },
-            },
-        }
-
-        # TODO: Load configuration from a file.
-        cfg = {
-            "llm": {
-                "import": "langchain_community.llms",
-                "class": "Ollama",
-                "params": {
-                    "model": "llama3",
-                    "format": "json",
-                },
-            },
-        }
-
         # Set the routes for SAGA stuff if not already defined using the defaults.
         # This allows custom routes to be added before the server is started and
         # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
         if IncomingRoutes.generate_actions.value not in self.router.routes:
-            llm = dynamic_model_loader(cfg["llm"])
+            llm = dynamic_model_loader(self.config.action_llm)
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(ActionsAgent(llm=llm)),
+                    TGActionsEndpoint(
+                        ActionsAgent(llm=llm),
+                    ),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
             )
         if IncomingRoutes.generate_conversations.value not in self.router.routes:
-            llm = dynamic_model_loader(cfg["llm"])
+            llm = dynamic_model_loader(self.config.conversation_llm)
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    saga_server.ConversationEndpoint(ConversationAgent(llm=llm)),
+                    TGConversationEndpoint(
+                        ConversationAgent(llm=llm),
+                    ),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -670,27 +661,6 @@ def main(auto_run=True) -> RuntimeBridge:
         help="Path to a personas config file",
     )
     args = parser.parse_args()
-
-    def get_abs_path(file_name: str) -> str:
-        """Append the file name to the project or exe root"""
-        root_path: Optional[str] = (
-            thistle_gulch.get_exe_dir()
-            if thistle_gulch.is_exe_build()
-            else os.path.dirname(os.path.dirname(thistle_gulch.__file__))
-        )
-        return f"{root_path}/{file_name}"
-
-    def load_yaml(file_path: str) -> Optional[Any]:
-        """Load yaml data from the given absolute path"""
-        if not os.path.exists(file_path):
-            logger.error(f"Failed to find config file at '{file_path}'")
-            return None
-
-        with open(file_path, "r") as f:
-            for config_data in yaml.load(f, Loader=yaml.FullLoader):
-                return config_data
-
-        return None
 
     # Load the bridge config file from disk
     bridge_config = BridgeConfig()

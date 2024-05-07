@@ -2,6 +2,29 @@
   port: 8080
   cors: "*"
   runtime_path: ""
-  llm:
-    action_generation_model: "gpt-3.5-turbo-0125"
-    conversation_generation_model: "gpt-4-turbo-2024-04-09"
+  action_llm:
+    import: "langchain_openai"
+    class: "ChatOpenAI"
+    params:
+      streaming: True
+      model_name: "gpt-3.5-turbo-0125"
+      temperature: 0.9
+      model_kwargs:
+        response_format:
+          type: "json_object"
+  conversation_llm:
+    import: "langchain_openai"
+    class: "ChatOpenAI"
+    params:
+      streaming: True
+      model_name: "gpt-4-turbo-2024-04-09"
+      temperature: 0.9
+      model_kwargs:
+        response_format:
+          type: "json_object"
+
+    #import: "langchain_community.llms"
+    #class: "Ollama"
+    #params:
+    #  model: "llama3"
+    #  format: "json"
