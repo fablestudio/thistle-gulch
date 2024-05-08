@@ -6,7 +6,6 @@ from typing import Callable, Optional, Awaitable, Dict, Any, List
 
 from langchain_core.language_models.llms import BaseLLM
 import fable_saga
-import fable_saga.server as saga_server
 import socketio
 import yaml
 import cattrs
@@ -14,7 +13,6 @@ from aiohttp import web
 from attr import define
 
 import fable_saga.server as saga_server
-from fable_saga import StreamingDebugCallback
 from fable_saga.actions import ActionsAgent, Action
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
@@ -33,7 +31,6 @@ from . import (
 )
 from .data_models import (
     PersonaContextObject,
-    Persona,
     WorldContextObject,
     PersonaConfig,
 )
@@ -205,7 +202,7 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         #         f,
         #         default_style="",
         #         default_flow_style=False,
-        #         width=10000,
+        #         width=120,
         #         sort_keys=False,
         #     )
 
