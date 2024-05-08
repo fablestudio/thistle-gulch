@@ -2,12 +2,17 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Callable, Optional, Awaitable, Dict, Any
+from typing import Callable, Optional, Awaitable, Dict, Any, List
 
-import fable_saga.server as saga_server
+from langchain_core.language_models.llms import BaseLLM
+import fable_saga
 import socketio
+import yaml
+import cattrs
 from aiohttp import web
 from attr import define
+
+import fable_saga.server as saga_server
 from fable_saga.actions import ActionsAgent, Action
 from fable_saga.conversations import ConversationAgent
 from fable_saga.server import BaseEndpoint, ActionsResponse
@@ -24,10 +29,37 @@ from . import (
     MessageSystem,
     IncomingRoutes,
 )
-from .data_models import PersonaContextObject
+from .data_models import (
+    PersonaContextObject,
+    WorldContextObject,
+    PersonaConfig,
+)
 
 # Set the saga_server converter to allow extra keys in for now.
 saga_server.converter.forbid_extra_keys = False
+
+
+def get_abs_path(file_name: str) -> str:
+    """Append the file name to the project or exe root"""
+    root_path: Optional[str] = (
+        thistle_gulch.get_exe_dir()
+        if thistle_gulch.is_exe_build()
+        else os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+    )
+    return f"{root_path}/{file_name}"
+
+
+def load_yaml(file_path: str) -> Optional[Any]:
+    """Load yaml data from the given absolute path"""
+    if not os.path.exists(file_path):
+        logger.error(f"Failed to find config file at '{file_path}'")
+        return None
+
+    with open(file_path, "r") as f:
+        for config_data in yaml.safe_load(f):
+            return config_data
+
+    return None
 
 
 # Override the default saga_server request types to include a context_obj field when working with the runtime.
@@ -41,8 +73,11 @@ class TGActionsRequest(saga_server.ActionsRequest):
 class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
     """Server for SAGA."""
 
-    def __init__(self, agent: saga_server.ActionsAgent):
+    def __init__(
+        self, agent: saga_server.ActionsAgent, model_override: Optional[str] = None
+    ):
         self.agent = agent
+        self.model_override = model_override
 
     async def handle_request(
         self, req: TGActionsRequest
@@ -52,8 +87,16 @@ class TGActionsEndpoint(BaseEndpoint[TGActionsRequest, ActionsResponse]):
             assert isinstance(
                 req, TGActionsRequest
             ), f"Invalid request type: {type(req)}"
+
+            # Disable request model overrides now that we're using a config
+            # Override the model or use the one included in the request
+            # model = self.model_override if self.model_override else req.model
+
             actions = await self.agent.generate_actions(
-                req.context, req.skills, req.retries, req.verbose, req.model
+                req.context,
+                req.skills,
+                req.retries,
+                req.verbose,  # model
             )
 
             response = saga_server.ActionsResponse(
@@ -76,13 +119,18 @@ class TGConversationRequest(saga_server.ConversationRequest):
     context_obj: Optional[PersonaContextObject] = None
 
 
-class TGConversationEndpoint(saga_server.ConversationEndpoint):
+class TGConversationEndpoint(
+    BaseEndpoint[TGConversationRequest, saga_server.ConversationResponse]
+):
     """Server for SAGA."""
 
-    def __init__(self, agent: saga_server.ConversationAgent):
-        super().__init__(agent)
+    def __init__(
+        self, agent: saga_server.ConversationAgent, model_override: Optional[str] = None
+    ):
+        self.agent = agent
+        self.model_override = model_override
 
-    async def generate_conversation(
+    async def handle_request(
         self, req: TGConversationRequest
     ) -> saga_server.ConversationResponse:
         # Generate conversation
@@ -90,12 +138,17 @@ class TGConversationEndpoint(saga_server.ConversationEndpoint):
             assert isinstance(
                 req, TGConversationRequest
             ), f"Invalid request type: {type(req)}"
+
+            # Disable request model overrides now that we're using a config
+            # Override the model or use the one included in the request
+            # model = self.model_override if self.model_override else req.model
+
             conversation = await self.agent.generate_conversation(
                 req.persona_guids,
                 req.context,
                 req.retries,
                 req.verbose,
-                req.model,
+                # model,
             )
 
             response = saga_server.ConversationResponse(
@@ -136,11 +189,91 @@ class OnReadyEndpoint(BaseEndpoint[GenericMessage, None]):
         logger.debug(f"[Simulation Ready] Pausing simulation during initialization..")
         await self.bridge.runtime.api.pause()
 
+        world_context = await self.bridge.runtime.api.get_world_context()
+
+        # Uncomment to update personas config to latest from Runtime
+        # file_path = (
+        #     os.path.dirname(os.path.dirname(thistle_gulch.__file__))
+        #     + "/personas_config.yaml"
+        # )
+        # with open(file_path, "w") as f:
+        #     yaml.dump(
+        #         world_context.personas,
+        #         f,
+        #         default_style="",
+        #         default_flow_style=False,
+        #         width=120,
+        #         sort_keys=False,
+        #     )
+
+        # Initialize any characters that are in the personas config
+        if self.bridge.persona_configs:
+            logger.debug(f"[Simulation Ready] Configuring personas..")
+            for persona_cfg in self.bridge.persona_configs:
+
+                # A persona guid is required
+                if not persona_cfg.persona_guid:
+                    logger.error(
+                        f"Persona config does not specify the required 'persona_guid' parameter: {persona_cfg}"
+                    )
+                    continue
+
+                # Verify that this persona_guid exists in the world context
+                existing_persona = next(
+                    (
+                        p
+                        for p in world_context.personas
+                        if p.persona_guid == persona_cfg.persona_guid
+                    ),
+                    None,
+                )
+                if existing_persona is None:
+                    logger.error(
+                        f"[Simulation Ready] While configuring personas: persona_guid not found: '{persona_cfg.persona_guid}'"
+                    )
+                    continue
+
+                # Override properties
+                property_values = {}
+                if persona_cfg.summary:
+                    property_values["summary"] = persona_cfg.summary
+                if persona_cfg.description:
+                    property_values["description"] = persona_cfg.description
+                if persona_cfg.backstory:
+                    property_values["backstory"] = persona_cfg.backstory
+                if property_values:
+                    await self.bridge.runtime.api.update_character_properties(
+                        persona_cfg.persona_guid, property_values
+                    )
+
+                # Override agent states
+                if persona_cfg.actions_enabled or persona_cfg.conversations_enabled:
+                    await self.bridge.runtime.api.enable_agent(
+                        persona_cfg.persona_guid,
+                        persona_cfg.actions_enabled,
+                        persona_cfg.conversations_enabled,
+                    )
+
+                # Override memories
+                if persona_cfg.memories:
+                    await self.bridge.runtime.api.character_memory_clear(
+                        persona_cfg.persona_guid
+                    )
+                    for memory_cfg in persona_cfg.memories:
+                        memory = await self.bridge.runtime.api.character_memory_add(
+                            persona_guid=persona_cfg.persona_guid,
+                            timestamp=memory_cfg.timestamp,
+                            summary=memory_cfg.summary,
+                            entity_ids=memory_cfg.entity_ids,
+                            position=memory_cfg.position,
+                            importance_weight=memory_cfg.importance_weight,
+                        )
+
         # Call the on_ready callback if it exists.
         if self.bridge.on_ready is not None:
             # pass the bridge instance to the on_ready callback so that it can send messages to the runtime.
             logger.debug(f"[Simulation Ready] Calling on_ready callback..")
-            resume = await self.bridge.on_ready(self.bridge)
+            resume = await self.bridge.on_ready(self.bridge, world_context)
         else:
             logger.debug(f"[Simulation Ready] No on_ready callback registered..")
             resume = True
@@ -279,20 +412,46 @@ class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Error] No on_error callback registered..")
 
 
-@define
+def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
+    """Load a model dynamically based on the configuration."""
+    if model_cfg.get("import") is None or model_cfg.get("class") is None:
+        raise Exception("Model configuration must include 'import' and 'class' fields.")
+
+    # Import the module and get the class.
+    module = __import__(model_cfg["import"], fromlist=[model_cfg["class"]])
+    model_class = getattr(module, model_cfg["class"])
+
+    # Create an instance of the class with the provided parameters.
+    llm: BaseLLM = model_class(**model_cfg.get("params", {}))
+
+    # Add the fable_saga callbacks to the model.
+    if llm.callbacks is None:
+        llm.callbacks = [
+            fable_saga.StreamingDebugCallback(),
+            fable_saga.SagaCallbackHandler(),
+        ]
+    return llm
+
+
+@define(slots=True)
 class BridgeConfig:
     host: str = "localhost"
     port: int = 8080
     cors: str = "*"
     runtime_path: Optional[str] = None
+    action_llm: dict = {}
+    conversation_llm: dict = {}
 
 
 class RuntimeBridge:
 
-    def __init__(self, config: BridgeConfig):
+    def __init__(self, config: BridgeConfig, persona_configs: List[PersonaConfig]):
         self.config = config
+        self.persona_configs = persona_configs
         self.router = IncomingMessageRouter()
-        self.on_ready: Optional[Callable[[RuntimeBridge], Awaitable[bool]]] = None
+        self.on_ready: Optional[
+            Callable[[RuntimeBridge, WorldContextObject], Awaitable[bool]]
+        ] = None
         self.on_tick: Optional[Callable[[RuntimeBridge, datetime], Awaitable[None]]] = (
             None
         )
@@ -330,7 +489,8 @@ class RuntimeBridge:
         sio.attach(self.app)
         self.sio = sio
 
-        if self.config.runtime_path is None:
+        # No runtime was provided - if this project is running as an app find the included runtime build
+        if not self.config.runtime_path:
             default_exe_path = thistle_gulch.get_exe_dir()
             if default_exe_path:
                 runtime_exec_path = f"{default_exe_path}/ThistleGulch.exe"
@@ -338,7 +498,7 @@ class RuntimeBridge:
                     self.config.runtime_path = runtime_exec_path
 
         # Validate the runtime path and create a runtime instance.
-        if self.config.runtime_path is not None:
+        if self.config.runtime_path:
             runtime_exec, runtime_args = parse_runtime_path_and_args(
                 self.config.runtime_path
             )
@@ -442,7 +602,7 @@ class RuntimeBridge:
 """
         )
 
-        if self.config.runtime_path is not None:
+        if self.config.runtime_path:
             self.runtime.start()
         else:
             logger.warning("[Bridge] Skipping Runtime Start as no path was provided")
@@ -451,19 +611,25 @@ class RuntimeBridge:
         # This allows custom routes to be added before the server is started and
         # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
         if IncomingRoutes.generate_actions.value not in self.router.routes:
+            llm = dynamic_model_loader(self.config.action_llm)
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
-                    TGActionsEndpoint(ActionsAgent()),
+                    TGActionsEndpoint(
+                        ActionsAgent(llm=llm),
+                    ),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
             )
         if IncomingRoutes.generate_conversations.value not in self.router.routes:
+            llm = dynamic_model_loader(self.config.conversation_llm)
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
-                    saga_server.ConversationEndpoint(ConversationAgent()),
+                    TGConversationEndpoint(
+                        ConversationAgent(llm=llm),
+                    ),
                     logging.DEBUG,
                     MessageSystem.ENDPOINTS,
                 )
@@ -479,8 +645,6 @@ class RuntimeBridge:
 
 
 def main(auto_run=True) -> RuntimeBridge:
-    dummy_config = BridgeConfig()
-
     # Parse command line arguments
     import argparse
 
@@ -490,22 +654,61 @@ def main(auto_run=True) -> RuntimeBridge:
         type=str,
         help="Path to the thistle gulch runtime and any additional arguments",
     )
+    parser.add_argument("--host", type=str, help="Host to listen on")
+    parser.add_argument("--port", type=int, help="Port to listen on")
+    parser.add_argument("--cors", type=str, help="CORS origin")
     parser.add_argument(
-        "--host", type=str, default=dummy_config.host, help="Host to listen on"
+        "--bridge_config",
+        type=str,
+        default="bridge_config.yaml",
+        help="Path to a config file",
     )
     parser.add_argument(
-        "--port", type=int, default=dummy_config.port, help="Port to listen on"
-    )
-    parser.add_argument(
-        "--cors", type=str, default=dummy_config.cors, help="CORS origin"
+        "--personas_config",
+        type=str,
+        default="personas_config.yaml",
+        help="Path to a personas config file",
     )
     args = parser.parse_args()
 
+    # Load the bridge config file from disk
+    bridge_config = BridgeConfig()
+    if args.bridge_config:
+        bridge_config_path = args.bridge_config.replace("\\", "/")
+        # If it's a file name, get the absolute path
+        if "/" not in bridge_config_path:
+            bridge_config_path = get_abs_path(bridge_config_path)
+        # Load and structure the yaml
+        bridge_config_yaml = load_yaml(bridge_config_path)
+        if bridge_config_yaml:
+            bridge_config = cattrs.structure(bridge_config_yaml, BridgeConfig)
+
+    # Load the personas config file from disk
+    personas_config = []
+    if args.personas_config:
+        personas_config_path = args.personas_config.replace("\\", "/")
+        # If it's a file name, get the absolute path
+        if "/" not in personas_config_path:
+            personas_config_path = get_abs_path(personas_config_path)
+        # Load and structure the yaml
+        personas_config_yaml = load_yaml(personas_config_path)
+        if personas_config_yaml:
+            personas_config = cattrs.structure(
+                personas_config_yaml.get("personas"), List[PersonaConfig]
+            )
+
+    # Command-line arguments override the config values on disk
+    if args.host:
+        bridge_config.host = args.host
+    if args.port:
+        bridge_config.port = args.port
+    if args.cors:
+        bridge_config.cors = args.cors
+    if args.runtime:
+        bridge_config.runtime_path = args.runtime
+
     # Run the bridge server.
-    real_config = BridgeConfig(
-        host=args.host, port=args.port, cors=args.cors, runtime_path=args.runtime
-    )
-    bridge = RuntimeBridge(real_config)
+    bridge = RuntimeBridge(bridge_config, personas_config)
     if auto_run:
         bridge.run()
     return bridge

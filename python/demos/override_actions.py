@@ -9,6 +9,7 @@ from langchain.prompts import PromptTemplate
 
 from thistle_gulch import logger, IncomingRoutes, Route
 from thistle_gulch.bridge import TGActionsEndpoint, RuntimeBridge, TGActionsRequest
+from thistle_gulch.data_models import WorldContextObject
 from thistle_gulch.skills import GoToSkill
 from . import Demo, disable_all_agents
 
@@ -58,8 +59,8 @@ class PrintActionsAndPickFirstDemo(Demo):
         persona_guid = "jack_kane"
 
         # Enable one agent and disable all others
-        async def on_ready(_) -> bool:
-            await disable_all_agents(bridge)
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
+            await disable_all_agents(bridge, world_context)
             await bridge.runtime.api.enable_agent(persona_guid, True, True)
 
             return True
@@ -117,8 +118,8 @@ class SkipSagaAlwaysDoTheDefaultActionDemo(Demo):
         )
 
         # Enable one agent and disable all others
-        async def on_ready(_) -> bool:
-            await disable_all_agents(bridge)
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
+            await disable_all_agents(bridge, world_context)
             await bridge.runtime.api.enable_agent("jack_kane", True, True)
 
             return True
@@ -211,8 +212,8 @@ and the chosen skill options.""".replace(
         )
 
         # Enable Kane's agent and disable all others
-        async def on_ready(_) -> bool:
-            await disable_all_agents(bridge)
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
+            await disable_all_agents(bridge, world_context)
             await bridge.runtime.api.enable_agent("jack_kane", True, True)
 
             return True
@@ -251,9 +252,9 @@ class OnActionComplete(Demo):
 
         location_list = ["sheriff_station_building", "the_saloon", "bank_building"]
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             await bridge.runtime.api.focus_character(sheriff_id)
             await bridge.runtime.api.follow_character(sheriff_id, 0.8)

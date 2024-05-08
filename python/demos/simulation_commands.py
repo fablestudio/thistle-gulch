@@ -37,9 +37,9 @@ class SetStartTimeDemo(Demo):
         datestr = input("Enter the start hour (HH - 24hour): ")
         date = datetime(1880, 1, 1, int(datestr))
 
-        async def on_ready(_) -> bool:
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
             print(f"Current simulation start time is {bridge.runtime.start_date}")
             print(f"Setting simulation start time to {date}")
@@ -74,8 +74,8 @@ class SimulationTickDemo(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/simulation_commands.py
         """
 
-        async def on_ready(_) -> bool:
-            await disable_all_agents(bridge)
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
+            await disable_all_agents(bridge, world_context)
             return True
 
         print("Registering custom on_ready callback.")
@@ -116,15 +116,15 @@ class SelectSimObject(Demo):
             https://github.com/fablestudio/thistle-gulch/blob/main/python/demos/simulation_commands.py
         """
 
-        world_context: WorldContextObject
+        world_context_: WorldContextObject
 
         # Focus on and follow the character at simulation start
-        async def on_ready(_) -> bool:
-            nonlocal world_context
+        async def on_ready(_, world_context: WorldContextObject) -> bool:
+            nonlocal world_context_
 
-            await disable_all_agents(bridge)
+            await disable_all_agents(bridge, world_context)
 
-            world_context = await bridge.runtime.api.get_world_context()
+            world_context_ = world_context
 
             # Show the user a description of how object selection works
             future = asyncio.get_event_loop().create_future()
@@ -151,13 +151,13 @@ class SelectSimObject(Demo):
 
             # Check if the selected object was a character
             selected_object: Optional[Persona | SimObject] = next(
-                (p for p in world_context.personas if p.persona_guid == guid), None
+                (p for p in world_context_.personas if p.persona_guid == guid), None
             )
 
             # Otherwise look for a sim object
             if selected_object is None:
                 selected_object = next(
-                    (s for s in world_context.sim_objects if s.guid == guid), None
+                    (s for s in world_context_.sim_objects if s.guid == guid), None
                 )
 
             # Object not found

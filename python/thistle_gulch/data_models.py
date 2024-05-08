@@ -16,21 +16,6 @@ class Vector3:
 
 
 @define(slots=True)
-class Persona:
-    persona_guid: str
-    name: str
-    summary: str
-    description: str
-    backstory: str
-    energy_level: str
-    position: Vector3
-    location_id: str
-    destination_id: str
-    actions_enabled: bool
-    conversations_enabled: bool
-
-
-@define(slots=True)
 class SimObject:
     guid: str
     name: str
@@ -81,13 +66,22 @@ class SequenceUpdate:
 
 
 @define(slots=True)
+class MemoryConfig:
+    timestamp: str
+    summary: str
+    entity_ids: Optional[List[str]] = None
+    position: Optional[Vector3] = None
+    importance_weight: float = 0.5
+
+
+@define(slots=True)
 class Memory:
     guid: str
     timestamp: str
     summary: str
     context_id: str
     entity_ids: List[str]
-    position: Vector3
+    position: Optional[Vector3]
     importance_weight: float
 
 
@@ -109,6 +103,32 @@ class Interactable:
     name: str
     description: str
     interactions: List[str]
+
+
+@define(slots=True)
+class Persona:
+    persona_guid: str = ""
+    name: str = ""
+    summary: str = ""
+    description: str = ""
+    backstory: str = ""
+    energy_level: str = ""
+    position: Optional[Vector3] = None
+    location_id: str = ""
+    destination_id: str = ""
+    actions_enabled: Optional[bool] = None
+    conversations_enabled: Optional[bool] = None
+
+
+@define(slots=True)
+class PersonaConfig:
+    persona_guid: str = ""
+    summary: str = ""
+    description: str = ""
+    backstory: str = ""
+    actions_enabled: Optional[bool] = None
+    conversations_enabled: Optional[bool] = None
+    memories: List[MemoryConfig] = []
 
 
 @define(slots=True)

@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from enum import Enum
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Dict, Any
 from datetime import datetime
 from asyncio import Future
 
@@ -101,32 +101,43 @@ class API:
         self.runtime.start_date = date
 
     async def enable_agent(
-        self, persona_guid: str, actions: bool, conversations: bool
+        self,
+        persona_guid: str,
+        actions: Optional[bool] = None,
+        conversations: Optional[bool] = None,
     ) -> None:
         """
-        Enable or disable the Bridge agent for a specific character. Enabled agents generate their actions using the
-        python Bridge by sending requests to generate action options. Disabled agents generate their actions in the
-        simulation Runtime using a simple scoring system similar to the one used by The Sims. The agent state does not
-        affect conversation generation - all characters use the Bridge for this purpose.
+        Enable or disable the Bridge for action and/or conversation generation. Generates actions using the
+        python Bridge by sending requests to generate action options. When bridge actions are disabled, actions are
+        generated in the simulation Runtime using a simple scoring system similar to the one used by The Sims.
+        Conversations are only generated via the bridge - if disabled
 
         :param persona_guid: persona to modify
         :param actions: Enable or disable the agent's action generation
         :param conversations: Enable or disable the agent's conversation generation
         """
-        logger.debug(
-            f"{('Enabling' if actions else 'Disabling')} actions: {persona_guid}"
-        )
-        logger.debug(
-            f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_guid}"
-        )
+
+        if actions is None and conversations is None:
+            logger.error(
+                f"Failed to enable agent for '{persona_guid}' - at least one of the 'actions' or 'conversations' arguments must be set"
+            )
+            return
+
+        data: Dict[str, Any] = {"command": "enable-agent", "persona_guid": persona_guid}
+        if actions is not None:
+            data["actions"] = actions
+            logger.debug(
+                f"{('Enabling' if actions else 'Disabling')} actions: {persona_guid}"
+            )
+        if conversations is not None:
+            data["conversations"] = conversations
+            logger.debug(
+                f"{('Enabling' if conversations else 'Disabling')} conversations: {persona_guid}"
+            )
+
         await self.runtime.send_message(
             "character-command",
-            {
-                "command": "enable-agent",
-                "persona_guid": persona_guid,
-                "actions": actions,
-                "conversations": conversations,
-            },
+            data,
         )
 
     async def character_memory_add(
@@ -154,8 +165,6 @@ class API:
 
         if entity_ids is None:
             entity_ids = [persona_guid]
-        if position is None:
-            position = Vector3(0, 0, 0)
         if importance_weight is None:
             importance_weight = 0.5
 
@@ -212,27 +221,28 @@ class API:
             {"command": "character-memory-clear", "persona_guid": persona_guid},
         )
 
-    async def update_character_property(
-        self, persona_guid: str, property_name: str, value: str
+    async def update_character_properties(
+        self, persona_guid: str, property_values: Dict[str, Any]
     ) -> None:
         """
-        Set a character property to a new value. Characters in Thistle Gulch come with a set of pre-defined properties
-        such as energy, description, and backstory which ultimately define the behavior of the character in the
-        simulation via the generation of actions and conversations. For instance, changing a character's backstory
-        alters their motivations and can lead them to make very different decisions when interacting with other characters.
+        Set one or more character properties to a new value. Characters in Thistle Gulch come with a set of pre-defined
+        properties such as energy, description, and backstory which ultimately define the behavior of the character in
+        the simulation via the generation of actions and conversations. For instance, changing a character's backstory
+        alters their motivations and can lead them to make very different decisions when interacting with other
+        characters.
 
         :param persona_guid: Persona to modify
-        :param property_name: Name of the property to modify
-        :param value: Value to assign to the property
+        :param property_values: Map from property names to their new values
         """
-        logger.debug(f"Updating {persona_guid} {property_name} to '{value}'")
+
+        logger.debug(f"Updating {persona_guid} properties to {property_values}")
         await self.runtime.send_message(
             "character-command",
             {
-                "command": "update-character-property",
+                "command": "update-character-properties",
                 "persona_guid": persona_guid,
-                "property": property_name,
-                "value": value,
+                "properties": list(property_values.keys()),
+                "values": list(property_values.values()),
             },
         )
 
