@@ -59,7 +59,7 @@ def load_yaml(file_path: str) -> Optional[Any]:
         return None
 
     with open(file_path, "r") as f:
-        for config_data in yaml.load(f, Loader=yaml.FullLoader):
+        for config_data in yaml.safe_load(f):
             return config_data
 
     return None
