@@ -6,7 +6,7 @@ authors = ["Frank Carey <fcarey@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<3.11"
+python = ">=3.8.1,<3.13"
 python-socketio = "^5.11.1"
 cattrs = "^23.2.3"
 aiohttp = "^3.9.3"
