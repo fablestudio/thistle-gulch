@@ -415,18 +415,6 @@ class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Error] No on_error callback registered..")
 
 
-@define(slots=True)
-class PersonasConfig:
-    personas: List[Persona] = []
-
-
-@define(slots=True)
-class LlmConfig:
-    action_generation_model: Optional[str] = None
-    conversation_generation_model: Optional[str] = None
-
-
-@define(slots=True)
 def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
     """Load a model dynamically based on the configuration."""
     if model_cfg.get("import") is None or model_cfg.get("class") is None:
