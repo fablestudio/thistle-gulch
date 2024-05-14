@@ -19,7 +19,7 @@
     #debug_prompt: True
     params:
       streaming: True
-      model_name: "gpt-4-turbo-2024-04-09"
+      model_name: "gpt-4o"
       temperature: 0.9
       model_kwargs:
         response_format:
