@@ -1,7 +1,15 @@
 import datetime
-from typing import Optional, List, Dict
-from attrs import define
+from typing import Optional, List, Dict, Any
+from attr import define
 from fable_saga.actions import Skill
+
+
+@define(slots=True)
+class ModelConfig:
+    class_import: str
+    class_type: str
+    debug_prompt: bool = False
+    params: Dict[str, Any] = {}
 
 
 @define(slots=True)
