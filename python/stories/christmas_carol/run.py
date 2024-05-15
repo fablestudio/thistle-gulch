@@ -1,6 +1,8 @@
 import asyncio
+import sys
 from datetime import datetime, timedelta
 from typing import List, Dict
+import logging
 
 import cattrs
 from langchain.prompts import PromptTemplate
@@ -45,6 +47,7 @@ def main():
     # Create a custom conversation agent for the Christmas Carol - we will change the template later.
     llm = thistle_gulch.bridge.dynamic_model_loader(cattrs.structure(bridge.config.conversation_llm, ModelConfig))
     conversation_agent = thistle_gulch.bridge.ConversationAgent(llm=llm)
+
     # Create the override endpoints (we may not need both).
     override_conversations = thistle_gulch.bridge.Route(
         thistle_gulch.IncomingRoutes.generate_conversations.value,
@@ -61,7 +64,7 @@ def main():
     organizers = ["sarah_brown", "ezekiel_blackwood"]
 
     async def on_ready(_, world_context):
-        await bridge.runtime.api.modal("The Christmas Carol", guidance, ["Start"])
+
         print("Setting the time to Christmas Eve Day.")
         nonlocal carol_time
         await bridge.runtime.api.set_start_date(carol_time - timedelta(hours=0.5))
@@ -77,6 +80,12 @@ def main():
             conversation=None,
         )
         await bridge.runtime.api.override_character_action("sarah_brown", initial_conversation.to_action())
+
+
+        future = asyncio.Future()
+        await bridge.runtime.api.modal("The Christmas Carol", guidance, ["Start"], False, future)
+        await future
+
         await bridge.runtime.api.resume()
 
     async def on_tick(_, current_time: datetime):
@@ -86,7 +95,7 @@ def main():
             return
 
         elif carol_state == "not_started":
-            await bridge.runtime.api.modal("Gather up", "Gather round, the Christmas Carol is about to begin!", None)
+            await bridge.runtime.api.modal("Gather up", "Gather round, the Christmas Carol is about to begin!")
             carol_state = "waiting"
             for person in singers:
                 goto = GoToSkill(goal="Join the Christmas Carol", destination="church")
@@ -94,7 +103,7 @@ def main():
 
         elif carol_state == "starting":
             carol_state = "started"
-            await bridge.runtime.api.modal("Everyone has arrived", "The Christmas Carol has started!", None)
+            await bridge.runtime.api.modal("Everyone has arrived", "The Christmas Carol has started!")
             line = "We wish you a merry Christmas!"
             wait_for = []
             for person in singers:
@@ -140,6 +149,16 @@ def main():
     bridge.on_tick = on_tick
     bridge.on_action_complete = on_action_complete
 
+
+    # Setup logging
+    logging.basicConfig(
+        level=logging.WARNING,
+        stream=sys.stdout,
+        format="<%(levelname)s> %(asctime)s - %(name)s - %(pathname)s:%(lineno)d\n    %(message)s",
+    )
+    thistle_gulch.logger.setLevel(logging.INFO)
+    # This shows the generation of the response as it comes in.
+    fable_saga.streaming_debug_logger.setLevel(logging.DEBUG)
 
     try:
         bridge.run()

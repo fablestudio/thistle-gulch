@@ -420,7 +420,7 @@ class API:
         self,
         title: str,
         message: str,
-        buttons: List[str],
+        buttons: Optional[List[str]] = None,
         pause: bool = True,
         future: Optional[Future] = None,
     ) -> None:
