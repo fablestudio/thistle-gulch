@@ -194,7 +194,7 @@ and the chosen skill options.""".replace(
                 new_context = self.context_template.format(context_dump=yaml_dump)
 
                 actions = await self.agent.generate_actions(
-                    new_context, req.skills, req.retries, req.verbose, req.model
+                    new_context, req.skills, req.retries, req.verbose
                 )
                 response = saga_server.ActionsResponse(
                     actions=actions, reference=req.reference

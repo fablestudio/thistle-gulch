@@ -3,8 +3,9 @@
   cors: "*"
   runtime_path: ""
   action_llm:
-    import: "langchain_openai"
-    class: "ChatOpenAI"
+    class_import: "langchain_openai"
+    class_type: "ChatOpenAI"
+    #debug_prompt: True
     params:
       streaming: True
       model_name: "gpt-3.5-turbo-0125"
@@ -13,11 +14,12 @@
         response_format:
           type: "json_object"
   conversation_llm:
-    import: "langchain_openai"
-    class: "ChatOpenAI"
+    class_import: "langchain_openai"
+    class_type: "ChatOpenAI"
+    #debug_prompt: True
     params:
       streaming: True
-      model_name: "gpt-4-turbo-2024-04-09"
+      model_name: "gpt-4o"
       temperature: 0.9
       model_kwargs:
         response_format:

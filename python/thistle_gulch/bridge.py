@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Callable, Optional, Awaitable, Dict, Any, List
 
-from langchain_core.language_models.llms import BaseLLM
+from langchain_core.language_models.llms import BaseLLM, LLMResult
 import fable_saga
 import socketio
 import yaml
@@ -33,6 +33,7 @@ from .data_models import (
     PersonaContextObject,
     WorldContextObject,
     PersonaConfig,
+    ModelConfig,
 )
 
 # Set the saga_server converter to allow extra keys in for now.
@@ -412,23 +413,33 @@ class OnSimulationErrorEndpoint(BaseEndpoint[GenericMessage, None]):
             logger.debug(f"[Simulation Error] No on_error callback registered..")
 
 
-def dynamic_model_loader(model_cfg: dict) -> BaseLLM:
+def dynamic_model_loader(model_cfg: ModelConfig) -> BaseLLM:
     """Load a model dynamically based on the configuration."""
-    if model_cfg.get("import") is None or model_cfg.get("class") is None:
+    if model_cfg.class_import is None or model_cfg.class_type is None:
         raise Exception("Model configuration must include 'import' and 'class' fields.")
 
     # Import the module and get the class.
-    module = __import__(model_cfg["import"], fromlist=[model_cfg["class"]])
-    model_class = getattr(module, model_cfg["class"])
+    module = __import__(model_cfg.class_import, fromlist=[model_cfg.class_type])
+    model_class = getattr(module, model_cfg.class_type)
 
     # Create an instance of the class with the provided parameters.
-    llm: BaseLLM = model_class(**model_cfg.get("params", {}))
+    llm: BaseLLM = model_class(**model_cfg.params)
 
     # Add the fable_saga callbacks to the model.
+    def prompt_callback(prompts):
+        if model_cfg.debug_prompt:
+            logger.info(f"Prompts: {prompts[-1]}")
+
+    def response_callback(response: LLMResult):
+        if model_cfg.debug_response:
+            logger.info(f"Response: {response}")
+        elif model_cfg.debug_info:
+            logger.info(f"Model Info: {response.llm_output}")
+
     if llm.callbacks is None:
         llm.callbacks = [
             fable_saga.StreamingDebugCallback(),
-            fable_saga.SagaCallbackHandler(),
+            fable_saga.SagaCallbackHandler(prompt_callback, response_callback),
         ]
     return llm
 
@@ -611,7 +622,8 @@ class RuntimeBridge:
         # This allows custom routes to be added before the server is started and
         # avoiding using OpenAI. If langchain_openai in not installed, this will fail.
         if IncomingRoutes.generate_actions.value not in self.router.routes:
-            llm = dynamic_model_loader(self.config.action_llm)
+            cfg = cattrs.structure(self.config.action_llm, ModelConfig)
+            llm = dynamic_model_loader(cfg)
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_actions.value,
@@ -623,7 +635,8 @@ class RuntimeBridge:
                 )
             )
         if IncomingRoutes.generate_conversations.value not in self.router.routes:
-            llm = dynamic_model_loader(self.config.conversation_llm)
+            cfg = cattrs.structure(self.config.conversation_llm, ModelConfig)
+            llm = dynamic_model_loader(cfg)
             self.router.add_route(
                 Route(
                     IncomingRoutes.generate_conversations.value,
