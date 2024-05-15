@@ -9,6 +9,8 @@ class ModelConfig:
     class_import: str
     class_type: str
     debug_prompt: bool = False
+    debug_response: bool = False
+    debug_info: bool = False
     params: Dict[str, Any] = {}
 
 

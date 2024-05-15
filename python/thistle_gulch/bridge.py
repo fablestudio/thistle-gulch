@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Callable, Optional, Awaitable, Dict, Any, List
 
-from langchain_core.language_models.llms import BaseLLM
+from langchain_core.language_models.llms import BaseLLM, LLMResult
 import fable_saga
 import socketio
 import yaml
@@ -426,10 +426,20 @@ def dynamic_model_loader(model_cfg: ModelConfig) -> BaseLLM:
     llm: BaseLLM = model_class(**model_cfg.params)
 
     # Add the fable_saga callbacks to the model.
+    def prompt_callback(prompts):
+        if model_cfg.debug_prompt:
+            logger.info(f"Prompts: {prompts[-1]}")
+
+    def response_callback(response: LLMResult):
+        if model_cfg.debug_response:
+            logger.info(f"Response: {response}")
+        elif model_cfg.debug_info:
+            logger.info(f"Model Info: {response.llm_output}")
+
     if llm.callbacks is None:
         llm.callbacks = [
-            fable_saga.StreamingDebugCallback(model_cfg.debug_prompt),
-            fable_saga.SagaCallbackHandler(),
+            fable_saga.StreamingDebugCallback(),
+            fable_saga.SagaCallbackHandler(prompt_callback, response_callback),
         ]
     return llm
 
