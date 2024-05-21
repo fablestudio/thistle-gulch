@@ -15,6 +15,14 @@ class ModelConfig:
 
 
 @define(slots=True)
+class TokenUsage:
+    prompt_tokens: int
+    completion_tokens: int
+    prompt_tokens_cost: float = 0.0
+    completion_tokens_cost: float = 0.0
+
+
+@define(slots=True)
 class Vector3:
     x: float
     y: float

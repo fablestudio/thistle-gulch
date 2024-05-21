@@ -1,5 +1,5 @@
 from attrs import define
-from typing import List
+from typing import List, Optional
 from fable_saga.actions import Action
 
 
@@ -30,7 +30,7 @@ class ConverseWithSkill:
     # The guid of the persona to converse with
     persona_guid: str
     # Optional pre-defined conversation to use. If no conversation is provided, one will be generated instead
-    conversation: List[dict]
+    conversation: Optional[List[dict]]
     # The topic of the conversation
     topic: str
     # Lots of helpful details to aid in conversation generation. Only used if no conversation is provided.
