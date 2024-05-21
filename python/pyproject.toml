@@ -11,8 +11,9 @@ python-socketio = "^5.11.1"
 cattrs = "^23.2.3"
 aiohttp = "^3.9.3"
 fable-saga = { git = "https://github.com/fablestudio/fable-saga.git", rev = "main" }
+#fable-saga = { path = "../../fable-saga", develop = true}
 types-pyyaml = "^6.0.12.20240311"
-langchain-openai = { version = "^0.1.1", optional = true }
+langchain-openai = { version = "^0.1.6", optional = true }
 langchain-anthropic = { version = "^0.1.6", optional = true }
 pyinstaller = "^6.6.0"
 
