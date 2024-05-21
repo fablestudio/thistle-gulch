@@ -9,7 +9,7 @@ import cattrs
 from fable_saga.actions import Action
 
 from . import logger, converter
-from .data_models import PersonaContextObject, WorldContextObject, Memory, Vector3
+from .data_models import PersonaContextObject, WorldContextObject, Memory, Vector3, TokenUsage
 
 if TYPE_CHECKING:
     from .runtime import Runtime
@@ -450,4 +450,26 @@ class API:
                 "pause": pause,
             },
             future,
+        )
+
+    async def add_cost(self, model_name: str, usage: TokenUsage) -> None:
+        """
+        Notify the Runtime of a cost to the simulation based on token usage.
+
+        This is generally handled during SAGA (actions and conversation generation) with openai automatically as
+        information in the llm_info object of the response, but this can be used to manually add costs to the simulation
+        if needed. Example when using an LLM outside of SAGA requests.
+
+        Args:
+            model_name: The name of the model that incurred the cost. (e.g. "gpt-3.5-turbo")
+            usage: The token usage object containing the number of tokens used for completion and prompt and their costs.
+        """
+        logger.debug(f"Adding cost for model: {model_name}")
+        await self.runtime.send_message(
+            "simulation-command",
+            {
+                "command": "add-cost",
+                "modal_name": model_name,
+                "token_usage": usage,
+            },
         )
