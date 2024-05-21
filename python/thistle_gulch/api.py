@@ -9,7 +9,13 @@ import cattrs
 from fable_saga.actions import Action
 
 from . import logger, converter
-from .data_models import PersonaContextObject, WorldContextObject, Memory, Vector3, TokenUsage
+from .data_models import (
+    PersonaContextObject,
+    WorldContextObject,
+    Memory,
+    Vector3,
+    TokenUsage,
+)
 
 if TYPE_CHECKING:
     from .runtime import Runtime
@@ -323,6 +329,7 @@ class API:
         CALENDAR = "Calendar"
         CHARACTER_DETAILS = "CharacterDetails"
         HISTORY = "History"
+        COLLAPSED = "Collapsed"
 
     async def focus_character(
         self, persona_guid: str, open_tab: FocusPanelTab = FocusPanelTab.NONE
