@@ -60,6 +60,18 @@ see a modal with options for wyatt_cooper once the first request is processed by
 You can choose which option you want him to do. Note that the options are sorted by their score, so the "best" option should be at the top. 
 See the [Runtime Wiki](https://github.com/fablestudio/thistle-gulch/wiki/Runtime) for more details on using the Runtime.
 
+# Running Stories
+
+In addition to the demos, you can also run stories. Currently, these are community driven episodes / scenarios that are
+using the various APIs and features of Thistle Gulch. Each story exists in its own directory under the `stories` folder.
+The ruy.py file in each story directory is the entry point for the story.
+
+To run a story, make sure you are in the ./python directory within the repo and run the following command:
+
+```bash
+poetry run python stories/christmas_carol/run.py "<PATH_TO_ITCHIO_DIR>/ThistleGulch.exe"
+```
+
 # Making Thistle Gulch your own.
 
 There are lots of ways to customize Thistle Gulch, with more coming in each release. Head over to
